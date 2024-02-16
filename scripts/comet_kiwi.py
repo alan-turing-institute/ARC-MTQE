@@ -14,7 +14,7 @@ def main():
     main_dir = os.path.dirname(os.path.dirname(__file__))
 
     # WMT 2021 critical error test data
-    data_dir = os.path.join(main_dir, "mlqe-pe", "data", "catastrophic_errors")
+    data_dir = os.path.join(main_dir, "data", "mlqe-pe", "data", "catastrophic_errors")
 
     # save results here
     now = datetime.today().strftime("%Y%m%dT%H%M%S")

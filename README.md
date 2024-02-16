@@ -34,9 +34,11 @@ make data
 Each model has its own directory and within it each run of the model has a timestamped directory. Predictions are saved in a separate csv file for each language pair (`encs`, `ende`, `enja`, `enzh`).
 
 ```
-├── mlqe-pe/
-│   ├── data/
+├── data/
+│   ├── mlqe-pe/
 │   ├──   ├── .../
+│   ├── unbabel/
+│   ├──   ...
 ├── notebooks/
 │   ├── ...
 ├── results/
@@ -45,7 +47,6 @@ Each model has its own directory and within it each run of the model has a times
 │   ├──   ├──   ├── <language pair>_predictions.csv
 │   ├──   ├──   ├── ...
 ├── scripts/
-│   ├── eval.py
 │   ├── ...
 ```
 

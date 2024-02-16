@@ -41,7 +41,7 @@ def load_data(model, timestamp, lp):
 
     # gold labels
     data_dir = os.path.join(
-        main_dir, "mlqe-pe", "data", "catastrophic_errors_goldlabels"
+        main_dir, "data", "mlqe-pe", "data", "catastrophic_errors_goldlabels"
     )
     labels_path = os.path.join(
         data_dir, f"{lp}_majority_test_goldlabels", "goldlabels.txt"
