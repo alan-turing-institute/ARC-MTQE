@@ -70,3 +70,13 @@ The evaluation script produces summary statistics and plots given a model and ti
 ```bash
 poetry run python scripts/eval.py -m <model name> -t <timestamp>
 ```
+
+## Development
+
+To run linters:
+
+```bash
+poetry run black .
+poetry run isort .
+poetry run flake8
+```
