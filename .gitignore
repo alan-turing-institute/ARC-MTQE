@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # Data and output files
-mlqe-pe/
+data/
 results/
