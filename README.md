@@ -17,13 +17,13 @@ To use COMETKiwi, you need a HuggingFace account and access token (they're under
 huggingface-cli login
 ```
 
-Install dependencies with Poetry and pre-commit hooks:
+Install dependencies and pre-commit hooks with Poetry:
 
 ```bash
 make setup
 ```
 
-Download WMT 2021 critical error data:
+Download datasets:
 
 ```bash
 make data
@@ -50,6 +50,10 @@ Each model has its own directory and within it each run of the model has a times
 │   ├── ...
 ```
 
+## Links
+
+- [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
+
 ## COMETKiwi
 
 Run the `comet_kiwi.py` script to make predictions for the test data.
@@ -58,18 +62,8 @@ Run the `comet_kiwi.py` script to make predictions for the test data.
 poetry run python scripts/comet_kiwi.py
 ```
 
-The evaluation script produces summary statistics and plots given a model and timestamp within the results directory.
+The evaluation script produces summary statistics and plots given a model and timestamp within the same results directory.
 
 ```bash
 poetry run python scripts/eval.py -m <model name> -t <timestamp>
-```
-
-## Development
-
-To run linters manually:
-
-```bash
-poetry run black .
-poetry run isort .
-poetry run flake8
 ```
