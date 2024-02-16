@@ -35,10 +35,10 @@ Each model has its own directory and within it each run of the model has a times
 
 ```
 ├── data/
+│   ├── demetr/
 │   ├── mlqe-pe/
-│   ├──   ├── .../
 │   ├── unbabel/
-│   ├──   ...
+│   ├── wmt-qe-2022-data/
 ├── notebooks/
 │   ├── ...
 ├── results/

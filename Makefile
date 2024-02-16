@@ -1,15 +1,13 @@
 setup:
-	mkdir -p results
-
 	poetry update
 	poetry install
 
 data:
 	mkdir -p data
 
-	#================#
-	# MLQE-PE DATA   #
-	#================#
+	#===============================================#
+	# MLQE-PE data (includes WMT QE CED 2021 data)  #
+	#===============================================#
 
 	cd data && git clone https://github.com/sheffieldnlp/mlqe-pe.git
 
@@ -23,7 +21,19 @@ data:
 	# Unbabel 2022 MQM data #
 	#=======================#
 
-	cd data/ && \
+	cd data && \
 	mkdir -p unbabel && \
 	cd unbabel && \
 	wget https://raw.githubusercontent.com/google/wmt-mqm-human-evaluation/main/generalMT2022/enru/mqm_generalMT2022_enru.tsv
+
+	#================#
+	# DEMETR dataset #
+	#================#
+
+	cd data && git clone https://github.com/marzenakrp/demetr.git
+
+	#=============#
+	# WMT QE 2022 #
+	#=============#
+
+	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2022-data.git
