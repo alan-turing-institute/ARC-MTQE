@@ -2,6 +2,9 @@ setup:
 	poetry update
 	poetry install
 
+	poetry run pre-commit autoupdate
+	poetry run pre-commit install --install-hooks
+
 data:
 	mkdir -p data
 
@@ -15,7 +18,7 @@ data:
 	tar -xvzf encs_majority_test_goldlabels.tar.gz && \
 	tar -xvzf ende_majority_test_goldlabels.tar.gz && \
 	tar -xvzf enja_majority_test_goldlabels.tar.gz && \
-	tar -xvzf enzh_majority_test_goldlabels.tar.gz 
+	tar -xvzf enzh_majority_test_goldlabels.tar.gz
 
 	#=======================#
 	# Unbabel 2022 MQM data #

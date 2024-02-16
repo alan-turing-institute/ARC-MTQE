@@ -11,13 +11,13 @@ git clone https://github.com/alan-turing-institute/ARC-MTQE.git
 cd ARC-MTQE
 ```
 
-To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token: 
+To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
 
 ```bash
 huggingface-cli login
 ```
 
-Update and install Poetry dependencies:
+Install dependencies with Poetry and pre-commit hooks:
 
 ```bash
 make setup
@@ -66,7 +66,7 @@ poetry run python scripts/eval.py -m <model name> -t <timestamp>
 
 ## Development
 
-To run linters:
+To run linters manually:
 
 ```bash
 poetry run black .
