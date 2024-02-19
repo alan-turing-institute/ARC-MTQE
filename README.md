@@ -11,12 +11,6 @@ git clone https://github.com/alan-turing-institute/ARC-MTQE.git
 cd ARC-MTQE
 ```
 
-To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
-
-```bash
-huggingface-cli login
-```
-
 Install dependencies and pre-commit hooks with Poetry:
 
 ```bash
@@ -27,6 +21,12 @@ Download datasets:
 
 ```bash
 make data
+```
+
+To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
+
+```bash
+huggingface-cli login
 ```
 
 ## Structure of this repository
