@@ -40,3 +40,8 @@ data:
 	#=============#
 
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2022-data.git
+
+	cd ./data/wmt-qe-2022-data/train-dev_data/task3_ced/dev/en-de && tar -xvzf en-de-dev.tar.gz
+	cd ./data/wmt-qe-2022-data/train-dev_data/task3_ced/dev/pt-en && tar -xvzf pt-en-dev.tar.gz
+	cd ./data/wmt-qe-2022-data/train-dev_data/task3_ced/train/en-de && tar -xvzf en-de-train.tar.gz
+	cd ./data/wmt-qe-2022-data/train-dev_data/task3_ced/train/pt-en && tar -xvzf pt-en-train.tar.gz
