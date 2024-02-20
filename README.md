@@ -26,7 +26,7 @@ make data
 To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
 
 ```bash
-huggingface-cli login
+poetry run huggingface-cli login
 ```
 
 ## Structure of this repository
