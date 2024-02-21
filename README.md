@@ -29,6 +29,11 @@ To use COMETKiwi, you need a HuggingFace account and access token (they're under
 poetry run huggingface-cli login
 ```
 
+To use the COMET models, you must also acknowledge the license for their latest models on the HuggingFace page:
+- [COMETKiwi](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)
+- [COMETKiwi-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
+- [COMETKiwi-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
+
 ## Structure of this repository
 
 Each model has its own directory and within it each run of the model has a timestamped directory. Predictions are saved in a separate csv file for each language pair (`encs`, `ende`, `enja`, `enzh`).
