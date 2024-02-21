@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "MTQE"  
+name = "MTQE"
 version = "0.1.0"
-description = "" 
-authors = ["Applied Research Centre, The Alan Turing Institute <arc@turing.ac.uk>"]  
+description = ""
+authors = ["Applied Research Centre, The Alan Turing Institute <arc@turing.ac.uk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 huggingface_hub = "0.12.1"
-python = ">=3.9,<4.0.0"  
+python = ">=3.9,<4.0.0"
 unbabel-comet= "2.0.1"
 ipywidgets = "^8.1.1"
 torch = "2.0.1"
@@ -30,8 +30,12 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 88
+line-length = 120
 include = '\.pyi?$'
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = E203
 
 [tool.isort]
 profile = "black"
