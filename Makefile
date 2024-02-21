@@ -56,3 +56,9 @@ data:
 			cd ../../ ; \
 		done \
 	done
+
+	#=============#
+	# WMT QE 2023 #
+	#=============#
+
+	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
