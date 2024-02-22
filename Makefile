@@ -68,4 +68,4 @@ analyse_da_data:
 
 analyse_ced_test_data:
 	poetry run python scripts/comet_kiwi.py
-	poetry run python scripts/eval.py -p ./predictions/ced_test_data/
+	poetry run python scripts/eval_ced.py -p ./predictions/ced_test_data/
