@@ -19,15 +19,12 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description="Get directory names")
 
-    parser.add_argument("-m", "--model", required=True, help="Model name")
-    parser.add_argument(
-        "-t", "--timestamp", required=True, help="Predictions timestamp"
-    )
+    parser.add_argument("-p", "--path", required=True, help="Path to predictions directory")
 
     return parser.parse_args()
 
 
-def load_data(model, timestamp, lp):
+def load_data(pred_dir, lp, model):
     """
     Load model predictions and gold truth labels for language pair.
     """
@@ -35,35 +32,27 @@ def load_data(model, timestamp, lp):
     main_dir = os.getcwd()
 
     # predictions
-    predictions_dir = os.path.join(main_dir, "results", model, timestamp)
-    pred_path = os.path.join(predictions_dir, f"{lp}_predictions.csv")
+    pred_path = os.path.join(pred_dir, f"{lp}_{model}.csv")
     df_pred = pd.read_csv(pred_path)
 
     # gold labels
-    data_dir = os.path.join(
-        main_dir, "data", "mlqe-pe", "data", "catastrophic_errors_goldlabels"
-    )
-    labels_path = os.path.join(
-        data_dir, f"{lp}_majority_test_goldlabels", "goldlabels.txt"
-    )
-    df_labels = pd.read_csv(
-        labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "label"]
-    )
+    data_dir = os.path.join(main_dir, "data", "mlqe-pe", "data", "catastrophic_errors_goldlabels")
+    labels_path = os.path.join(data_dir, f"{lp}_majority_test_goldlabels", "goldlabels.txt")
+    df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "label"])
 
     # merge on sentence indexes
     df_results = pd.merge(df_pred, df_labels, on="idx")
 
-    return df_results, predictions_dir
+    return df_results
 
 
 def main():
     args = parse_args()
-    model = args.model
-    timestamp = args.timestamp
+    model = "cometkiwi"
 
     language_pairs = ["encs", "ende", "enja", "enzh"]
     for lp in language_pairs:
-        df_results, results_path = load_data(model, timestamp, lp)
+        df_results = load_data(args.path, lp, model)
 
         # higher COMET score --> higher confidence it is NOT an error
         # labels:  ERROR = 0, NOT = 1
@@ -106,7 +95,7 @@ def main():
 
         fig.suptitle(lp, fontsize=16)
         fig.tight_layout()
-        fig.savefig(os.path.join(results_path, f"{lp}_curves.png"), bbox_inches="tight")
+        fig.savefig(os.path.join(args.path, f"{lp}_curves.png"), bbox_inches="tight")
 
 
 if __name__ == "__main__":

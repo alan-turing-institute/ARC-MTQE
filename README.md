@@ -36,8 +36,6 @@ To use the COMET models, you must also acknowledge the license for their latest 
 
 ## Structure of this repository
 
-Each model has its own directory and within it each run of the model has a timestamped directory. Predictions are saved in a separate csv file for each language pair (`encs`, `ende`, `enja`, `enzh`).
-
 ```
 ├── data/
 │   ├── demetr/
@@ -47,11 +45,9 @@ Each model has its own directory and within it each run of the model has a times
 │   ├── wmt-qe-2023-data/
 ├── notebooks/
 │   ├── ...
-├── results/
-│   ├── <model name>
-│   ├──   ├── <timestamp>
-│   ├──   ├──   ├── <language pair>_predictions.csv
-│   ├──   ├──   ├── ...
+├── predictions/
+│   ├── ced_test_data/
+│   ├── da_test_data/
 ├── scripts/
 │   ├── ...
 ```
@@ -60,16 +56,20 @@ Each model has its own directory and within it each run of the model has a times
 
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
 
-## COMETKiwi
+## Make predictions
 
-Run the `comet_kiwi.py` script to make predictions for the test data.
+### DA test data
+
+To make predictions for WMT 2022 and 2023 DA test data using COMET-QE and COMETKiwi-22:
 
 ```bash
-poetry run python scripts/comet_kiwi.py
+make analyse_da_data
 ```
 
-The evaluation script produces summary statistics and plots given a model and timestamp within the same results directory.
+### CED test data
+
+To make COMETKiwi-22 predictions for the  CED test data:
 
 ```bash
-poetry run python scripts/eval.py -m <model name> -t <timestamp>
+make analyse_ced_test_data
 ```
