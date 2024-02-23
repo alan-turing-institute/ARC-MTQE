@@ -63,9 +63,8 @@ data:
 
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
 
-analyse_da_data:
-	poetry run python scripts/comets_compare.py
+predict_da:
+	poetry run python scripts/predict_da.py
 
-analyse_ced_test_data:
-	poetry run python scripts/comet_kiwi.py
-	poetry run python scripts/eval_ced.py -p ./predictions/ced_test_data/
+predict_ced:
+	poetry run python scripts/predict_ced.py

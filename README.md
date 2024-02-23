@@ -30,9 +30,9 @@ poetry run huggingface-cli login
 ```
 
 To use the COMET models, you must also acknowledge the license for their latest models on the HuggingFace page:
-- [COMETKiwi](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)
-- [COMETKiwi-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
-- [COMETKiwi-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
+- [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)
+- [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
+- [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
 
 ## Structure of this repository
 
@@ -63,13 +63,11 @@ To use the COMET models, you must also acknowledge the license for their latest 
 To make predictions for WMT 2022 and 2023 DA test data using COMET-QE and COMETKiwi-22:
 
 ```bash
-make analyse_da_data
+make predict_da
 ```
-
-### CED test data
 
 To make COMETKiwi-22 predictions for the  CED test data:
 
 ```bash
-make analyse_ced_test_data
+make predict_ced
 ```
