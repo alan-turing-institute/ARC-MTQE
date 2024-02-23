@@ -58,16 +58,14 @@ To use the COMET models, you must also acknowledge the license for their latest 
 
 ## Make predictions
 
-### DA test data
-
 To make predictions for WMT 2022 and 2023 DA test data using COMET-QE and COMETKiwi-22:
 
 ```bash
-make predict_da
+make analyse_da
 ```
 
 To make COMETKiwi-22 predictions for the  CED test data:
 
 ```bash
-make predict_ced
+make analyse_ced
 ```

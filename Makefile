@@ -53,7 +53,7 @@ data:
 		for d in ${TRAIN_DEV} ; do \
 			cd $${d}/$${lp} ; \
 			tar -xvzf $${lp}-$${d}.tar.gz ; \
-			cd ../../ ; \
+			cd ../../ ; \~
 		done \
 	done
 
@@ -63,8 +63,10 @@ data:
 
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
 
-predict_da:
+analyse_da:
 	poetry run python scripts/predict_da.py
+	poetry run python scripts/eval_da.py
 
-predict_ced:
+analyse_ced:
 	poetry run python scripts/predict_ced.py
+	poetry run python scripts/eval_ced.py -p ./predictions/ced_test_data/
