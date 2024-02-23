@@ -17,7 +17,7 @@ for lp in LANGUAGE_PAIRS_22:
     with open(os.path.join(out_dir, f"2022_{lp}_comet_qe"), "rb") as f:
         qe_scores = pickle.load(f)
 
-    with open(os.path.join(out_dir, f"2022_{lp}_cometkiwi"), "rb") as f:
+    with open(os.path.join(out_dir, f"2022_{lp}_cometkiwi_22"), "rb") as f:
         kiwi_scores = pickle.load(f)
 
     # INCONSISTENCY IN 2022 FILE NAMES
