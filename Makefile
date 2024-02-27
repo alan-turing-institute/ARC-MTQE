@@ -53,7 +53,7 @@ data:
 		for d in ${TRAIN_DEV} ; do \
 			cd $${d}/$${lp} ; \
 			tar -xvzf $${lp}-$${d}.tar.gz ; \
-			cd ../../ ; \~
+			cd ../../ ; \
 		done \
 	done
 
