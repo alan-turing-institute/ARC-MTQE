@@ -11,6 +11,30 @@ LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "en-te"]
 
 root_dir = os.getcwd()
 
+
+def create_latex_table(col_names, results):
+    """
+    Each row is a model and column a language pair.
+    """
+    textabular = f"c|{'c'*len(col_names)}"
+    texheader = " & " + " & ".join(map(lambda x: x.upper(), col_names)) + "\\\\"
+    texdata = "\\hline\n"
+    for label, values in results.items():
+        texdata += f"{label} & {' & '.join(map(lambda n: '%.3f'%n, values))} \\\\\n"
+    texdata += "\\hline"
+    tex_full = [
+        "\\begin{table}",
+        "\\centering",
+        "\\begin{tabular}{" + textabular + "}",
+        texheader,
+        texdata,
+        "\\end{tabular}",
+        "\\end{table}",
+    ]
+
+    return tex_full
+
+
 print("\n")
 print("WMT 2022 DA")
 print("================")
@@ -40,12 +64,14 @@ for lp in LANGUAGE_PAIRS_22:
     print("COMETKiwi", f"{spearmanr(kiwi_scores, labels).statistic:.2f}")
     print("----------------")
 
+
 print("\n")
 print("WMT 2023 DA")
 print("================")
 
 labels_path = os.path.join(root_dir, "data", "wmt-qe-2023-data", "gold_labels", "hallucinations_gold_T1s_header.tsv")
 df_labels = pd.read_csv(labels_path, sep="\t")
+results = {"COMET-QE": [], "COMETKiwi": []}
 
 for lp in LANGUAGE_PAIRS_23:
     print(lp)
@@ -66,6 +92,17 @@ for lp in LANGUAGE_PAIRS_23:
     qe_scores_clean = np.delete(qe_scores, hallucination_idx)
     kiwi_scores_clean = np.delete(kiwi_scores, hallucination_idx)
 
-    print("COMET-QE", f"{spearmanr(qe_scores_clean, labels).statistic:.3f}")
-    print("COMETKiwi", f"{spearmanr(kiwi_scores_clean, labels).statistic:.3f}")
+    qe_corr = spearmanr(qe_scores_clean, labels).statistic
+    kiwi_corr = spearmanr(kiwi_scores_clean, labels).statistic
+    print("COMET-QE", f"{qe_corr:.3f}")
+    print("COMETKiwi", f"{kiwi_corr:.3f}")
     print("----------------")
+
+    results["COMET-QE"].append(qe_corr)
+    results["COMETKiwi"].append(kiwi_corr)
+
+
+tex_full = create_latex_table(LANGUAGE_PAIRS_23, results)
+with open("comets_compare.tex", "w") as f:
+    for line in tex_full:
+        f.write(f"{line}\n")
