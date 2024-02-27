@@ -67,6 +67,9 @@ analyse_da:
 	poetry run python scripts/predict_da.py
 	poetry run python scripts/eval_da.py
 
+eval_da:
+	poetry run python scripts/eval_da.py
+
 analyse_ced:
 	poetry run python scripts/predict_ced.py
 	poetry run python scripts/eval_ced.py -p ./predictions/ced_test_data/

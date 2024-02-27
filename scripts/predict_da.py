@@ -7,7 +7,7 @@ from comet import download_model, load_from_checkpoint
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 # lists include DA not MQM data
 LANGUAGE_PAIRS_22 = ["en-cs", "en-ja", "en-mr", "en-yo", "km-en", "ps-en"]
-LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "he-en"]
+LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "en-te"]
 
 
 def create_output_dir(root_dir: str = ROOT_DIR) -> str:

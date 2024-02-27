@@ -1,17 +1,25 @@
 import os
 import pickle
 
+import numpy as np
+import pandas as pd
 from scipy.stats import spearmanr
 
 # lists include DA not MQM data
 LANGUAGE_PAIRS_22 = ["en-cs", "en-ja", "en-mr", "en-yo", "km-en", "ps-en"]
-LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "he-en"]
+LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "en-te"]
 
 root_dir = os.getcwd()
+
+print("\n")
+print("WMT 2022 DA")
+print("================")
 
 data_dir_22 = os.path.join(root_dir, "data", "wmt-qe-2022-data", "test_data-gold_labels", "task1_da")
 
 for lp in LANGUAGE_PAIRS_22:
+    print(lp)
+
     out_dir = os.path.join(root_dir, "predictions", "da_test_data")
 
     with open(os.path.join(out_dir, f"2022_{lp}_comet_qe"), "rb") as f:
@@ -30,3 +38,34 @@ for lp in LANGUAGE_PAIRS_22:
 
     print("COMET-QE", f"{spearmanr(qe_scores, labels).statistic:.2f}")
     print("COMETKiwi", f"{spearmanr(kiwi_scores, labels).statistic:.2f}")
+    print("----------------")
+
+print("\n")
+print("WMT 2023 DA")
+print("================")
+
+labels_path = os.path.join(root_dir, "data", "wmt-qe-2023-data", "gold_labels", "hallucinations_gold_T1s_header.tsv")
+df_labels = pd.read_csv(labels_path, sep="\t")
+
+for lp in LANGUAGE_PAIRS_23:
+    print(lp)
+    out_dir = os.path.join(root_dir, "predictions", "da_test_data")
+
+    with open(os.path.join(out_dir, f"2023_{lp}_comet_qe"), "rb") as f:
+        qe_scores = pickle.load(f)
+
+    with open(os.path.join(out_dir, f"2023_{lp}_cometkiwi_22"), "rb") as f:
+        kiwi_scores = pickle.load(f)
+
+    lp_scores = df_labels[df_labels["lp"] == lp]["score"]
+
+    # remove hallucinations, this was also done at WMT 2023:
+    # https://github.com/WMT-QE-Task/qe-eval-scripts/blob/main/wmt23/task1_sentence_evaluate.py
+    hallucination_idx = [i for i, x in enumerate(lp_scores) if x == "hallucination"]
+    labels = [float(score) for score in lp_scores if score != "hallucination"]
+    qe_scores_clean = np.delete(qe_scores, hallucination_idx)
+    kiwi_scores_clean = np.delete(kiwi_scores, hallucination_idx)
+
+    print("COMET-QE", f"{spearmanr(qe_scores_clean, labels).statistic:.3f}")
+    print("COMETKiwi", f"{spearmanr(kiwi_scores_clean, labels).statistic:.3f}")
+    print("----------------")
