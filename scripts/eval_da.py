@@ -1,5 +1,6 @@
 import os
 import pickle
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -35,74 +36,70 @@ def create_latex_table(col_names, results):
     return tex_full
 
 
-print("\n")
-print("WMT 2022 DA")
-print("================")
+def load_labels(lp, year):
 
-data_dir_22 = os.path.join(root_dir, "data", "wmt-qe-2022-data", "test_data-gold_labels", "task1_da")
+    if year == "2022":
+        data_dir_22 = os.path.join(root_dir, "data", "wmt-qe-2022-data", "test_data-gold_labels", "task1_da")
 
-for lp in LANGUAGE_PAIRS_22:
-    print(lp)
+        # INCONSISTENCY IN 2022 FILE NAMES
+        if os.path.exists(os.path.join(data_dir_22, lp, f"test.2022.{lp}.da_score")):
+            with open(os.path.join(data_dir_22, lp, f"test.2022.{lp}.da_score")) as f:
+                labels = [float(score) for score in f.read().splitlines()]
+        else:
+            with open(os.path.join(data_dir_22, lp, f"test2022.{lp}.da_score")) as f:
+                labels = [float(score) for score in f.read().splitlines()]
+
+    elif year == "2023":
+        labels_path = os.path.join(
+            root_dir, "data", "wmt-qe-2023-data", "gold_labels", "hallucinations_gold_T1s_header.tsv"
+        )
+        df_labels = pd.read_csv(labels_path, sep="\t")
+        labels = df_labels[df_labels["lp"] == lp]["score"]
+
+    return labels
+
+
+def load_predictions(lp, year, model):
 
     out_dir = os.path.join(root_dir, "predictions", "da_test_data")
 
-    with open(os.path.join(out_dir, f"2022_{lp}_comet_qe"), "rb") as f:
-        qe_scores = pickle.load(f)
+    with open(os.path.join(out_dir, f"{year}_{lp}_{model}"), "rb") as f:
+        predictions = pickle.load(f)
 
-    with open(os.path.join(out_dir, f"2022_{lp}_cometkiwi_22"), "rb") as f:
-        kiwi_scores = pickle.load(f)
-
-    # INCONSISTENCY IN 2022 FILE NAMES
-    if os.path.exists(os.path.join(data_dir_22, lp, f"test.2022.{lp}.da_score")):
-        with open(os.path.join(data_dir_22, lp, f"test.2022.{lp}.da_score")) as f:
-            labels = [float(score) for score in f.read().splitlines()]
-    else:
-        with open(os.path.join(data_dir_22, lp, f"test2022.{lp}.da_score")) as f:
-            labels = [float(score) for score in f.read().splitlines()]
-
-    print("COMET-QE", f"{spearmanr(qe_scores, labels).statistic:.2f}")
-    print("COMETKiwi", f"{spearmanr(kiwi_scores, labels).statistic:.2f}")
-    print("----------------")
+    return predictions
 
 
-print("\n")
-print("WMT 2023 DA")
-print("================")
+def score_predictions(year):
 
-labels_path = os.path.join(root_dir, "data", "wmt-qe-2023-data", "gold_labels", "hallucinations_gold_T1s_header.tsv")
-df_labels = pd.read_csv(labels_path, sep="\t")
-results = {"COMET-QE": [], "COMETKiwi": []}
+    results = defaultdict(list)
+    lps = LANGUAGE_PAIRS_22 if year == "2022" else LANGUAGE_PAIRS_23
+    model_names = {"comet_qe": "COMET-QE 2020", "comet_qe_21": "COMET-QE 2021", "cometkiwi_22": "COMETKiwi 2022"}
 
-for lp in LANGUAGE_PAIRS_23:
-    print(lp)
-    out_dir = os.path.join(root_dir, "predictions", "da_test_data")
+    for lp in lps:
 
-    with open(os.path.join(out_dir, f"2023_{lp}_comet_qe"), "rb") as f:
-        qe_scores = pickle.load(f)
+        labels = load_labels(lp, year)
 
-    with open(os.path.join(out_dir, f"2023_{lp}_cometkiwi_22"), "rb") as f:
-        kiwi_scores = pickle.load(f)
+        for model in ["comet_qe", "comet_qe_21", "cometkiwi_22"]:
 
-    lp_scores = df_labels[df_labels["lp"] == lp]["score"]
+            preds = load_predictions(lp, year, model)
 
-    # remove hallucinations, this was also done at WMT 2023:
-    # https://github.com/WMT-QE-Task/qe-eval-scripts/blob/main/wmt23/task1_sentence_evaluate.py
-    hallucination_idx = [i for i, x in enumerate(lp_scores) if x == "hallucination"]
-    labels = [float(score) for score in lp_scores if score != "hallucination"]
-    qe_scores_clean = np.delete(qe_scores, hallucination_idx)
-    kiwi_scores_clean = np.delete(kiwi_scores, hallucination_idx)
+            if year == "2023":
+                # remove hallucinations, this was also done at WMT 2023:
+                # https://github.com/WMT-QE-Task/qe-eval-scripts/blob/main/wmt23/task1_sentence_evaluate.py
+                hallucination_idx = [i for i, x in enumerate(labels) if x == "hallucination"]
+                labels_clean = [float(score) for score in labels if score != "hallucination"]
+                preds_clean = np.delete(preds, hallucination_idx)
+                corr = spearmanr(preds_clean, labels_clean).statistic
+            else:
+                corr = spearmanr(preds, labels).statistic
 
-    qe_corr = spearmanr(qe_scores_clean, labels).statistic
-    kiwi_corr = spearmanr(kiwi_scores_clean, labels).statistic
-    print("COMET-QE", f"{qe_corr:.3f}")
-    print("COMETKiwi", f"{kiwi_corr:.3f}")
-    print("----------------")
+            results[model_names[model]].append(corr)
 
-    results["COMET-QE"].append(qe_corr)
-    results["COMETKiwi"].append(kiwi_corr)
+    return results
 
 
-tex_full = create_latex_table(LANGUAGE_PAIRS_23, results)
-with open("comets_compare.tex", "w") as f:
+results_23 = score_predictions("2023")
+tex_full = create_latex_table(LANGUAGE_PAIRS_23, results_23)
+with open("comets_compare_2023.tex", "w") as f:
     for line in tex_full:
         f.write(f"{line}\n")

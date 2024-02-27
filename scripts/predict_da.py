@@ -44,12 +44,14 @@ def load_test_data(lp: str, year: str, root_dir: str = ROOT_DIR) -> typing.Dict[
     return [{"src": src, "mt": mt} for src, mt in zip(src_data, mt_data)]
 
 
-def load_model(model_name: str = "cometkiwi_22"):
+def load_model(model_name: str = "cometkiwi_22", root_dir=ROOT_DIR):
     """
     Return one of the COMET models (COMETKiwi22 by default).
     """
     if model_name == "comet_qe":
         model_path = download_model("Unbabel/wmt20-comet-qe-da")
+    elif model_name == "comet_qe_21":
+        model_path = os.path.join(root_dir, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
     elif model_name == "cometkiwi_22":
         model_path = download_model("Unbabel/wmt22-cometkiwi-da")
     # elif model_name == "cometkiwi_23_xl":
@@ -64,7 +66,7 @@ def main():
 
     out_dir = create_output_dir()
 
-    for model_name in ["comet_qe", "cometkiwi_22"]:
+    for model_name in ["comet_qe", "comet_qe_21", "cometkiwi_22"]:
         model = load_model(model_name)
         for year in ["2022", "2023"]:
             lps = LANGUAGE_PAIRS_22 if year == "2022" else LANGUAGE_PAIRS_23

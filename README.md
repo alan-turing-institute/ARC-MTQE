@@ -49,6 +49,8 @@ To use the COMET models, you must also acknowledge the license for their latest 
 │   ├── unbabel/
 │   ├── wmt-qe-2022-data/
 │   ├── wmt-qe-2023-data/
+├── models/
+│   ├── ...
 ├── notebooks/
 │   ├── ...
 ├── predictions/
