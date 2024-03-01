@@ -53,6 +53,8 @@ To use the COMET models, you must also acknowledge the license for their latest 
 │   ├── ...
 ├── notebooks/
 │   ├── ...
+│   outputs/
+│   ├── ...
 ├── predictions/
 │   ├── ced_test_data/
 │   ├── da_test_data/
@@ -82,4 +84,12 @@ To make COMETKiwi-22 predictions for the  CED test data:
 
 ```bash
 make analyse_ced
+```
+
+## Evaluation
+
+To create a latex table in the outputs directory with performance scores of the different COMET models on the WMT 2023 DA data:
+
+```bash
+make eval_da
 ```
