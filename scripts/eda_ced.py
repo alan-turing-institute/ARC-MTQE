@@ -16,16 +16,16 @@ DI_DATASET_ANNOTATIONS = {"train": True, "dev": True, "test": False}
 # List of names for each row of the latex table that will be created
 LI_ROW_NAMES = [
     "Num rows",
-    "Num rows with agreement",
-    "Percentage total rows with agreement",
-    "Num critical errors",
-    "Percentage critical errors",
-    "Num critical errors with agreement",
-    "Percentage critical errors with agreement",
-    "Num critical errors - Annotator 1",
-    "Num critical errors - Annotator 2",
-    "Num critical errors - Annotator 3",
-    "Median source segment length",
+    "Num rows with agreement",  # Number of rows where all 3 annotators agree on the score
+    "Percentage total rows with agreement",  # Percentage of all rows where all 3 annotators agree on the score
+    "Num critical errors",  # Number of critical errors in the dataset
+    "Percentage critical errors",  # Percentage of all rows that are critical errors
+    "Num critical errors with agreement",  # Num of critical errors where all 3 annotators scored the translation as 1
+    "Percentage critical errors with agreement",  # Percentage of all critical errors where all 3 annotators agree
+    "Num critical errors - Annotator 1",  # Number of records that annotator 1 scored as a critical error
+    "Num critical errors - Annotator 2",  # Number of records that annotator 2 scored as a critical error
+    "Num critical errors - Annotator 3",  # Number of records that annotator 3 scored as a critical error
+    "Median source segment length",  # Length is calculated by number of characters (not num of words)
     "Mean source segment length",
     "Median target segment length",
     "Mean target segment length",
