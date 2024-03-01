@@ -25,10 +25,14 @@ LI_ROW_NAMES = [
     "Num critical errors - Annotator 1",  # Number of records that annotator 1 scored as a critical error
     "Num critical errors - Annotator 2",  # Number of records that annotator 2 scored as a critical error
     "Num critical errors - Annotator 3",  # Number of records that annotator 3 scored as a critical error
-    "Median source segment length",  # Length is calculated by number of characters (not num of words)
+    "Min source segment length",  # Length is calculated by number of characters (not num of words)
+    "Median source segment length",
     "Mean source segment length",
+    "Max source segment length",
+    "Min target segment length",
     "Median target segment length",
     "Mean target segment length",
+    "Max target segment length",
 ]
 
 
@@ -139,8 +143,12 @@ for lp in DI_LANGUAGE_PAIRS:
         n_rows = df.shape[0]
         n_median_source_length = "{:.2f}".format(df["source"].str.len().median())
         n_mean_source_length = "{:.2f}".format(df["source"].str.len().mean())
+        n_min_source_length = "{:.2f}".format(df["source"].str.len().min())
+        n_max_source_length = "{:.2f}".format(df["source"].str.len().max())
         n_median_target_length = "{:.2f}".format(df["target"].str.len().median())
         n_mean_target_length = "{:.2f}".format(df["target"].str.len().mean())
+        n_min_target_length = "{:.2f}".format(df["target"].str.len().min())
+        n_max_target_length = "{:.2f}".format(df["target"].str.len().max())
         n_critical_errors = df[df["label"] == "ERR"].shape[0]
         p_critical_errors = "{:.2f}".format(100 * n_critical_errors / n_rows)
 
@@ -180,10 +188,14 @@ for lp in DI_LANGUAGE_PAIRS:
         summary.append(str(n_critical_errors1))
         summary.append(str(n_critical_errors2))
         summary.append(str(n_critical_errors3))
+        summary.append(n_min_source_length)
         summary.append(n_median_source_length)
         summary.append(n_mean_source_length)
+        summary.append(n_max_source_length)
+        summary.append(n_min_target_length)
         summary.append(n_median_target_length)
         summary.append(n_mean_target_length)
+        summary.append(n_max_target_length)
         di_data_summary[lp][dataset] = summary
 
 # create table
