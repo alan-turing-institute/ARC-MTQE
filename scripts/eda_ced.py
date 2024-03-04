@@ -142,32 +142,43 @@ def create_latex_table(
     return tex_full
 
 
-di_ced_data = {}  # dictionary to store the dataframes for each dataset
+def load_data(language_pairs: dict = DI_LANGUAGE_PAIRS) -> dict:
+    """
+    Placeholder function for loading data - will be replaced
 
-# Load data by language pair
-for lp in DI_LANGUAGE_PAIRS:
-    n_rows = 0
-    n_segments = 0
-    n_critical_errors = 0
+    Parameters:
+    language_pairs - a dictionary where the keys are short names for each language pair (e.g., en-cs) and the
+                     values are the long names (e.g., English-Czech)
 
-    path_dev = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_dev.tsv")
-    path_train = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_train.tsv")
-    path_test = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_test_blind.tsv")
-    path_goldlabels = os.path.join(
-        DATA_DIR, "catastrophic_errors_goldlabels", f"{lp}_majority_test_goldlabels", "goldlabels.txt"
-    )
+    Returns:
+    ced_data - a dictionary containing the dataframes for each dataset
+    """
 
-    df_dev = pd.read_csv(path_dev, sep="\t", header=None, names=["idx", "source", "target", "annotations", "label"])
-    df_train = pd.read_csv(path_train, sep="\t", header=None, names=["idx", "source", "target", "annotations", "label"])
-    df_test = pd.read_csv(path_test, sep="\t", header=None, names=["idx", "source", "target"])
-    df_labels = pd.read_csv(path_goldlabels, sep="\t", header=None, names=["lang_pair", "ref", "idx", "label"])
-    df_test_labelled = pd.merge(df_test, df_labels, on="idx")
-    di_ced_data[lp] = {"train": df_train, "dev": df_dev, "test": df_test_labelled}
+    ced_data = {}  # dictionary to store the dataframes for each dataset
 
-di_data_summary = {}  # dictionary for recording summary metrics
+    # Load data by language pair
+    for lp in language_pairs:
+
+        path_dev = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_dev.tsv")
+        path_train = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_train.tsv")
+        path_test = os.path.join(DATA_DIR, "catastrophic_errors", f"{lp}_majority_test_blind.tsv")
+        path_goldlabels = os.path.join(
+            DATA_DIR, "catastrophic_errors_goldlabels", f"{lp}_majority_test_goldlabels", "goldlabels.txt"
+        )
+
+        df_dev = pd.read_csv(path_dev, sep="\t", header=None, names=["idx", "source", "target", "annotations", "label"])
+        df_train = pd.read_csv(
+            path_train, sep="\t", header=None, names=["idx", "source", "target", "annotations", "label"]
+        )
+        df_test = pd.read_csv(path_test, sep="\t", header=None, names=["idx", "source", "target"])
+        df_labels = pd.read_csv(path_goldlabels, sep="\t", header=None, names=["lang_pair", "ref", "idx", "label"])
+        df_test_labelled = pd.merge(df_test, df_labels, on="idx")
+        ced_data[lp] = {"train": df_train, "dev": df_dev, "test": df_test_labelled}
+
+    return ced_data
 
 
-def get_sentence_stats(column: pd.Series):
+def get_sentence_stats(column: pd.Series) -> tuple[str, str, str, str]:
     """
     Takes a column of a dataframe and returns basic statistics about the length of text in the column
 
@@ -175,10 +186,10 @@ def get_sentence_stats(column: pd.Series):
     column - column (series) of a dataframe
 
     Returns:
-    median_len - the median length of text in the column over all rows
-    mean_len - the mean length of text in the column over all rows
-    min_len - the minimum length of text in the column over all rows
-    max_len - the maximum length of text in the column over all rows
+    median_len - the median length of text in the column over all rows formatted as a string to 2dp
+    mean_len - the mean length of text in the column over all rows formatted as a string to 2dp
+    min_len - the minimum length of text in the column over all rows formatted as a string to 2dp
+    max_len - the maximum length of text in the column over all rows formatted as a string to 2dp
     """
 
     column_len = column.str.len()
@@ -191,72 +202,108 @@ def get_sentence_stats(column: pd.Series):
     return median_len, mean_len, min_len, max_len
 
 
-for lp in DI_LANGUAGE_PAIRS:
-    di_data_summary[lp] = {}
-    for dataset in DI_DATASET_ANNOTATIONS:
-        df = di_ced_data[lp][dataset]
+def summarise_data(
+    ced_data: dict, dataset_annotations: dict = DI_DATASET_ANNOTATIONS, language_pairs: list = DI_LANGUAGE_PAIRS
+) -> dict:
+    """
+    Function that collects the data statistics by language pair and dataset type
 
-        # Calculate values for all datasets
-        n_rows = df.shape[0]
-        n_median_source_length, n_mean_source_length, n_min_source_length, n_max_source_length = get_sentence_stats(
-            df["source"]
-        )
-        n_median_target_length, n_mean_target_length, n_min_target_length, n_max_target_length = get_sentence_stats(
-            df["target"]
-        )
-        n_critical_errors = df[df["label"] == "ERR"].shape[0]
-        p_critical_errors = "{:.2f}".format(100 * n_critical_errors / n_rows)
+    Parameters:
+    ced_data - dictionary of the CED data where the keys are the langague pairs and the values are themselves
+               dictionaries where the keys are the names of the datasets (e.g., train) and the values are dataframes
+    dataset_annotations - a dictionary where the keys are the names of the datasets (e.g., train)
+              and the values are boolean with TRUE meaning there are scores recorded by individual annotator
+    language_pairs - a dictionary where the keys are short names for each language pair (e.g., en-cs)
+              and the values are the long names (e.g., English-Czech)
 
-        if DI_DATASET_ANNOTATIONS[dataset]:
-            # These values are only calculated if there are scores by annotator
-            df = extract_annotations(df)
-            df["agree"] = df.apply(define_agreement, axis=1)
-            df["error_agree"] = (df["agree"] == 1) & (df["label"] == "ERR")
-            n_rows_agreement = df[df["agree"] == 1].shape[0]
-            p_rows_agreement = "{:.2f}".format(100 * n_rows_agreement / n_rows)
-            n_critical_errors_agreement = df[df["error_agree"] == 1].shape[0]
-            p_critical_errors_agreement = "{:.2f}".format(100 * n_critical_errors_agreement / n_critical_errors)
-            n_critical_errors1 = df[df["ann_1"] == "1"].shape[0]
-            n_critical_errors2 = df[df["ann_2"] == "1"].shape[0]
-            n_critical_errors3 = df[df["ann_3"] == "1"].shape[0]
-        else:
-            n_rows_agreement = "-"
-            p_rows_agreement = "-"
-            n_critical_errors_agreement = "-"
-            p_critical_errors_agreement = "-"
-            n_critical_errors1 = "-"
-            n_critical_errors2 = "-"
-            n_critical_errors3 = "-"
+    Returns:
+    data_summary - dictionary of the calculated metrics where the keys are the langague pairs and the values
+                   are themselves dictionaries where the keys are the names of the datasets (e.g., train) and
+                   the values are summarised metrics
 
-        # A temp list to store the summary data
-        summary = []
-        # Note that the order the data are added to the summary list must match
-        # the order of the metrics listed in LI_ROW_NAMES otherwise the data
-        # will appear in the wrong row in the latex table
-        summary.append(str(n_rows))
-        summary.append(str(n_rows_agreement))
-        summary.append(p_rows_agreement)
-        summary.append(str(n_critical_errors))
-        summary.append(p_critical_errors)
-        summary.append(str(n_critical_errors_agreement))
-        summary.append(p_critical_errors_agreement)
-        summary.append(str(n_critical_errors1))
-        summary.append(str(n_critical_errors2))
-        summary.append(str(n_critical_errors3))
-        summary.append(n_min_source_length)
-        summary.append(n_median_source_length)
-        summary.append(n_mean_source_length)
-        summary.append(n_max_source_length)
-        summary.append(n_min_target_length)
-        summary.append(n_median_target_length)
-        summary.append(n_mean_target_length)
-        summary.append(n_max_target_length)
-        di_data_summary[lp][dataset] = summary
+    """
+    data_summary = {}  # dictionary for recording summary metrics
 
-# create table
-latex_table = create_latex_table(di_data_summary)
+    for lp in language_pairs:
+        data_summary[lp] = {}
+        for dataset in dataset_annotations:
+            df = ced_data[lp][dataset]
 
-# save table to file
-with open("eda_summary.tex", "w") as f:
-    for line in latex_table:
-        f.write(f"{line}\n")
+            # Calculate values for all datasets
+            n_rows = df.shape[0]
+            n_median_source_length, n_mean_source_length, n_min_source_length, n_max_source_length = get_sentence_stats(
+                df["source"]
+            )
+            n_median_target_length, n_mean_target_length, n_min_target_length, n_max_target_length = get_sentence_stats(
+                df["target"]
+            )
+            n_critical_errors = df[df["label"] == "ERR"].shape[0]
+            p_critical_errors = "{:.2f}".format(100 * n_critical_errors / n_rows)
+
+            if dataset_annotations[dataset]:
+                # These values are only calculated if there are scores by annotator
+                df = extract_annotations(df)
+                df["agree"] = df.apply(define_agreement, axis=1)
+                df["error_agree"] = (df["agree"] == 1) & (df["label"] == "ERR")
+                n_rows_agreement = df[df["agree"] == 1].shape[0]
+                p_rows_agreement = "{:.2f}".format(100 * n_rows_agreement / n_rows)
+                n_critical_errors_agreement = df[df["error_agree"] == 1].shape[0]
+                p_critical_errors_agreement = "{:.2f}".format(100 * n_critical_errors_agreement / n_critical_errors)
+                n_critical_errors1 = df[df["ann_1"] == "1"].shape[0]
+                n_critical_errors2 = df[df["ann_2"] == "1"].shape[0]
+                n_critical_errors3 = df[df["ann_3"] == "1"].shape[0]
+            else:
+                n_rows_agreement = "-"
+                p_rows_agreement = "-"
+                n_critical_errors_agreement = "-"
+                p_critical_errors_agreement = "-"
+                n_critical_errors1 = "-"
+                n_critical_errors2 = "-"
+                n_critical_errors3 = "-"
+
+            # A temp list to store the summary data
+            summary = []
+            # Note that the order the data are added to the summary list must match
+            # the order of the metrics listed in LI_ROW_NAMES otherwise the data
+            # will appear in the wrong row in the latex table
+            summary.append(str(n_rows))
+            summary.append(str(n_rows_agreement))
+            summary.append(p_rows_agreement)
+            summary.append(str(n_critical_errors))
+            summary.append(p_critical_errors)
+            summary.append(str(n_critical_errors_agreement))
+            summary.append(p_critical_errors_agreement)
+            summary.append(str(n_critical_errors1))
+            summary.append(str(n_critical_errors2))
+            summary.append(str(n_critical_errors3))
+            summary.append(n_min_source_length)
+            summary.append(n_median_source_length)
+            summary.append(n_mean_source_length)
+            summary.append(n_max_source_length)
+            summary.append(n_min_target_length)
+            summary.append(n_median_target_length)
+            summary.append(n_mean_target_length)
+            summary.append(n_max_target_length)
+            data_summary[lp][dataset] = summary
+
+    return data_summary
+
+
+def perform_eda():
+    """ """
+
+    ced_data = load_data()
+
+    data_summary = summarise_data(ced_data)
+
+    # create table
+    latex_table = create_latex_table(data_summary)
+
+    # save table to file
+    with open("eda_summary.tex", "w") as f:
+        for line in latex_table:
+            f.write(f"{line}\n")
+
+
+if __name__ == "__main__":
+    perform_eda()
