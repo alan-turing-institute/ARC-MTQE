@@ -290,7 +290,9 @@ def summarise_data(
 
 
 def perform_eda():
-    """ """
+    """
+    Loads the data, calculates summary metrics then writes data to file in the format of a latex table
+    """
 
     ced_data = load_data()
 
