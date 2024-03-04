@@ -36,7 +36,7 @@ LI_ROW_NAMES = [
 ]
 
 
-def extract_annotations(df):
+def extract_annotations(df: pd.DataFrame) -> pd.DataFrame:
     """
     Takes a dataframe of CED data an extracts the individual annotator scores
     into new columns - for these data there are three annotators per translation.
@@ -47,6 +47,13 @@ def extract_annotations(df):
     '1' - critical error as defined in https://aclanthology.org/2021.wmt-1.71.pdf
     '2' - source text unintelligible
     '3' - translated text contains too many errors to be annotated
+
+    Parameters:
+    df - a dataframe with the column named 'annotations', the data in the column is expected to
+         be in the format [a, b, c] where a, b and c are the scores from three annotators
+
+    Returns:
+    df - the dataframe with three new columns containing the scores for the three annotators
     """
     df["annotations"] = df["annotations"].str.replace("[", "")
     df["annotations"] = df["annotations"].str.replace("]", "")
@@ -56,9 +63,15 @@ def extract_annotations(df):
     return df
 
 
-def define_agreement(row):
+def define_agreement(row: pd.Series) -> int:
     """
-    Returns 1 if all three annotators give a record the same score
+    Takes a row CED data and returns 1 if all three annotators give a record the same score
+
+    Parameters:
+    row - a row of the CED dataframe
+
+    Returns:
+    1 if the three annotations are the same, 0 otherwise
     """
     if row["ann_1"] == row["ann_2"] == row["ann_3"]:
         return 1
@@ -66,18 +79,37 @@ def define_agreement(row):
         return 0
 
 
-def create_latex_table(summary):
+def create_latex_table(
+    summary: dict,
+    dataset_annotations: dict = DI_DATASET_ANNOTATIONS,
+    language_pairs: list = DI_LANGUAGE_PAIRS,
+    row_names: list = LI_ROW_NAMES,
+) -> list:
     """
     Create Latex table given some summary data
+
+    Parameters:
+    summary - a dictionary where each key is a language pair, each value is itself a dictionary
+              where the keys are the names of the datasets (e.g., train, dev, test) and the values
+              correspond to metrics listed in order of row_names
+    dataset_annotations - a dictionary where the keys are the names of the datasets (e.g., train)
+              and the values are boolean with TRUE meaning there are scores recorded by individual annotator
+    language_pairs - a dictionary where the keys are short names for each language pair (e.g., en-cs)
+              and the values are the long names (e.g., English-Czech)
+    row_names - a list of the names of the rows to add to the table
+
+    Returns:
+    tex_full - a list containing the content of a latex table with one entry per row of the table
+
     """
-    num_columns = len(DI_DATASET_ANNOTATIONS) * len(DI_LANGUAGE_PAIRS)
+    num_columns = len(dataset_annotations) * len(language_pairs)
     textabular = f"c|{'c'*num_columns}"
     texheader1 = ""
     texheader2 = ""
-    texdata = LI_ROW_NAMES.copy()
-    for lp in DI_LANGUAGE_PAIRS:
-        texheader1 += " & \\multicolumn{3}{c}{" + DI_LANGUAGE_PAIRS[lp] + "}"
-        for dataset in DI_DATASET_ANNOTATIONS:
+    texdata = row_names.copy()
+    for lp in language_pairs:
+        texheader1 += " & \\multicolumn{3}{c}{" + language_pairs[lp] + "}"
+        for dataset in dataset_annotations:
             texheader2 += " & " + dataset
             data = summary[lp][dataset]
             for ind in range(len(data)):
@@ -134,6 +166,31 @@ for lp in DI_LANGUAGE_PAIRS:
 
 di_data_summary = {}  # dictionary for recording summary metrics
 
+
+def get_sentence_stats(column: pd.Series):
+    """
+    Takes a column of a dataframe and returns basic statistics about the length of text in the column
+
+    Parameters:
+    column - column (series) of a dataframe
+
+    Returns:
+    median_len - the median length of text in the column over all rows
+    mean_len - the mean length of text in the column over all rows
+    min_len - the minimum length of text in the column over all rows
+    max_len - the maximum length of text in the column over all rows
+    """
+
+    column_len = column.str.len()
+
+    median_len = "{:.2f}".format(column_len.median())
+    mean_len = "{:.2f}".format(column_len.mean())
+    min_len = "{:.2f}".format(column_len.min())
+    max_len = "{:.2f}".format(column_len.max())
+
+    return median_len, mean_len, min_len, max_len
+
+
 for lp in DI_LANGUAGE_PAIRS:
     di_data_summary[lp] = {}
     for dataset in DI_DATASET_ANNOTATIONS:
@@ -141,14 +198,12 @@ for lp in DI_LANGUAGE_PAIRS:
 
         # Calculate values for all datasets
         n_rows = df.shape[0]
-        n_median_source_length = "{:.2f}".format(df["source"].str.len().median())
-        n_mean_source_length = "{:.2f}".format(df["source"].str.len().mean())
-        n_min_source_length = "{:.2f}".format(df["source"].str.len().min())
-        n_max_source_length = "{:.2f}".format(df["source"].str.len().max())
-        n_median_target_length = "{:.2f}".format(df["target"].str.len().median())
-        n_mean_target_length = "{:.2f}".format(df["target"].str.len().mean())
-        n_min_target_length = "{:.2f}".format(df["target"].str.len().min())
-        n_max_target_length = "{:.2f}".format(df["target"].str.len().max())
+        n_median_source_length, n_mean_source_length, n_min_source_length, n_max_source_length = get_sentence_stats(
+            df["source"]
+        )
+        n_median_target_length, n_mean_target_length, n_min_target_length, n_max_target_length = get_sentence_stats(
+            df["target"]
+        )
         n_critical_errors = df[df["label"] == "ERR"].shape[0]
         p_critical_errors = "{:.2f}".format(100 * n_critical_errors / n_rows)
 
