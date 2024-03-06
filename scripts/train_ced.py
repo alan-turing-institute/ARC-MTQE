@@ -183,7 +183,7 @@ def get_ced_train_dev_data(
 
         df_train_data["score"] = df_train_data.apply(score_data, axis=1).astype("int32")
         # NOTE: LIMITING TRAINING DATA TO 1000 RECORDS FOR TESTING ONLY
-        # df_train_data = df_train_data[:1000]
+        df_train_data = df_train_data[:1000]
         # Save to csv format
         path_train_data = os.path.join(data_dir, f"{lp}_majority_train.csv")
         df_train_data[["src", "mt", "score"]].to_csv(path_train_data)
