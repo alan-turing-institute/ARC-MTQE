@@ -183,7 +183,7 @@ def get_ced_train_dev_data(
 
         df_train_data["score"] = df_train_data.apply(score_data, axis=1).astype("int32")
         # NOTE: LIMITING TRAINING DATA TO 1000 RECORDS FOR TESTING ONLY
-        df_train_data = df_train_data[:1000]
+        # df_train_data = df_train_data[:1000]
         # Save to csv format
         path_train_data = os.path.join(data_dir, f"{lp}_majority_train.csv")
         df_train_data[["src", "mt", "score"]].to_csv(path_train_data)
@@ -236,7 +236,27 @@ def make_output_folder(folder_name: str, out_dir: str = OUT_DIR):
     return new_dir
 
 
-def train_comet(model: UnifiedMetric):
+def sum_trainable_params(model):
+    total_params = 0
+    total_trainable_params = 0
+    for name, parameter in model.named_parameters():
+        # print(name, parameter, parameter.requires_grad)
+        total_params += 1
+        if parameter.requires_grad:
+            total_trainable_params += 1
+    print(total_params, total_trainable_params)
+
+    total_params = 0
+    total_trainable_params = 0
+    for parameter in model.parameters():
+        # print(name, parameter, parameter.requires_grad)
+        total_params += 1
+        if parameter.requires_grad:
+            total_trainable_params += 1
+    print(total_params, total_trainable_params)
+
+
+def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
     """
     Trains the given model using the processes developed in the comet
     code base
@@ -244,22 +264,25 @@ def train_comet(model: UnifiedMetric):
 
     train_paths, dev_paths = get_ced_train_dev_data()
     # for now just take the first language pair (en-cs)
-    path_train_data = train_paths[0]
-    path_dev_data = dev_paths[0]
+    path_train_data = train_paths[lp_id]
+    path_dev_data = dev_paths[lp_id]
     # Set paths for training and val data
+    sum_trainable_params(model)
     model.hparams.train_data = [path_train_data]
     model.hparams.validation_data = [path_dev_data]
+    model.hparams.keep_embeddings_frozen = freeze_encoder
     # create new trainer object, only attempting to run 1 epoch initially
     trainer = Trainer(max_epochs=1, accelerator="cpu", devices=1)
 
     trainer.fit(model)
+    sum_trainable_params(model)
 
     print("Training finished!")
 
     return model
 
 
-def train_ced_model_1(language_pairs: list = LI_LANGUAGE_PAIRS):
+def train_ced_model_1(freeze_encoder: bool = True):
     """
     This didn't work for me on my Mac - something to do with the M1 chip?
     Same issue reported here: https://github.com/Unbabel/COMET/issues/176
@@ -270,7 +293,7 @@ def train_ced_model_1(language_pairs: list = LI_LANGUAGE_PAIRS):
 
     # print(model)
 
-    model = train_comet(model)
+    model = train_comet(model, freeze_encoder)
 
     # Create output folder specific to this training approach
     out_dir = make_output_folder("trained_model_v1")
@@ -278,7 +301,7 @@ def train_ced_model_1(language_pairs: list = LI_LANGUAGE_PAIRS):
     evaluate_model(LI_LANGUAGE_PAIRS[0], model, out_dir)
 
 
-def train_ced_model_2(language_pairs: list = LI_LANGUAGE_PAIRS):
+def train_ced_model_2(language_pairs: list = LI_LANGUAGE_PAIRS, freeze_encoder: bool = True):
     """
     To get over the error raised for me in train_ced_model_1, this
     approach uses a new class of CEDModel with the methods that caused
@@ -288,19 +311,20 @@ def train_ced_model_2(language_pairs: list = LI_LANGUAGE_PAIRS):
     like float64 data types, and I can't find a way to fix it.
     """
 
-    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-    model = load_qe_model_from_checkpoint(model_path)
-    # print(model)
+    for idx, lp in enumerate(language_pairs):
+        model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+        model = load_qe_model_from_checkpoint(model_path, freeze_encoder)
+        # print(model)
 
-    model = train_comet(model)
+        model = train_comet(model, idx)
 
-    # Create output folder specific to this training approach
-    out_dir = make_output_folder("trained_model_v2")
-    # at the moment, this is just hard-coded to evaluate the first lp
-    evaluate_model(LI_LANGUAGE_PAIRS[0], model, out_dir)
+        # Create output folder specific to this training approach
+        out_dir = make_output_folder("trained_model_v2")
+        # at the moment, this is just hard-coded to evaluate the first lp
+        evaluate_model(lp, model, out_dir)
 
 
-def train_ced_model_3(language_pairs: list = LI_LANGUAGE_PAIRS):
+def train_ced_model_3():
     """
     This approach attempts to create a training loop outside the comet
     framework... HOWEVER, it doesn't seem to work. The loss values
