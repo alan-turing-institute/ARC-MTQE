@@ -183,7 +183,7 @@ def get_ced_train_dev_data(
 
         df_train_data["score"] = df_train_data.apply(score_data, axis=1).astype("int32")
         # NOTE: LIMITING TRAINING DATA TO 1000 RECORDS FOR TESTING ONLY
-        # df_train_data = df_train_data[:1000]
+        df_train_data = df_train_data[:1000]
         # Save to csv format
         path_train_data = os.path.join(data_dir, f"{lp}_majority_train.csv")
         df_train_data[["src", "mt", "score"]].to_csv(path_train_data)
@@ -236,26 +236,6 @@ def make_output_folder(folder_name: str, out_dir: str = OUT_DIR):
     return new_dir
 
 
-def sum_trainable_params(model):
-    total_params = 0
-    total_trainable_params = 0
-    for name, parameter in model.named_parameters():
-        # print(name, parameter, parameter.requires_grad)
-        total_params += 1
-        if parameter.requires_grad:
-            total_trainable_params += 1
-    print(total_params, total_trainable_params)
-
-    total_params = 0
-    total_trainable_params = 0
-    for parameter in model.parameters():
-        # print(name, parameter, parameter.requires_grad)
-        total_params += 1
-        if parameter.requires_grad:
-            total_trainable_params += 1
-    print(total_params, total_trainable_params)
-
-
 def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
     """
     Trains the given model using the processes developed in the comet
@@ -267,7 +247,6 @@ def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
     path_train_data = train_paths[lp_id]
     path_dev_data = dev_paths[lp_id]
     # Set paths for training and val data
-    sum_trainable_params(model)
     model.hparams.train_data = [path_train_data]
     model.hparams.validation_data = [path_dev_data]
     model.hparams.keep_embeddings_frozen = freeze_encoder
@@ -275,9 +254,6 @@ def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
     trainer = Trainer(max_epochs=1, accelerator="cpu", devices=1)
 
     trainer.fit(model)
-    sum_trainable_params(model)
-
-    print("Training finished!")
 
     return model
 
@@ -314,7 +290,6 @@ def train_ced_model_2(language_pairs: list = LI_LANGUAGE_PAIRS, freeze_encoder: 
     for idx, lp in enumerate(language_pairs):
         model_path = download_model("Unbabel/wmt22-cometkiwi-da")
         model = load_qe_model_from_checkpoint(model_path, freeze_encoder)
-        # print(model)
 
         model = train_comet(model, idx)
 
