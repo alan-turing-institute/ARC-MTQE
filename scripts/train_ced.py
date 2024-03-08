@@ -380,7 +380,7 @@ def train_ced_model_4(language_pairs: list = LI_LANGUAGE_PAIRS, freeze_encoder: 
 
     for idx, lp in enumerate(language_pairs):
         model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-        model = load_qe_model_from_checkpoint(model_path, freeze_encoder=True, final_activation="sigmoid")
+        model = load_qe_model_from_checkpoint(model_path, freeze_encoder=freeze_encoder, final_activation="sigmoid")
 
         model = train_comet(model, idx)
 
