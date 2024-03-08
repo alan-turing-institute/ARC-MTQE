@@ -130,9 +130,25 @@ class CEDModel(UnifiedMetric):
             num_workers=0,
         )
 
+    def init_losses(self) -> None:
+        """Initializes Loss functions to be used."""
+        self.sentloss = nn.CrossEntropyLoss()
+        if self.word_level:
+            if self.hparams.cross_entropy_weights:
+                assert len(self.hparams.cross_entropy_weights) == self.num_classes
+                loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
+            else:
+                loss_weights = None
+
+            self.wordloss = nn.CrossEntropyLoss(reduction="mean", ignore_index=-1, weight=loss_weights)
+
 
 def load_qe_model_from_checkpoint(
-    checkpoint_path: str, reload_hparams: bool = False, strict: bool = False
+    checkpoint_path: str,
+    reload_hparams: bool = False,
+    strict: bool = False,
+    freeze_encoder: bool = True,
+    final_activation: str = "tanh",
 ) -> UnifiedMetric:
     """
     This code is copied from the load_from_checkpoint function imported
@@ -144,13 +160,14 @@ def load_qe_model_from_checkpoint(
     hparams_file = parent_folder / "hparams.yaml"
 
     if hparams_file.is_file():
-
         model = CEDModel.load_from_checkpoint(
             checkpoint_path,
             load_pretrained_weights=False,
             hparams_file=hparams_file if reload_hparams else None,
             map_location=torch.device("cpu"),
             strict=strict,
+            keep_embeddings_frozen=freeze_encoder,
+            final_activation=final_activation,
         )
         return model
 
@@ -236,7 +253,7 @@ def make_output_folder(folder_name: str, out_dir: str = OUT_DIR):
     return new_dir
 
 
-def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
+def train_comet(model: UnifiedMetric, lp_id: int):
     """
     Trains the given model using the processes developed in the comet
     code base
@@ -249,7 +266,7 @@ def train_comet(model: UnifiedMetric, lp_id: int, freeze_encoder: bool = True):
     # Set paths for training and val data
     model.hparams.train_data = [path_train_data]
     model.hparams.validation_data = [path_dev_data]
-    model.hparams.keep_embeddings_frozen = freeze_encoder
+
     # create new trainer object, only attempting to run 1 epoch initially
     trainer = Trainer(max_epochs=1, accelerator="cpu", devices=1)
 
@@ -356,5 +373,22 @@ def train_ced_model_3():
         print(f"Epoch: {epoch} | Train loss: {loss} | Test loss: {test_loss}")
 
 
+def train_ced_model_4(language_pairs: list = LI_LANGUAGE_PAIRS, freeze_encoder: bool = True):
+    """
+    This is similar to train_ced_model_2, but is attempting to use COMET-KIWI for classification rather than regression
+    """
+
+    for idx, lp in enumerate(language_pairs):
+        model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+        model = load_qe_model_from_checkpoint(model_path, freeze_encoder=True, final_activation="sigmoid")
+
+        model = train_comet(model, idx)
+
+        # Create output folder specific to this training approach
+        out_dir = make_output_folder("trained_model_v4")
+        # at the moment, this is just hard-coded to evaluate the first lp
+        evaluate_model(lp, model, out_dir)
+
+
 if __name__ == "__main__":
-    train_ced_model_2()
+    train_ced_model_4()
