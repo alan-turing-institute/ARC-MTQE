@@ -71,8 +71,12 @@ data:
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
 
 analyse_da:
-	poetry run python scripts/predict_da.py
-	poetry run python scripts/eval_da.py
+	poetry run python scripts/predict_da.py -m comet_qe -y 2023
+	poetry run python scripts/predict_da.py -m comet_qe_21 -y 2023
+	poetry run python scripts/predict_da.py -m cometkiwi_22 -y 2023
+
+analyse_da_xl:
+	poetry run python scripts/predict_da.py -m cometkiwi_23_xl -y 2023
 
 eval_da:
 	poetry run python scripts/eval_da.py

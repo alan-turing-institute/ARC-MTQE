@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 import typing
@@ -8,6 +9,18 @@ ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 # lists include DA not MQM data
 LANGUAGE_PAIRS_22 = ["en-cs", "en-ja", "en-mr", "en-yo", "km-en", "ps-en"]
 LANGUAGE_PAIRS_23 = ["en-gu", "en-hi", "en-mr", "en-ta", "en-te"]
+
+
+def parse_args():
+    """
+    Construct argument parser.
+    """
+    parser = argparse.ArgumentParser(description="Get directory names")
+
+    parser.add_argument("-m", "--model", required=True, help="Model")
+    parser.add_argument("-y", "--year", required=True, help="Year")
+
+    return parser.parse_args()
 
 
 def create_output_dir(root_dir: str = ROOT_DIR) -> str:
@@ -54,8 +67,8 @@ def load_model(model_name: str = "cometkiwi_22", root_dir=ROOT_DIR):
         model_path = os.path.join(root_dir, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
     elif model_name == "cometkiwi_22":
         model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-    # elif model_name == "cometkiwi_23_xl":
-    #     model_path = download_model("Unbabel/wmt23-cometkiwi-da-xl")
+    elif model_name == "cometkiwi_23_xl":
+        model_path = download_model("Unbabel/wmt23-cometkiwi-da-xl")
     model = load_from_checkpoint(model_path)
 
     return model
@@ -64,24 +77,28 @@ def load_model(model_name: str = "cometkiwi_22", root_dir=ROOT_DIR):
 def main():
     """ """
 
+    args = parse_args()
+
+    model_name = args.model
+    model = load_model(model_name)
+
+    year = args.year
+    lps = LANGUAGE_PAIRS_22 if year == "2022" else LANGUAGE_PAIRS_23
+
     out_dir = create_output_dir()
 
-    for model_name in ["comet_qe", "comet_qe_21", "cometkiwi_22"]:
-        model = load_model(model_name)
-        for year in ["2022", "2023"]:
-            lps = LANGUAGE_PAIRS_22 if year == "2022" else LANGUAGE_PAIRS_23
-            for lp in lps:
-                print(f"{model_name} predictions for WMT {year} {lp}")
+    for lp in lps:
+        print(f"{model_name} predictions for WMT {year} {lp}")
 
-                out_file_name = os.path.join(out_dir, f"{year}_{lp}_{model_name}")
-                if os.path.exists(out_file_name):
-                    print(f"{out_file_name} already exists, skipping...")
-                    continue
+        out_file_name = os.path.join(out_dir, f"{year}_{lp}_{model_name}")
+        if os.path.exists(out_file_name):
+            print(f"{out_file_name} already exists, skipping...")
+            continue
 
-                comet_data = load_test_data(lp, year)
-                model_output = model.predict(comet_data, batch_size=8, gpus=0)
-                with open(out_file_name, "wb") as f:
-                    pickle.dump(model_output.scores, f)
+        comet_data = load_test_data(lp, year)
+        model_output = model.predict(comet_data, batch_size=8, gpus=0)
+        with open(out_file_name, "wb") as f:
+            pickle.dump(model_output.scores, f)
 
 
 if __name__ == "__main__":
