@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Data and output files
-data/
+./data/
 results/
 predictions/
 
