@@ -132,3 +132,7 @@ dmypy.json
 data/
 results/
 predictions/
+lightning_logs/
+
+# Poetry
+poetry.lock

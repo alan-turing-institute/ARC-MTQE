@@ -15,6 +15,7 @@ pytorch-lightning = "1.9.5"
 jupyter = "^1.0.0"
 matplotlib = "^3.8.0"
 scikit-learn = "^1.4.0"
+openai = "^1.14.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.2"
