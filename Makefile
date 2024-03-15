@@ -13,10 +13,14 @@ setup:
 	poetry run pre-commit autoupdate
 	poetry run pre-commit install --install-hooks
 
+	# make directories specified in `src/mtqe/utils/paths.py`
+	mkdir -p predictions
+	mkdir -p outputs
+
 models:
 	mkdir -p models
 
-	# COMET-QE-21
+	# COMET-QE-21 DA
 	cd ./models && wget https://unbabel-experimental-models.s3.amazonaws.com/comet/wmt21/wmt21-comet-qe-da.tar.gz
 	cd ./models && tar -xf wmt21-comet-qe-da.tar.gz
 
@@ -69,6 +73,9 @@ data:
 	#=============#
 
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
+
+preprocess_data:
+	poetry run python scripts/data_preprocess.py
 
 analyse_da:
 	poetry run python scripts/predict_da.py -m comet_qe -y 2023
