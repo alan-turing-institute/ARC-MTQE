@@ -24,7 +24,9 @@ models:
 	cd ./models && wget https://unbabel-experimental-models.s3.amazonaws.com/comet/wmt21/wmt21-comet-qe-da.tar.gz
 	cd ./models && tar -xf wmt21-comet-qe-da.tar.gz
 
-data:
+data: download_data preprocess_data
+
+download_data:
 	mkdir -p data
 
 	#===============================================#

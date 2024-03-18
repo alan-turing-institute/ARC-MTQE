@@ -23,14 +23,14 @@ ROOT_DIR = find_project_root()
 
 # DATA
 DATA_DIR = os.path.join(ROOT_DIR, "data")
-DATA_MLQE_PE_DIR = os.path.join(DATA_DIR, "mlqe-pe", "data")
-DATA_CED_21_DIR = os.path.join(DATA_MLQE_PE_DIR, "catastrophic_errors")
-DATA_DA_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data", "test_data-gold_labels", "task1_da")
-DATA_DA_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data", "test_data_2023", "task1_sentence_level")
+MLQE_PE_DIR = os.path.join(DATA_DIR, "mlqe-pe", "data")
+WMT_QE_21_CED_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors")
+WMT_QE_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data")
+WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
 
-# MODELS - LOCAL
+# MODELS (LOCAL)
 COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
 
 # OUTPUTS
-PRED_DIR = os.path.join(ROOT_DIR, "predictions")
-OUT_DIR = os.path.join(ROOT_DIR, "outputs")
+PREDICTIONS_DIR = os.path.join(ROOT_DIR, "predictions")
+OUTPUTS_DIR = os.path.join(ROOT_DIR, "outputs")
