@@ -59,7 +59,7 @@ def load_da_test_data(
         with open(os.path.join(WMT_DA_22_TEST_DIR, lp, "test.2022.src")) as f:
             src_data = f.read().splitlines()
 
-        # NOTE: INCONSISTENCY IN 2022 SCORE FILE NAMES
+        # NOTE: inconsistency in 2022 file names
         if os.path.exists(os.path.join(WMT_DA_22_TEST_DIR, lp, f"test.2022.{lp}.da_score")):
             with open(os.path.join(WMT_DA_22_TEST_DIR, lp, f"test.2022.{lp}.da_score")) as f:
                 labels = [float(score) for score in f.read().splitlines()]
