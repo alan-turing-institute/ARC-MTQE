@@ -76,7 +76,7 @@ def load_da_test_data(
             src_data = f.read().splitlines()
 
         # 2023 has a single goldlabels file for all language pairs
-        labels_path = os.path.join(wmt23_dir, "goldlabels", "hallucinations_gold_T1s_header.tsv")
+        labels_path = os.path.join(wmt23_dir, "gold_labels", "hallucinations_gold_T1s_header.tsv")
         df_labels = pd.read_csv(labels_path, sep="\t")
         labels = df_labels[df_labels["lp"] == lp]["score"]
 
