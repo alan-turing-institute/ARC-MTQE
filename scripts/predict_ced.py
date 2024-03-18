@@ -9,6 +9,10 @@ from mtqe.utils.paths import PREDICTIONS_DIR
 
 
 def main():
+    """
+    Make predictions for WMT 2021 CED test data using COMETKiwi 2022.
+    """
+
     # COMETKiwi 2022
     model = load_comet_model()
 
