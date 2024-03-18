@@ -8,19 +8,37 @@ from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
 from mtqe.utils.paths import MLQE_PE_DIR, WMT_QE_22_DIR, WMT_QE_23_DIR
 
 
+def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
+    """
+    Rescore ERR/NOT CED labels into binary indicators: ERR = 0, NOT = 1.
+
+    Parameters
+    ----------
+    ced_data: Union[pd.Series, np.ndarray]
+        Array of ERR/NOT labels.
+
+    Parameters
+    ----------
+    np.ndarray
+
+    """
+
+    return np.where(ced_data == "NOT", 1, 0)
+
+
 def comet_format(data: pd.DataFrame) -> typing.List[typing.Dict[str, str]]:
     """
-    Format source and machine translated sentence pairs into COMET format.
+    Format source and machine translated sentence pairs into COMET format:
+        - [{"src": "<sentence>", "mt": "<translation>"}, {...}].
 
     Parameters
     ----------
     data: pd.DataFrame
         DataFrame of source and translated text in "src" and "mt" columns.
 
-    Returns
+    Parameters
     ----------
     list[dict[str, str]]
-        [{"src":"...", "mt":"..."}, {...}]
     """
 
     return [{"src": src, "mt": mt} for src, mt in zip(data["src"], data["mt"])]
@@ -46,7 +64,10 @@ def load_da_test_data(
     Returns
     ----------
     pd.DataFrame
-        DataFrame with "src", "mt" and "score" columns.
+        DataFrame composed of the following columns:
+            - "src": source text
+            - "mt": machine translated text
+            - "score": Direct Assessment score
     """
 
     assert year in ["2022", "2023"], f"Invalid year {year}, valid input is either '2022' or '2023'..."
@@ -97,7 +118,11 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     Returns
     ----------
     pd.DataFrame
-        DataFrame with "idx", "src", "mt" and "score" columns.
+        DataFrame composed of the following columns:
+            - "idx": unique identifier
+            - "src": source text
+            - "mt": machine translated text
+            - "score": whether the translation contains a critical error (0) or not (1)
     """
 
     WMT_QE_21_CED_DIR = os.path.join(mlqepe_dir, "catastrophic_errors")
@@ -108,7 +133,10 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     labels_path = os.path.join(
         WMT_QE_21_CED_LABELS_DIR, f"{lp.replace('-', '')}_majority_test_goldlabels", "goldlabels.txt"
     )
-    df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "score"])
+    df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "error"])
+
+    # NOT en error = 1, CRITICAL ERROR = 0
+    df_labels["score"] = score_ced(df_labels)
 
     df_full = pd.merge(df_data, df_labels, on="idx")
 
@@ -131,7 +159,7 @@ def save_ced_data_to_csv(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR
     df_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
 
     # NOT en error = 1, CRITICAL ERROR = 0
-    df_data["score"] = np.where(df_data["error"] == "NOT", 1, 0)
+    df_data["score"] = score_ced(df_data["error"])
 
     # save as csv file
     df_data[["src", "mt", "score"]].to_csv(path_data.replace("tsv", "csv"))
