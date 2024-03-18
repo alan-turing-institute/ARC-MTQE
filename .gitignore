@@ -133,6 +133,8 @@ data/
 results/
 predictions/
 lightning_logs/
+MTQE/
+wandb/
 
 # Poetry
 poetry.lock
