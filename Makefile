@@ -80,7 +80,7 @@ preprocess_data:
 	poetry run python scripts/data_preprocess.py
 
 analyse_da:
-	poetry run python scripts/predict_da.py -m comet_qe -y 2023
+	poetry run python scripts/predict_da.py -m comet_qe_20 -y 2023
 	poetry run python scripts/predict_da.py -m comet_qe_21 -y 2023
 	poetry run python scripts/predict_da.py -m cometkiwi_22 -y 2023
 

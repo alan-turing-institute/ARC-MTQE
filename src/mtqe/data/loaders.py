@@ -59,7 +59,7 @@ def load_da_test_data(
         with open(os.path.join(WMT_DA_22_TEST_DIR, lp, "test.2022.src")) as f:
             src_data = f.read().splitlines()
 
-        # NOTE: inconsistency in 2022 file names
+        # there's an inconsistency in 2022 file names
         if os.path.exists(os.path.join(WMT_DA_22_TEST_DIR, lp, f"test.2022.{lp}.da_score")):
             with open(os.path.join(WMT_DA_22_TEST_DIR, lp, f"test.2022.{lp}.da_score")) as f:
                 labels = [float(score) for score in f.read().splitlines()]
@@ -97,20 +97,22 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     Returns
     ----------
     pd.DataFrame
-        DataFrame with "src", "mt" and "score" columns.
+        DataFrame with "idx", "src", "mt" and "score" columns.
     """
 
     WMT_QE_21_CED_DIR = os.path.join(mlqepe_dir, "catastrophic_errors")
-    data_path = os.path.join(WMT_QE_21_CED_DIR, f"{lp}_majority_test_blind.tsv")
+    data_path = os.path.join(WMT_QE_21_CED_DIR, f"{lp.replace('-', '')}_majority_test_blind.tsv")
     df_data = pd.read_csv(data_path, sep="\t", header=None, names=["idx", "src", "mt"])
 
     WMT_QE_21_CED_LABELS_DIR = os.path.join(mlqepe_dir, "catastrophic_errors_goldlabels")
-    labels_path = os.path.join(WMT_QE_21_CED_LABELS_DIR, f"{lp}_majority_test_goldlabels", "goldlabels.txt")
+    labels_path = os.path.join(
+        WMT_QE_21_CED_LABELS_DIR, f"{lp.replace('-', '')}_majority_test_goldlabels", "goldlabels.txt"
+    )
     df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "score"])
 
     df_full = pd.merge(df_data, df_labels, on="idx")
 
-    return df_full[["src", "mt", "score"]]
+    return df_full[["idx", "src", "mt", "score"]]
 
 
 def save_ced_data_to_csv(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR):
@@ -135,7 +137,7 @@ def save_ced_data_to_csv(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR
     df_data[["src", "mt", "score"]].to_csv(path_data.replace("tsv", "csv"))
 
 
-def load_ced_data_paths(
+def get_ced_data_paths(
     data_split: str, lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED, mlqepe_dir: str = MLQE_PE_DIR
 ) -> typing.List[str]:
     """
@@ -162,7 +164,10 @@ def load_ced_data_paths(
     file_paths = []
     for lp in lps:
         fp = os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.csv")
+        file_paths.append(fp)
+
+        # the CSV files get created when `make data` is called so this should not be necessary
         if not os.path.exists(fp):
             save_ced_data_to_csv(data_split, lp, mlqepe_dir)
-        file_paths.append(fp)
+
     return file_paths

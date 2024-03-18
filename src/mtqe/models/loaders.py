@@ -7,7 +7,15 @@ def load_comet_model(model_name: str = "cometkiwi_22", comet_qe_21: str = COMET_
     """
     Return one of the COMET models (COMETKiwi22 by default).
     """
-    if model_name == "comet_qe":
+
+    assert model_name in [
+        "comet_qe_20",
+        "comet_qe_21",
+        "cometkiwi_22",
+        "cometkiwi_23_xl",
+    ], f"Invalid model_name {model_name}, ...."
+
+    if model_name == "comet_qe_20":
         model_path = download_model("Unbabel/wmt20-comet-qe-da")
     elif model_name == "comet_qe_21":
         model_path = comet_qe_21
