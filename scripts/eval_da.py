@@ -73,13 +73,18 @@ def score_predictions(year):
 
     results = defaultdict(list)
     lps = LANGUAGE_PAIRS_22 if year == "2022" else LANGUAGE_PAIRS_23
-    model_names = {"comet_qe": "COMET-QE 2020", "comet_qe_21": "COMET-QE 2021", "cometkiwi_22": "COMETKiwi 2022"}
+    model_names = {
+        "comet_qe": "COMET-QE 2020",
+        "comet_qe_21": "COMET-QE 2021",
+        "cometkiwi_22": "COMETKiwi 2022",
+        "cometkiwi_23_xl": "COMETKiwi-XL 2023",
+    }
 
     for lp in lps:
 
         labels = load_labels(lp, year)
 
-        for model in ["comet_qe", "comet_qe_21", "cometkiwi_22"]:
+        for model in model_names:
 
             preds = load_predictions(lp, year, model)
 
@@ -98,8 +103,17 @@ def score_predictions(year):
     return results
 
 
-results_23 = score_predictions("2023")
-tex_full = create_latex_table(LANGUAGE_PAIRS_23, results_23)
-with open("comets_compare_2023.tex", "w") as f:
-    for line in tex_full:
-        f.write(f"{line}\n")
+def main():
+    out_dir = os.path.join(root_dir, "outputs")
+    os.makedirs(out_dir, exist_ok=True)
+
+    results_23 = score_predictions("2023")
+    tex_full = create_latex_table(LANGUAGE_PAIRS_23, results_23)
+
+    with open(os.path.join(out_dir, "comets_compare_2023.tex"), "w") as f:
+        for line in tex_full:
+            f.write(f"{line}\n")
+
+
+if __name__ == "__main__":
+    main()

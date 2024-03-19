@@ -4,17 +4,16 @@ version = "0.1.0"
 description = ""
 authors = ["Applied Research Centre, The Alan Turing Institute <arc@turing.ac.uk>"]
 readme = "README.md"
+packages = [{include = "mtqe", from="src"}]
 
 [tool.poetry.dependencies]
-huggingface_hub = "0.12.1"
 python = ">=3.9,<4.0.0"
-unbabel-comet= "2.0.1"
 ipywidgets = "^8.1.1"
-torch = "2.0.1"
-pytorch-lightning = "1.9.5"
 jupyter = "^1.0.0"
 matplotlib = "^3.8.0"
 scikit-learn = "^1.4.0"
+huggingface-hub = "^0.21.3"
+unbabel-comet = "^2.2.1"
 wandb = "^0.16.4"
 
 [tool.poetry.dev-dependencies]
