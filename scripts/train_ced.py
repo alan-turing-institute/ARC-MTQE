@@ -11,7 +11,7 @@ import wandb
 from mtqe.data.loaders import get_ced_data_paths, load_ced_test_data
 from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import OUTPUTS_DIR
+from mtqe.utils.paths import PREDICTIONS_DIR
 
 
 def evaluate_model(lp: str, model: UnifiedMetric, out_dir: str):
@@ -33,8 +33,8 @@ def evaluate_model(lp: str, model: UnifiedMetric, out_dir: str):
     df_results.to_csv(out_file_name, index=False)
 
 
-def make_output_folder(folder_name: str, out_dir: str = OUTPUTS_DIR):
-    new_dir = os.path.join(out_dir, folder_name)
+def make_output_folder(folder_name: str, preds_dir: str = PREDICTIONS_DIR):
+    new_dir = os.path.join(preds_dir, folder_name)
     os.makedirs(new_dir, exist_ok=True)
 
     return new_dir
