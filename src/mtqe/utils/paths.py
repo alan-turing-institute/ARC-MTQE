@@ -25,6 +25,7 @@ ROOT_DIR = find_project_root()
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 MLQE_PE_DIR = os.path.join(DATA_DIR, "mlqe-pe", "data")
 WMT_QE_21_CED_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors")
+WMT_QE_21_CED_GOLDLABELS_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors_goldlabels")
 WMT_QE_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data")
 WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
 
