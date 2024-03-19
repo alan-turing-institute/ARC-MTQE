@@ -12,6 +12,8 @@ from sklearn.metrics import (
     roc_curve,
 )
 
+from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
+
 
 def parse_args():
     """
@@ -37,7 +39,7 @@ def load_data(pred_dir, lp, model):
 
     # gold labels
     data_dir = os.path.join(main_dir, "data", "mlqe-pe", "data", "catastrophic_errors_goldlabels")
-    labels_path = os.path.join(data_dir, f"{lp}_majority_test_goldlabels", "goldlabels.txt")
+    labels_path = os.path.join(data_dir, f"{lp.replace('-', '')}_majority_test_goldlabels", "goldlabels.txt")
     df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "label"])
 
     # merge on sentence indexes
@@ -50,7 +52,7 @@ def main():
     args = parse_args()
     model = "cometkiwi"
 
-    language_pairs = ["encs", "ende", "enja", "enzh"]
+    language_pairs = LI_LANGUAGE_PAIRS_WMT_21_CED
     for lp in language_pairs:
         df_results = load_data(args.path, lp, model)
 

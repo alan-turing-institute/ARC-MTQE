@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Applied Research Centre, The Alan Turing Institute <arc@turing.ac.uk>"]
 readme = "README.md"
+packages = [{include = "mtqe", from="src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0.0"
