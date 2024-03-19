@@ -201,7 +201,7 @@ def get_ced_train_dev_data(
 
         df_train_data["score"] = df_train_data.apply(score_data, axis=1).astype("int32")
         # NOTE: LIMITING TRAINING DATA TO 1000 RECORDS FOR TESTING ONLY
-        df_train_data = df_train_data[:100]
+        # df_train_data = df_train_data[:100]
         # Save to csv format
         path_train_data = os.path.join(data_dir, f"{lp}_majority_train.csv")
         df_train_data[["src", "mt", "score"]].to_csv(path_train_data)
@@ -213,7 +213,7 @@ def get_ced_train_dev_data(
         path_data = os.path.join(data_dir, f"{lp}_majority_dev.tsv")
         df_dev_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
         # NOTE: LIMITING DEV DATA TO 20 RECORDS FOR TESTING ONLY
-        df_dev_data = df_train_data[:20]
+        # df_dev_data = df_train_data[:20]
         df_dev_data["score"] = df_dev_data.apply(score_data, axis=1).astype("int32")
         # Save to csv format
         path_dev_data = os.path.join(data_dir, f"{lp}_majority_dev.csv")
@@ -279,7 +279,7 @@ def train_comet(model: UnifiedMetric, lp_id: int, experiment_name: str):
     )
 
     # create new trainer object
-    trainer = Trainer(max_epochs=4, accelerator="cpu", devices=1, logger=wandb_logger)
+    trainer = Trainer(max_epochs=3, accelerator="cpu", devices=1, logger=wandb_logger)
 
     trainer.fit(model)
 
@@ -329,10 +329,11 @@ def train_ced_model_class(language_pairs: list = LI_LANGUAGE_PAIRS, freeze_encod
 
         now = datetime.now()
         now_str = now.strftime("%Y%m%d_%H:%M:%S")
-        model = train_comet(model, idx, "test_experiment_cls_" + lp + "_" + now_str)
+        model_name = "all_train_data_cls_" + lp + "_" + now_str
+        model = train_comet(model, idx, model_name)
 
         # Create output folder specific to this training approach
-        out_dir = make_output_folder("trained_model_classification")
+        out_dir = make_output_folder("trained_model_classification/" + model_name)
         evaluate_model(lp, model, out_dir)
 
         break
