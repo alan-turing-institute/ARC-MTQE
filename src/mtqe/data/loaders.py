@@ -17,10 +17,9 @@ def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
     ced_data: Union[pd.Series, np.ndarray]
         Array of ERR/NOT labels.
 
-    Parameters
+    Returns
     ----------
     np.ndarray
-
     """
 
     return np.where(ced_data == "NOT", 1, 0)
@@ -36,7 +35,7 @@ def comet_format(data: pd.DataFrame) -> typing.List[typing.Dict[str, str]]:
     data: pd.DataFrame
         DataFrame of source and translated text in "src" and "mt" columns.
 
-    Parameters
+    Returns
     ----------
     list[dict[str, str]]
     """
