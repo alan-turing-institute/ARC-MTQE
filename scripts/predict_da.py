@@ -37,7 +37,7 @@ def create_output_dir(pred_dir: str = PREDICTIONS_DIR) -> str:
 
 def main():
     """
-    Make predictions for DA test in the given WMT year using one of the models in the COMET family.
+    Make predictions for DA test data in the given WMT year using one of the models in the COMET family.
     """
 
     args = parse_args()

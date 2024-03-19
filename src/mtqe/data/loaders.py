@@ -136,7 +136,7 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "error"])
 
     # NOT en error = 1, CRITICAL ERROR = 0
-    df_labels["score"] = score_ced(df_labels)
+    df_labels["score"] = score_ced(df_labels["error"])
 
     df_full = pd.merge(df_data, df_labels, on="idx")
 
