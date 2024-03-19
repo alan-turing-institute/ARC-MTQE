@@ -112,7 +112,7 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     lp: str
         The langauge pair, passed as IOS code (e.g., "en-cs").
     mlqepe_dir: str
-        Path to clone of the sheffieldnlp/mlqe-pe GitHub repistory.
+        Path to the `data/` directory in clone of the sheffieldnlp/mlqe-pe GitHub repository.
 
     Returns
     ----------
@@ -178,7 +178,7 @@ def get_ced_data_paths(
     lps: list[str]
         List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
     mlqepe_dir: str
-        Path to clone of the sheffieldnlp/mlqe-pe GitHub repistory.
+        Path to the `data/` directory in clone of the sheffieldnlp/mlqe-pe GitHub repository.
 
     Returns
     ----------
