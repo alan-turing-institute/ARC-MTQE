@@ -102,6 +102,12 @@ def train_ced_model_class(language_pairs: list = LI_LANGUAGE_PAIRS_WMT_21_CED, f
         break
 
 
+def get_data_paths(dataset_info: dict):
+    if dataset_info["dataset_name"] == "ced":  # only supporting the 1 dataset for now
+        lps = dataset_info["language_pairs"]
+        return get_ced_data_paths("train", lps)
+
+
 def train_with_params(config_file):
     with open(os.path.join(CONFIG_DIR, config_file + ".yaml")) as stream:
         config = yaml.safe_load(stream)
@@ -109,9 +115,20 @@ def train_with_params(config_file):
     NUM_SEEDS = len(config["seeds"])
     NUM_EXPERIMENTS = len(config["experiments"])
 
-    for exp_id in range(NUM_EXPERIMENTS):
+    for exp in config["experiments"]:
+        train_paths = []
+        val_paths = []
+        hparams = config["experiments"][exp]["hparams"]
+        train_data = hparams["train_data"]
+        val_data = hparams["validation_data"]
+        for dataset in train_data:
+            train_paths.extend(get_data_paths(train_data[dataset]))
+        for dataset in val_data:
+            val_paths.extend(get_data_paths(val_data[dataset]))
         for seed_id in range(NUM_SEEDS):
-            print(config["experiments"][exp_id], config["seeds"][seed_id])
+            pass
+
+        print(train_paths)
 
     print(NUM_SEEDS, NUM_EXPERIMENTS)
 

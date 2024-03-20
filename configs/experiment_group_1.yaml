@@ -37,34 +37,36 @@ trainer_config:
   deterministic: True
 
 experiments:
-- en-cs_frozen:
+  en-cs_frozen:
+    name: en-cs_frozen
     hparams:
       train_data:
-        - train_1:
-            dataset: ced
-            language_pairs:
-              - en-cs
+        train_1:
+          dataset_name: ced
+          language_pairs:
+            - en-cs
       validation_data:
-        - valid_1:
-            dataset: ced
-            language_pairs:
-              - en-cs
+        valid_1:
+          dataset_name: ced
+          language_pairs:
+            - en-cs
       keep_embeddings_frozen: true
     trainer_config:
       max_epochs: 3
 
-- en-cs_unfrozen:
+en-cs_unfrozen:
+    name: en-cs_unfrozen
     hparams:
       train_data:
-        - train_1:
-            dataset: ced
-            language_pairs:
-              - en-cs
+        train_1:
+          dataset_name: ced
+          language_pairs:
+            - en-cs
       validation_data:
-        - valid_1:
-            dataset: ced
-            language_pairs:
-              - en-cs
+        valid_1:
+          dataset_name: ced
+          language_pairs:
+            - en-cs
       keep_embeddings_frozen: false
     trainer_config:
       max_epochs: 3
