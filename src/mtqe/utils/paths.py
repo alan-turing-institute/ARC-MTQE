@@ -29,6 +29,9 @@ WMT_QE_21_CED_GOLDLABELS_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors_go
 WMT_QE_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data")
 WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
 
+# CONFIG
+CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
+
 # MODELS (LOCAL)
 COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
 

@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import pandas as pd
+import yaml
 from comet import download_model
 from comet.models import UnifiedMetric
 from pytorch_lightning.loggers.wandb import WandbLogger
@@ -11,7 +12,7 @@ import wandb
 from mtqe.data.loaders import get_ced_data_paths, load_ced_test_data
 from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import PREDICTIONS_DIR
+from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
 
 
 def evaluate_model(lp: str, model: UnifiedMetric, out_dir: str):
@@ -47,8 +48,8 @@ def train_comet(model: UnifiedMetric, paths_train_data: list, paths_dev_data: li
     """
 
     # Set paths for training and val data
-    model.hparams.train_data = paths_train_data
-    model.hparams.validation_data = paths_dev_data
+    # model.hparams.train_data = paths_train_data
+    # model.hparams.validation_data = paths_dev_data
     model.hparams.batch_size = 8
 
     wandb_logger = WandbLogger(
@@ -85,11 +86,13 @@ def train_ced_model_class(language_pairs: list = LI_LANGUAGE_PAIRS_WMT_21_CED, f
 
     for idx, lp in enumerate(language_pairs):
         model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-        model = load_qe_model_from_checkpoint(model_path, freeze_encoder=freeze_encoder, final_activation="sigmoid")
+        model = load_qe_model_from_checkpoint(
+            model_path, [train_paths[idx]], [dev_paths[idx]], freeze_encoder=freeze_encoder, final_activation="sigmoid"
+        )
 
         now = datetime.now()
         now_str = now.strftime("%Y%m%d_%H:%M:%S")
-        model_name = "refactor1_cls_" + lp + "_" + now_str
+        model_name = "refactor2_cls_" + lp + "_" + now_str
         model = train_comet(model, [train_paths[idx]], [dev_paths[idx]], model_name)
 
         # Create output folder specific to this training approach
@@ -99,5 +102,19 @@ def train_ced_model_class(language_pairs: list = LI_LANGUAGE_PAIRS_WMT_21_CED, f
         break
 
 
+def train_with_params(config_file):
+    with open(os.path.join(CONFIG_DIR, config_file + ".yaml")) as stream:
+        config = yaml.safe_load(stream)
+
+    NUM_SEEDS = len(config["seeds"])
+    NUM_EXPERIMENTS = len(config["experiments"])
+
+    for exp_id in range(NUM_EXPERIMENTS):
+        for seed_id in range(NUM_SEEDS):
+            print(config["experiments"][exp_id], config["seeds"][seed_id])
+
+    print(NUM_SEEDS, NUM_EXPERIMENTS)
+
+
 if __name__ == "__main__":
-    train_ced_model_class()
+    train_with_params("experiment_group_1")

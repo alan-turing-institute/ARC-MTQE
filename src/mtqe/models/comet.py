@@ -40,8 +40,6 @@ class CEDModel(UnifiedMetric):
         input_segments: List[str] = ["mt", "src", "ref"],
         word_level_training: bool = False,
         loss_lambda: float = 0.65,
-        error_labels: List[str] = ["minor", "major"],
-        cross_entropy_weights: Optional[List[float]] = None,
         load_pretrained_weights: bool = True,
     ):
 
@@ -70,8 +68,6 @@ class CEDModel(UnifiedMetric):
             input_segments=input_segments,
             word_level_training=word_level_training,
             loss_lambda=loss_lambda,
-            # error_labels = error_labels,
-            # cross_entropy_weights = cross_entropy_weights,
             load_pretrained_weights=load_pretrained_weights,
         )
 
@@ -128,6 +124,8 @@ class CEDModel(UnifiedMetric):
 
 def load_qe_model_from_checkpoint(
     checkpoint_path: str,
+    paths_train_data: list,
+    paths_dev_data: list,
     reload_hparams: bool = False,
     strict: bool = False,
     freeze_encoder: bool = True,
@@ -152,5 +150,7 @@ def load_qe_model_from_checkpoint(
             keep_embeddings_frozen=freeze_encoder,
             final_activation=final_activation,
             batch_size=16,
+            train_data=paths_train_data,
+            validation_data=paths_dev_data,
         )
         return model
