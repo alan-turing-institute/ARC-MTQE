@@ -134,7 +134,7 @@ dmypy.json
 results/
 predictions/
 lightning_logs/
-MTQE/
+checkpoints/
 wandb/
 
 # Poetry
