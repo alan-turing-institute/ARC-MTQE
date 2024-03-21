@@ -1,8 +1,15 @@
+# WandB names
+wandb:
+  project: MTQE
+  entity: turing-arc
+
+# The experiments defined in this file will be run once for each of the following seeds
 seeds:
   - 12
   - 77
   - 89
 
+# These are model parameters that are fixed for each experiment
 hparams:
   activations: Tanh
   batch_size: 16
@@ -10,7 +17,7 @@ hparams:
   dropout: 0.1
   encoder_learning_rate: 1.0e-06
   encoder_model: XLM-RoBERTa
-  final_activation: null
+  final_activation: sigmoid
   hidden_sizes:
   - 3072
   - 1024
@@ -32,41 +39,42 @@ hparams:
   word_layer: 24
   word_level_training: false
 
+# This is trainer config that is fixed for each experiment
 trainer_config:
   accelerator: cpu
   deterministic: True
+  devices: 1
+  max_epochs: 1
 
+# These are the data for each experiment
 experiments:
   en-cs_frozen:
     name: en-cs_frozen
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+          - en-de
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
     hparams:
-      train_data:
-        train_1:
-          dataset_name: ced
-          language_pairs:
-            - en-cs
-      validation_data:
-        valid_1:
-          dataset_name: ced
-          language_pairs:
-            - en-cs
       keep_embeddings_frozen: true
-    trainer_config:
-      max_epochs: 3
 
 en-cs_unfrozen:
     name: en-cs_unfrozen
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
     hparams:
-      train_data:
-        train_1:
-          dataset_name: ced
-          language_pairs:
-            - en-cs
-      validation_data:
-        valid_1:
-          dataset_name: ced
-          language_pairs:
-            - en-cs
       keep_embeddings_frozen: false
-    trainer_config:
-      max_epochs: 3

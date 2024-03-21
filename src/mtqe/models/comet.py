@@ -6,6 +6,8 @@ from comet.models import UnifiedMetric
 from torch import nn
 from torch.utils.data import DataLoader, RandomSampler
 
+from mtqe.models.metrics import ClassificationMetrics
+
 
 class CEDModel(UnifiedMetric):
     """
@@ -109,27 +111,28 @@ class CEDModel(UnifiedMetric):
         )
 
     def init_losses(self) -> None:
-        """Initializes Loss functions to be used."""
+        """
+        Initializes Loss functions to be used.
+        This overrides the method in the UnifiedMetric class
+        """
         self.sentloss = nn.CrossEntropyLoss()
-        # self.sentloss = nn.MSELoss()
-        if self.word_level:
-            if self.hparams.cross_entropy_weights:
-                assert len(self.hparams.cross_entropy_weights) == self.num_classes
-                loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
-            else:
-                loss_weights = None
 
-            self.wordloss = nn.CrossEntropyLoss(reduction="mean", ignore_index=-1, weight=loss_weights)
+    def init_metrics(self):
+        """
+        Initializes training and validation classification metrics
+        This overrides the method in UnifiedMetric class
+        """
+        self.train_corr = ClassificationMetrics(prefix="train")
+        self.val_corr = nn.ModuleList([ClassificationMetrics(prefix=d) for d in self.hparams.validation_data])
 
 
 def load_qe_model_from_checkpoint(
     checkpoint_path: str,
     paths_train_data: list,
     paths_dev_data: list,
-    reload_hparams: bool = False,
     strict: bool = False,
-    freeze_encoder: bool = True,
-    final_activation: str = "tanh",
+    reload_hparams=False,
+    **kwargs
 ) -> UnifiedMetric:
     """
     This code is copied from the load_from_checkpoint function imported
@@ -140,17 +143,15 @@ def load_qe_model_from_checkpoint(
     parent_folder = checkpoint_path.parents[1]
     hparams_file = parent_folder / "hparams.yaml"
 
-    if hparams_file.is_file():
-        model = CEDModel.load_from_checkpoint(
-            checkpoint_path,
-            load_pretrained_weights=False,
-            hparams_file=hparams_file if reload_hparams else None,
-            map_location=torch.device("cpu"),
-            strict=strict,
-            keep_embeddings_frozen=freeze_encoder,
-            final_activation=final_activation,
-            batch_size=16,
-            train_data=paths_train_data,
-            validation_data=paths_dev_data,
-        )
-        return model
+    # if hparams_file.is_file():
+    model = CEDModel.load_from_checkpoint(
+        checkpoint_path,
+        load_pretrained_weights=False,
+        hparams_file=hparams_file if reload_hparams else None,
+        map_location=torch.device("cpu"),
+        strict=strict,
+        train_data=paths_train_data,
+        validation_data=paths_dev_data,
+        **kwargs
+    )
+    return model

@@ -32,6 +32,9 @@ WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
 # CONFIG
 CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
 
+# CHECKPOINTS
+CHECKPOINT_DIR = os.path.join(ROOT_DIR, "checkpoints")
+
 # MODELS (LOCAL)
 COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
 

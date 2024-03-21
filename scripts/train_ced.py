@@ -1,137 +1,108 @@
 import os
 from datetime import datetime
 
-import pandas as pd
 import yaml
 from comet import download_model
-from comet.models import UnifiedMetric
+from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 
 import wandb
-from mtqe.data.loaders import get_ced_data_paths, load_ced_test_data
-from mtqe.models.comet import load_qe_model_from_checkpoint
-from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
+from mtqe.data.loaders import get_ced_data_paths
+from mtqe.models.comet import CEDModel, load_qe_model_from_checkpoint
+from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
 
 
-def evaluate_model(lp: str, model: UnifiedMetric, out_dir: str):
-    """
-    Evaluate the model using the test data for one language pair and
-    save the results to the out_dir
-    """
-    # load test data
-    df_test_data = load_ced_test_data(lp)
-
-    test_data = df_test_data.to_dict("records")
-
-    # predict
-    model_output = model.predict(test_data, batch_size=8, gpus=0)
-
-    # save output
-    out_file_name = os.path.join(out_dir, f"{lp}_cometkiwi.csv")
-    df_results = pd.DataFrame({"idx": df_test_data["idx"], "comet_score": model_output.scores})
-    df_results.to_csv(out_file_name, index=False)
-
-
-def make_output_folder(folder_name: str, preds_dir: str = PREDICTIONS_DIR):
-    new_dir = os.path.join(preds_dir, folder_name)
-    os.makedirs(new_dir, exist_ok=True)
-
-    return new_dir
-
-
-def train_comet(model: UnifiedMetric, paths_train_data: list, paths_dev_data: list, experiment_name: str):
+def create_trainer(model: CEDModel, experiment_name: str, seed: int, **kwargs):
     """
     Trains the given model using the processes developed in the comet
     code base
     """
 
-    # Set paths for training and val data
-    # model.hparams.train_data = paths_train_data
-    # model.hparams.validation_data = paths_dev_data
-    model.hparams.batch_size = 8
-
+    # The entity and project names should be stored somewhere - in their own config?
+    # If someone else wanted to replicate then
     wandb_logger = WandbLogger(
         entity="turing-arc",
         project="MTQE",
         name=experiment_name,
         mode="online",
-        log_model=False,
+        log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
     )
 
+    # callback to log model checkpoints locally
+    checkpoint_callback = ModelCheckpoint(CHECKPOINT_DIR + "/" + experiment_name + "/")
     # create new trainer object
-    trainer = Trainer(max_epochs=1, accelerator="cpu", devices=1, logger=wandb_logger)
+    trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback], **kwargs)
+
+    return trainer
+
+
+def load_model_from_file(config, experiment_group_name: str, experiment_name: str, seed: int):
+
+    assert experiment_name in config["experiments"], (
+        experiment_name + " does not exist in " + experiment_group_name + ".yaml"
+    )
+    assert seed in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
+
+    # set data paths
+    train_paths = []
+    dev_paths = []
+    exp_setup = config["experiments"][experiment_name]
+    train_data = exp_setup["train_data"]
+    dev_data = exp_setup["dev_data"]
+    for dataset in train_data:
+        lps = train_data[dataset]["language_pairs"]
+        train_paths.extend(get_ced_data_paths("train", lps))
+    for dataset in dev_data:
+        lps = dev_data[dataset]["language_pairs"]
+        dev_paths.extend(get_ced_data_paths("dev", lps))
+
+    model_params = config["hparams"]  # these don't change between experiments
+    if "hparams" in exp_setup:
+        # add any experiment-specific params
+        model_params = {**model_params, **exp_setup["hparams"]}
+
+    # checkpoint path is currently hard-coded below - I think this should also
+    # be in the config so we can load any checkpoint
+    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+    model = load_qe_model_from_checkpoint(model_path, train_paths, dev_paths, reload_hparams=False, **model_params)
+
+    return model
+
+
+def create_model_name(experiment_group_name: str, experiment_name: str, seed: int):
+    now = datetime.now()
+    now_str = now.strftime("%Y%m%d_%H:%M:%S")
+    model_name = experiment_group_name + "__" + experiment_name + "__" + str(seed) + "__" + now_str
+    return model_name
+
+
+def train_model(experiment_group_name: str, experiment_name: str, seed: int):
+    with open(os.path.join(CONFIG_DIR, experiment_group_name + ".yaml")) as stream:
+        config = yaml.safe_load(stream)
+
+    trainer_params = config["trainer_config"]
+
+    model = load_model_from_file(config, experiment_group_name, experiment_name, seed)
+
+    model_name = create_model_name(experiment_group_name, experiment_name, seed)
+
+    seed_everything(seed, workers=True)
+
+    trainer = create_trainer(model, model_name, seed, **trainer_params)
 
     trainer.fit(model)
 
-    wandb.log({"test_metric": 0.5})
-    wandb.config["test_config"] = "abcd"
-
-    wandb_logger.experiment.config.update({"test_config_2": "efgh"})
+    # If we want to log other metrics or config after the run, we could use the
+    # following code
+    # wandb.log({"test_metric": 0.5})
+    # wandb.config["test_config"] = "abcd"
 
     wandb.finish()
 
     return model
 
 
-def train_ced_model_class(language_pairs: list = LI_LANGUAGE_PAIRS_WMT_21_CED, freeze_encoder: bool = True):
-    """
-    This uses COMET-KIWI for classification rather than regression
-    Current process is to only use training data from one language pair - will want to be able
-    to configure this so that multiple files of training data can be used.
-    """
-    train_paths = get_ced_data_paths("train")
-    dev_paths = get_ced_data_paths("dev")
-
-    for idx, lp in enumerate(language_pairs):
-        model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-        model = load_qe_model_from_checkpoint(
-            model_path, [train_paths[idx]], [dev_paths[idx]], freeze_encoder=freeze_encoder, final_activation="sigmoid"
-        )
-
-        now = datetime.now()
-        now_str = now.strftime("%Y%m%d_%H:%M:%S")
-        model_name = "refactor2_cls_" + lp + "_" + now_str
-        model = train_comet(model, [train_paths[idx]], [dev_paths[idx]], model_name)
-
-        # Create output folder specific to this training approach
-        out_dir = make_output_folder("trained_model_classification/" + model_name)
-        evaluate_model(lp, model, out_dir)
-
-        break
-
-
-def get_data_paths(dataset_info: dict):
-    if dataset_info["dataset_name"] == "ced":  # only supporting the 1 dataset for now
-        lps = dataset_info["language_pairs"]
-        return get_ced_data_paths("train", lps)
-
-
-def train_with_params(config_file):
-    with open(os.path.join(CONFIG_DIR, config_file + ".yaml")) as stream:
-        config = yaml.safe_load(stream)
-
-    NUM_SEEDS = len(config["seeds"])
-    NUM_EXPERIMENTS = len(config["experiments"])
-
-    for exp in config["experiments"]:
-        train_paths = []
-        val_paths = []
-        hparams = config["experiments"][exp]["hparams"]
-        train_data = hparams["train_data"]
-        val_data = hparams["validation_data"]
-        for dataset in train_data:
-            train_paths.extend(get_data_paths(train_data[dataset]))
-        for dataset in val_data:
-            val_paths.extend(get_data_paths(val_data[dataset]))
-        for seed_id in range(NUM_SEEDS):
-            pass
-
-        print(train_paths)
-
-    print(NUM_SEEDS, NUM_EXPERIMENTS)
-
-
 if __name__ == "__main__":
-    train_with_params("experiment_group_1")
+    train_model("experiment_group_1", "en-cs_frozen", 12)
