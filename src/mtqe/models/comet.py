@@ -143,15 +143,15 @@ def load_qe_model_from_checkpoint(
     parent_folder = checkpoint_path.parents[1]
     hparams_file = parent_folder / "hparams.yaml"
 
-    # if hparams_file.is_file():
-    model = CEDModel.load_from_checkpoint(
-        checkpoint_path,
-        load_pretrained_weights=False,
-        hparams_file=hparams_file if reload_hparams else None,
-        map_location=torch.device("cpu"),
-        strict=strict,
-        train_data=paths_train_data,
-        validation_data=paths_dev_data,
-        **kwargs
-    )
-    return model
+    if hparams_file.is_file():
+        model = CEDModel.load_from_checkpoint(
+            checkpoint_path,
+            load_pretrained_weights=False,
+            hparams_file=hparams_file if reload_hparams else None,
+            map_location=torch.device("cpu"),
+            strict=strict,
+            train_data=paths_train_data,
+            validation_data=paths_dev_data,
+            **kwargs
+        )
+        return model

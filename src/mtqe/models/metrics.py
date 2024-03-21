@@ -12,6 +12,13 @@ from torchmetrics import Metric
 
 
 class ClassificationMetrics(Metric):
+    """
+    New class to calculate classification metrics for the COMET CED model.
+    This is similar to the RegressionMetrics class in the COMET repo - in fact,
+    could have inherited from that instead and then just overriden the compute
+    method.
+    """
+
     is_differentiable = False
     higher_is_better = True
     full_state_update = False
@@ -54,7 +61,7 @@ class ClassificationMetrics(Metric):
             self.systems += systems
 
     def compute(self) -> torch.Tensor:
-        """Computes spearmans correlation coefficient."""
+        """Computes classification metrics."""
         try:
             preds = torch.cat(self.preds, dim=0)
             target = torch.cat(self.target, dim=0)
@@ -67,6 +74,8 @@ class ClassificationMetrics(Metric):
         return report
 
 
+# Expect we will want to call this function outside of instances of ClassificationMetrics
+# e.g., when calculating metrics on test data or calculating metrics from LLM output
 def calculate_metrics(prefix: str, preds: torch.Tensor, target: torch.Tensor) -> dict:
     # higher COMET score --> higher confidence it is NOT an error
     # However, we want the positive class to represent ERRORS
