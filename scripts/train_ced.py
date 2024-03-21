@@ -4,7 +4,7 @@ from datetime import datetime
 import yaml
 from comet import download_model
 from pytorch_lightning import LightningModule, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 
@@ -12,32 +12,6 @@ import wandb
 from mtqe.data.loaders import get_ced_data_paths
 from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
-
-
-def create_trainer(experiment_name: str, wandb_params: dict, checkpoint_dir: str = CHECKPOINT_DIR, **kwargs) -> Trainer:
-    """
-    Creates a trainer with a WandB logger, sets local directory to log checkpoint - have not yet
-    tested loading from the local checkpoint
-
-    Returns a Trainer object
-    """
-
-    wandb_logger = WandbLogger(
-        entity=wandb_params["entity"],
-        project=wandb_params["project"],
-        name=experiment_name,
-        mode="online",
-        log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
-    )
-
-    # early_stopping_callback = EarlyStopping(monitor="val_precision", patience=1, verbose=False, strict=True)
-    # callback to log model checkpoints locally
-    checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + experiment_name + "/")
-    # create new trainer object
-    # trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback, early_stopping_callback], **kwargs)
-    trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback], **kwargs)
-
-    return trainer
 
 
 def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
@@ -101,19 +75,41 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
 
     # Create model
     model = load_model_from_file(config, experiment_name)
+    # Name for this model / experiment
+    model_name = create_model_name(experiment_group_name, experiment_name, seed)
 
     seed_everything(seed, workers=True)
 
-    # Create trainer
-    model_name = create_model_name(experiment_group_name, experiment_name, seed)
+    # Create wandb logger
+    wandb_params = config["wandb"]
+    wandb_logger = WandbLogger(
+        entity=wandb_params["entity"],
+        project=wandb_params["project"],
+        name=experiment_name,
+        mode="online",
+        log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
+    )
+
+    early_stopping_params = config["early_stopping"]
+    # callback for early stopping
+    early_stopping_callback = EarlyStopping(**early_stopping_params)
+    # callback to log model checkpoints locally
+    # also needs to monitor the same metric as the early stopping callback so that we can work out
+    # which is the best checkpoint for that metric - not sure how we should record / store the checkpoint?
+    checkpoint_callback = ModelCheckpoint(
+        CHECKPOINT_DIR + "/" + model_name + "/", monitor=early_stopping_params["monitor"]
+    )
+
+    # create new trainer object
     trainer_params = config["trainer_config"]
-    trainer = create_trainer(model_name, config["wandb"], **trainer_params)
+    trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback, early_stopping_callback], **trainer_params)
 
     trainer.fit(model)
 
-    # If we want to log other metrics or config after the run, we could use the following code:
-    # wandb.log({"test_metric": 0.5})
-    # wandb.config["test_config"] = "abcd"
+    # Haven't tested if the next line works or not... trying to work out how we
+    # record the 'best' checkpoing according to the metric we are monitoring
+    # so that we can load it again
+    wandb.config["best_checkpoint_path"] = checkpoint_callback.best_model_path
 
     wandb.finish()
 

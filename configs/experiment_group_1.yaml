@@ -44,7 +44,16 @@ trainer_config:
   accelerator: cpu
   deterministic: True
   devices: 1
-  max_epochs: 1
+  max_epochs: 100
+
+# Config for early stopping callback, fixed for each experiment
+early_stopping:
+  monitor: val_precision
+  patience: 3
+  strict: True
+  verbose: False
+  mode: max
+  min_delta: 0.
 
 # These are the data for each experiment
 experiments:
