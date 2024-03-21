@@ -30,9 +30,11 @@ def create_trainer(experiment_name: str, wandb_params: dict, checkpoint_dir: str
         log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
     )
 
+    # early_stopping_callback = EarlyStopping(monitor="val_precision", patience=1, verbose=False, strict=True)
     # callback to log model checkpoints locally
     checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + experiment_name + "/")
     # create new trainer object
+    # trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback, early_stopping_callback], **kwargs)
     trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback], **kwargs)
 
     return trainer
@@ -98,7 +100,7 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     assert seed in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
 
     # Create model
-    model = load_model_from_file(config, experiment_group_name, experiment_name, seed)
+    model = load_model_from_file(config, experiment_name)
 
     seed_everything(seed, workers=True)
 
