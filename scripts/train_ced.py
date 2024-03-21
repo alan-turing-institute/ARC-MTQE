@@ -10,35 +10,36 @@ from pytorch_lightning.trainer.trainer import Trainer
 
 import wandb
 from mtqe.data.loaders import get_ced_data_paths
-from mtqe.models.comet import CEDModel, load_qe_model_from_checkpoint
+from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
 
 
-def create_trainer(model: CEDModel, experiment_name: str, seed: int, **kwargs):
+def create_trainer(experiment_name: str, wandb_params: dict, checkpoint_dir: str = CHECKPOINT_DIR, **kwargs):
     """
-    Trains the given model using the processes developed in the comet
-    code base
+    Creates a trainer with a WandB logger
     """
 
     # The entity and project names should be stored somewhere - in their own config?
     # If someone else wanted to replicate then
     wandb_logger = WandbLogger(
-        entity="turing-arc",
-        project="MTQE",
+        # entity="turing-arc",
+        # project="MTQE",
+        entity=wandb_params["entity"],
+        project=wandb_params["project"],
         name=experiment_name,
         mode="online",
         log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
     )
 
     # callback to log model checkpoints locally
-    checkpoint_callback = ModelCheckpoint(CHECKPOINT_DIR + "/" + experiment_name + "/")
+    checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + experiment_name + "/")
     # create new trainer object
     trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback], **kwargs)
 
     return trainer
 
 
-def load_model_from_file(config, experiment_group_name: str, experiment_name: str, seed: int):
+def load_model_from_file(config: dict, experiment_group_name: str, experiment_name: str, seed: int):
 
     assert experiment_name in config["experiments"], (
         experiment_name + " does not exist in " + experiment_group_name + ".yaml"
@@ -90,7 +91,7 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
 
     seed_everything(seed, workers=True)
 
-    trainer = create_trainer(model, model_name, seed, **trainer_params)
+    trainer = create_trainer(model_name, config["wandb"], **trainer_params)
 
     trainer.fit(model)
 
