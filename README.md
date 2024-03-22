@@ -40,6 +40,13 @@ To use the COMET models, you must also acknowledge the license for their latest 
 - [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
 - [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
 
+We use [WandB](https://wandb.ai/) to track experiments. It is necessary to login first (you should only need to do this once). The below code will prompt you for an API key, which you can find in the [User Settings](https://wandb.ai/settings):
+
+```python
+import wandb
+wandb.login()
+```
+
 ## Structure of this repository
 
 ```
