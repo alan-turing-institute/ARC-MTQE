@@ -1,4 +1,4 @@
-cd /bask/projects/v/vjgo8416-mt-qual-est
+# cd /bask/projects/v/vjgo8416-mt-qual-est
 module restore system
 module load bask-apps/test
 module load Miniconda3/4.10.3
@@ -14,4 +14,4 @@ conda create --yes --prefix "${CONDA_ENV_PATH}"
 # Activate the environment
 conda activate "${CONDA_ENV_PATH}"
 # Choose your version of Python
-conda install --yes python=3.10
+conda install --yes python=3.9
