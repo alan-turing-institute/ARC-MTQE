@@ -115,4 +115,4 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
 
 
 if __name__ == "__main__":
-    train_model("experiment_group_1", "en-cs_frozen", 12)
+    train_model("experiment_group_1", "en-cs_frozen_bask", 12)

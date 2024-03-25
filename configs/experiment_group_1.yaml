@@ -41,14 +41,14 @@ hparams:
 
 # This is trainer config that is fixed for each experiment
 trainer_config:
-  accelerator: cpu
+  accelerator: auto
   deterministic: True
   devices: 1
-  max_epochs: 100
+  max_epochs: 2
 
 # Config for early stopping callback, fixed for each experiment
 early_stopping:
-  monitor: val_precision
+  monitor: val_MCC
   patience: 3
   strict: True
   verbose: False
@@ -57,8 +57,8 @@ early_stopping:
 
 # These are the data for each experiment
 experiments:
-  en-cs_frozen:
-    name: en-cs_frozen
+  en-cs_frozen_bask:
+    name: en-cs_frozen_bask
     train_data:
       train_1:
         dataset_name: ced

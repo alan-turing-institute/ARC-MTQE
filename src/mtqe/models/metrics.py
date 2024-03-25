@@ -1,14 +1,7 @@
 from typing import Any, Callable, List, Optional
 
 import torch
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    matthews_corrcoef,
-    precision_score,
-    recall_score,
-)
-from torchmetrics import Metric
+from torchmetrics import Metric, MatthewsCorrCoef, Accuracy
 
 
 class ClassificationMetrics(Metric):
@@ -100,20 +93,21 @@ def calculate_metrics(prefix: str, preds: torch.Tensor, target: torch.Tensor) ->
     best_threshold = 0.5
 
     y_pred_binary = preds > best_threshold
-    mcc = matthews_corrcoef(target, y_pred_binary)
-    score_precision = precision_score(target, y_pred_binary)
-    score_recall = recall_score(target, y_pred_binary)
-    score_f1 = f1_score(target, y_pred_binary)
-    score_acc = accuracy_score(target, y_pred_binary)
-
+    # mcc = matthews_corrcoef(target, y_pred_binary)
+    # score_precision = precision_score(target, y_pred_binary)
+    # score_recall = recall_score(target, y_pred_binary)
+    # score_f1 = f1_score(target, y_pred_binary)
+    # score_acc = accuracy_score(target, y_pred_binary)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    mcc = MatthewsCorrCoef(num_classes=2).to(device)
     report = {
-        prefix + "_threshold": best_threshold,
+        # prefix + "_threshold": best_threshold,
         # prefix + "_MCC": mccs[idx_max],
-        prefix + "_MCC": mcc,
-        prefix + "_precision": score_precision,
-        prefix + "_recall": score_recall,
-        prefix + "_f1": score_f1,
-        prefix + "_acc": score_acc,
+        prefix + "_MCC": mcc(target, y_pred_binary),
+        # prefix + "_precision": score_precision,
+        #prefix + "_recall": score_recall,
+        #prefix + "_f1": score_f1,
+        #prefix + "_acc": score_acc,
     }
 
     return report
