@@ -1,103 +1,116 @@
-from typing import Any, Callable, List, Optional
+from typing import Dict
 
 import torch
-from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Metric, Precision, Recall
+from comet.models import RegressionMetric
+from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Precision, Recall
 
 
-class ClassificationMetrics(Metric):
+class ClassificationMetrics(RegressionMetric):
     """
     New class to calculate classification metrics for the COMET CED model.
-    This is similar to the RegressionMetrics class in the COMET repo - in fact,
-    could have inherited from that instead and then just overriden the compute
-    method.
+    This is similar to the RegressionMetrics class in the COMET repo
+    NOTE: a higher value is assumed to be a better value for all calculated metrics.
     """
 
-    is_differentiable = False
-    higher_is_better = True
-    full_state_update = False
-    preds: List[torch.Tensor]
-    target: List[torch.Tensor]
+    # is_differentiable = False
+    # higher_is_better = True
+    # full_state_update = False
+    # preds: List[torch.Tensor]
+    # target: List[torch.Tensor]
 
-    def __init__(
-        self,
-        prefix: str = "",
-        dist_sync_on_step: bool = False,
-        process_group: Optional[Any] = None,
-        dist_sync_fn: Optional[Callable] = None,
-    ) -> None:
-        super().__init__(
-            dist_sync_on_step=dist_sync_on_step,
-            process_group=process_group,
-            dist_sync_fn=dist_sync_fn,
-        )
-        self.add_state("preds", default=[], dist_reduce_fx="cat")
-        self.add_state("target", default=[], dist_reduce_fx="cat")
-        self.add_state("systems", default=[], dist_reduce_fx=None)
-        self.prefix = prefix
+    # def __init__(
+    #     self,
+    #     prefix: str = "",
+    #     dist_sync_on_step: bool = False,
+    #     process_group: Optional[Any] = None,
+    #     dist_sync_fn: Optional[Callable] = None,
+    # ) -> None:
+    #     super().__init__(
+    #         dist_sync_on_step=dist_sync_on_step,
+    #         process_group=process_group,
+    #         dist_sync_fn=dist_sync_fn,
+    #     )
+    #     self.add_state("preds", default=[], dist_reduce_fx="cat")
+    #     self.add_state("target", default=[], dist_reduce_fx="cat")
+    #     self.add_state("systems", default=[], dist_reduce_fx=None)
+    #     self.prefix = prefix
 
-    def update(
-        self,
-        preds: torch.Tensor,
-        target: torch.Tensor,
-        systems: Optional[List[str]] = None,
-    ) -> None:  # type: ignore
-        """Update state with predictions and targets.
+    # def update(
+    #     self,
+    #     preds: torch.Tensor,
+    #     target: torch.Tensor,
+    #     systems: Optional[List[str]] = None,
+    # ) -> None:  # type: ignore
+    #     """Update state with predictions and targets.
 
-        Args:
-            preds (torch.Tensor): Predictions from model
-            target (torch.Tensor): Ground truth values
-        """
-        self.preds.append(preds)
-        self.target.append(target)
+    #     Args:
+    #         preds (torch.Tensor): Predictions from model
+    #         target (torch.Tensor): Ground truth values
+    #     """
+    #     self.preds.append(preds)
+    #     self.target.append(target)
 
-        if systems:
-            self.systems += systems
+    #     if systems:
+    #         self.systems += systems
 
     def compute(self) -> torch.Tensor:
         """Computes classification metrics."""
         try:
             preds = torch.cat(self.preds, dim=0)
-            target = torch.cat(self.target, dim=0)
+            targets = torch.cat(self.targets, dim=0)
         except TypeError:
             preds = self.preds
-            target = self.target
+            targets = self.targets
 
-        report = calculate_metrics(self.prefix, preds, target)
+        report = calculate_metrics(self.prefix, preds, targets)
 
         return report
 
 
 # Expect we will want to call this function outside of instances of ClassificationMetrics
 # e.g., when calculating metrics on test data or calculating metrics from LLM output
-def calculate_metrics(prefix: str, preds: torch.Tensor, target: torch.Tensor) -> dict:
+def calculate_metrics(prefix: str, preds: torch.Tensor, targets: torch.Tensor) -> Dict:
+    """
+    Calculates and returns classification metrics given the true values and predictions.
+    Currently calculates:
+    - Matthew's Correlation Coefficient
+    - F1 Score
+    - Accuracy
+    - Precision
+    - Recall
+    NOTE: This code changes the positive class to mean there is an ERROR
+
+    Parameters
+    ----------
+    prefix: str
+        Text to be prefixed to the metric names
+
+    preds: torch.Tensor
+        Tensor of sigmoid predictions (between 0 and 1)
+
+    targets: torch.Tensor
+        Tensor of true values (either 0 or 1)
+
+    Returns
+    ----------
+    dict
+        Dictionary containing the classification metrics for the predictions and target values
+    """
     # higher COMET score --> higher confidence it is NOT an error
     # However, we want the positive class to represent ERRORS
     # Therefore we change the labels to:  ERROR = 1, NOT = 0
     preds = 1 - preds
-    target = 1 - target
+    targets = 1 - targets
 
-    # thresholds = np.arange(0, 1, 0.01)
+    # Threshold currently fixed, might want to experiment at some point
+    # when analysing the results with identifying the 'best' threshold
+    # according to some metric
+    threshold = 0.5
 
-    # mccs = []
-    # for t in thresholds:
-    #     # the model is treated as an error detector
-    #     # i.e., scores above threshold are "ERROR" predictions
-    #     # y_hat = (df_results["comet_score"] >= t).astype(int)
-    #     y_hat = (preds >= t).type(torch.uint8)
-    #     mcc = matthews_corrcoef(target, y_hat)
-    #     mccs.append(mcc)
+    # make the predictions
+    preds_binary = preds > threshold
 
-    # idx_max = np.argmax(mccs)
-    # best_threshold = thresholds[idx_max]
-
-    best_threshold = 0.5
-
-    y_pred_binary = preds > best_threshold
-    # mcc = matthews_corrcoef(target, y_pred_binary)
-    # score_precision = precision_score(target, y_pred_binary)
-    # score_recall = recall_score(target, y_pred_binary)
-    # score_f1 = f1_score(target, y_pred_binary)
-    # score_acc = accuracy_score(target, y_pred_binary)
+    # use
     device = "cuda" if torch.cuda.is_available() else "cpu"
     mcc = MatthewsCorrCoef(num_classes=2).to(device)
     score_precision = Precision().to(device)
@@ -105,13 +118,12 @@ def calculate_metrics(prefix: str, preds: torch.Tensor, target: torch.Tensor) ->
     score_f1 = F1Score().to(device)
     score_acc = Accuracy().to(device)
     report = {
-        # prefix + "_threshold": best_threshold,
-        # prefix + "_MCC": mccs[idx_max],
-        prefix + "_MCC": mcc(target, y_pred_binary),
-        prefix + "_precision": score_precision(target, y_pred_binary),
-        prefix + "_recall": score_recall(target, y_pred_binary),
-        prefix + "_f1": score_f1(target, y_pred_binary),
-        prefix + "_acc": score_acc(target, y_pred_binary),
+        prefix + "_threshold": threshold,
+        prefix + "_MCC": mcc(targets, preds_binary),
+        prefix + "_precision": score_precision(targets, preds_binary),
+        prefix + "_recall": score_recall(targets, preds_binary),
+        prefix + "_f1": score_f1(targets, preds_binary),
+        prefix + "_acc": score_acc(targets, preds_binary),
     }
 
     return report
