@@ -48,7 +48,7 @@ trainer_config:
 
 # Config for early stopping callback, fixed for each experiment
 early_stopping:
-  monitor: val_MCC
+  monitor: val_precision
   patience: 3
   strict: True
   verbose: False
@@ -64,7 +64,6 @@ experiments:
         dataset_name: ced
         language_pairs:
           - en-cs
-          - en-de
     dev_data:
       dev_1:
         dataset_name: ced

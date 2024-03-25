@@ -85,7 +85,7 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     wandb_logger = WandbLogger(
         entity=wandb_params["entity"],
         project=wandb_params["project"],
-        name=experiment_name,
+        name=model_name,
         mode="online",
         log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
     )
