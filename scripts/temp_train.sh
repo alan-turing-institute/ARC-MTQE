@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --account vjgo8416-mt-qual-est
 #SBATCH --qos turing
-#SBATCH --time 0-0:30:0
+#SBATCH --time 0-3:00:0
 #SBATCH --nodes 1
 #SBATCH --gpus-per-task 1
 #SBATCH --tasks-per-node=1

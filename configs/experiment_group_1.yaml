@@ -44,11 +44,11 @@ trainer_config:
   accelerator: auto
   deterministic: True
   devices: 1
-  max_epochs: 2
+  max_epochs: 100
 
 # Config for early stopping callback, fixed for each experiment
 early_stopping:
-  monitor: val_precision
+  monitor: val_recall
   patience: 3
   strict: True
   verbose: False
@@ -57,8 +57,8 @@ early_stopping:
 
 # These are the data for each experiment
 experiments:
-  en-cs_frozen_bask:
-    name: en-cs_frozen_bask
+  en-cs_frozen_100:
+    name: en-cs_frozen_100
     train_data:
       train_1:
         dataset_name: ced

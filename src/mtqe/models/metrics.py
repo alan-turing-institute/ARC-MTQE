@@ -100,10 +100,10 @@ def calculate_metrics(prefix: str, preds: torch.Tensor, target: torch.Tensor) ->
     # score_acc = accuracy_score(target, y_pred_binary)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     mcc = MatthewsCorrCoef(num_classes=2).to(device)
-    score_precision = Precision(num_classes=2).to(device)
-    score_recall = Recall(num_classes=2).to(device)
-    score_f1 = F1Score(num_classes=2).to(device)
-    score_acc = Accuracy(num_classes=2).to(device)
+    score_precision = Precision().to(device)
+    score_recall = Recall().to(device)
+    score_f1 = F1Score().to(device)
+    score_acc = Accuracy().to(device)
     report = {
         # prefix + "_threshold": best_threshold,
         # prefix + "_MCC": mccs[idx_max],

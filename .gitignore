@@ -136,6 +136,7 @@ predictions/
 lightning_logs/
 checkpoints/
 wandb/
+scripts/slurm_train_logs/
 
 # Poetry
 poetry.lock
