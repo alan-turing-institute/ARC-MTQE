@@ -41,7 +41,6 @@ hparams:
 
 # This is trainer config that is fixed for each experiment
 trainer_config:
-  accelerator: auto
   deterministic: True
   devices: 1
   max_epochs: 100

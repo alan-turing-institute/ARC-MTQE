@@ -83,7 +83,7 @@ class CEDModel(UnifiedMetric):
 
     def val_dataloader(self) -> DataLoader:
         """
-        Function that loads the validation sets.
+        Method that loads the validation sets.
         NOTE: this is overriden from the parent class because of an error when running
         locally on a Macbook. The num_workers variables were changed from 2 to 0.
         NOTE: A subset of training data is loaded for evaluation
@@ -112,9 +112,16 @@ class CEDModel(UnifiedMetric):
         return val_data
 
     def train_dataloader(self) -> DataLoader:
-        """Method that loads the train dataloader. Can be called every epoch to load a
+        """
+        Method that loads the train dataloader. Can be called every epoch to load a
         different trainset if `reload_dataloaders_every_n_epochs=1` in Lightning
         Trainer.
+        NOTE: this is overriden from the parent class because of an error when running
+        locally on a Macbook. The num_workers variables were changed from 2 to 0.
+
+        Returns
+        -------
+        torch.utils.data.DataLoader
         """
         data_path = self.hparams.train_data[self.current_epoch % len(self.hparams.train_data)]
         train_dataset = self.read_training_data(data_path)
@@ -130,14 +137,15 @@ class CEDModel(UnifiedMetric):
     def init_losses(self) -> None:
         """
         Initializes Loss functions to be used.
-        This overrides the method in the UnifiedMetric class
+        This overrides the method in the UnifiedMetric class to set the loss function to cross entropy
         """
         self.sentloss = nn.CrossEntropyLoss()
 
-    def init_metrics(self):
+    def init_metrics(self) -> None:
         """
         Initializes training and validation classification metrics
-        This overrides the method in UnifiedMetric class
+        This overrides the method in UnifiedMetric class to use the ClassificationMetrics class instead of
+        RegressionMetrics
         """
         self.train_corr = ClassificationMetrics(prefix="train")
         self.val_corr = nn.ModuleList([ClassificationMetrics(prefix=d) for d in self.hparams.validation_data])
@@ -154,11 +162,13 @@ def load_qe_model_from_checkpoint(
     """
     This code is copied from the load_from_checkpoint function imported
     from the comet repo - the difference is that the class is hard-coded
-    to be CEDModel
+    to be CEDModel and the device is set to cuda, if available.
     """
     checkpoint_path = Path(checkpoint_path)
     parent_folder = checkpoint_path.parents[1]
     hparams_file = parent_folder / "hparams.yaml"
+    # would be better if this was set once (in train_ced.py) and passed
+    # to functions when needed - currently also set in metrics.py
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     if hparams_file.is_file():

@@ -7,6 +7,7 @@ from pytorch_lightning import LightningModule, seed_everything
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
+from torch import cuda
 
 import wandb
 from mtqe.data.loaders import get_ced_data_paths
@@ -18,6 +19,20 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     """
     Gets paths to train and dev data from specification in config file
     Loads model using hparams from config file
+    NOTE: the checkpoint to load the model is currently hard-coded
+
+    Parameters
+    ----------
+    config: dict
+        Dictionary containing the config needed to load the model
+
+    experiment_name: str
+        The name of the experiment
+
+    Returns
+    ----------
+    LightningModule
+        A QE model in inherited from CometKiwi, repurposed for clasification
     """
     # set data paths
     train_paths = []
@@ -46,9 +61,25 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     return model
 
 
-def create_model_name(experiment_group_name: str, experiment_name: str, seed: int):
+def create_model_name(experiment_group_name: str, experiment_name: str, seed: int) -> str:
     """
     Creates (as good as unique) model name using the current datetime stamp
+
+    Parameters
+    ----------
+    experiment_group_name: str
+        The name of the group of experiments
+
+    experiment_name: str
+        The name of the experiment
+
+    seed: int
+        The initial random seed value
+
+    Returns
+    ----------
+    str
+        A model name
     """
     now = datetime.now()
     now_str = now.strftime("%Y%m%d_%H:%M:%S")
@@ -56,7 +87,13 @@ def create_model_name(experiment_group_name: str, experiment_name: str, seed: in
     return model_name
 
 
-def train_model(experiment_group_name: str, experiment_name: str, seed: int):
+def train_model(
+    experiment_group_name: str,
+    experiment_name: str,
+    seed: int,
+    config_dir: str = CONFIG_DIR,
+    checkpoint_dir: str = CHECKPOINT_DIR,
+):
     """
     Takes the name of an experiment group (and config file), an experiment name and random seed.
     Opens config file
@@ -64,10 +101,28 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     Creates a model using the data from the config file
     Creates a trainer object using data from the config file
     Fits the model and results are logged to wandb and checkpoint saved locally
+
+    Parameters
+    ----------
+    experiment_group_name: str
+        The name of the group of experiments
+
+    experiment_name: str
+        The name of the experiment
+
+    seed: int
+        The initial random seed value
+
+    config_dir: str
+        The directory where the config files are stored
+
+    checkpoint_dir: str
+        The directory where the checkpoints will be stored
     """
-    with open(os.path.join(CONFIG_DIR, experiment_group_name + ".yaml")) as stream:
+    with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
         config = yaml.safe_load(stream)
 
+    # Check that the experiment name is in the yaml file - the load won't work otherwise.
     assert experiment_name in config["experiments"], (
         experiment_name + " does not exist in " + experiment_group_name + ".yaml"
     )
@@ -78,6 +133,7 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     # Name for this model / experiment
     model_name = create_model_name(experiment_group_name, experiment_name, seed)
 
+    # Initialise random seed
     seed_everything(seed, workers=True)
 
     # Create wandb logger
@@ -95,14 +151,22 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     early_stopping_callback = EarlyStopping(**early_stopping_params)
     # callback to log model checkpoints locally
     # also needs to monitor the same metric as the early stopping callback so that we can work out
-    # which is the best checkpoint for that metric - not sure how we should record / store the checkpoint?
+    # which is the best checkpoint for that metric
     checkpoint_callback = ModelCheckpoint(
-        CHECKPOINT_DIR + "/" + model_name + "/", monitor=early_stopping_params["monitor"]
+        checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"]
     )
 
+    # would be better if this was set earlier and then passed to functions as required
+    # to functions when needed - currently also set in metrics.py and comet.py
+    device = "cuda" if cuda.is_available() else "cpu"
     # create new trainer object
     trainer_params = config["trainer_config"]
-    trainer = Trainer(logger=wandb_logger, callbacks=[checkpoint_callback, early_stopping_callback], **trainer_params)
+    trainer = Trainer(
+        logger=wandb_logger,
+        callbacks=[checkpoint_callback, early_stopping_callback],
+        accelerator=device,
+        **trainer_params
+    )
 
     trainer.fit(model)
 
@@ -115,4 +179,6 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
 
 
 if __name__ == "__main__":
+    # For now, just hard-coded to run the first experiment in the test yaml file
+    # Will need to parse args etc
     train_model("experiment_group_1", "en-cs_frozen_100", 12)
