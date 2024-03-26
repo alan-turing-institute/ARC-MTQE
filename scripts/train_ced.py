@@ -101,12 +101,59 @@ def create_model_name(experiment_group_name: str, experiment_name: str, seed: in
     return model_name
 
 
+def get_callbacks(
+    config: dict,
+    model_name: str,
+    checkpoint_dir: str = CHECKPOINT_DIR,
+) -> list:
+    """
+    Creates the callbacks to be used by the trainer
+    The trainer will always have a ModelCheckpoint callback, which will be stored in the first index of the list
+    The trainer may or may not have an EarlyStopping callback
+
+    Parameters
+    ----------
+    config: dict
+        Dictionary holding the config for the trainer
+
+    model_name: str
+        The name of the model
+
+    checkpoint_dir: str
+        The directory where the checkpoints will be stored
+
+    Returns
+    -------
+    ModelCheckpoint
+
+
+    list
+        A list of callbacks that will be used.
+    """
+
+    if "early_stopping" in config:
+        early_stopping_params = config["early_stopping"]
+        # callback for early stopping
+        early_stopping_callback = EarlyStopping(**early_stopping_params)
+        # callback to log model checkpoints locally
+        # also needs to monitor the same metric as the early stopping callback so that we can work out
+        # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
+        checkpoint_callback = ModelCheckpoint(
+            checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"], mode="max"
+        )
+        callbacks = [checkpoint_callback, early_stopping_callback]
+    else:
+        checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + model_name + "/")
+        callbacks = [checkpoint_callback]
+
+    return callbacks
+
+
 def train_model(
     experiment_group_name: str,
     experiment_name: str,
     seed: int,
     config_dir: str = CONFIG_DIR,
-    checkpoint_dir: str = CHECKPOINT_DIR,
 ):
     """
     Takes the name of an experiment group (and config file), an experiment name and random seed.
@@ -130,8 +177,6 @@ def train_model(
     config_dir: str
         The directory where the config files are stored
 
-    checkpoint_dir: str
-        The directory where the checkpoints will be stored
     """
 
     with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
@@ -161,33 +206,22 @@ def train_model(
         log_model=False,  # Takes too long to log the checkpoint in wandb, so keep false
     )
 
-    early_stopping_params = config["early_stopping"]
-    # callback for early stopping
-    early_stopping_callback = EarlyStopping(**early_stopping_params)
-    # callback to log model checkpoints locally
-    # also needs to monitor the same metric as the early stopping callback so that we can work out
-    # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
-    checkpoint_callback = ModelCheckpoint(
-        checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"], mode="max"
-    )
-
     # would be better if this was set earlier and then passed to functions as required
     # to functions when needed - currently also set in metrics.py and comet.py
     device = "cuda" if cuda.is_available() else "cpu"
+    # create the callbacks for the trainer
+    callbacks = get_callbacks(config, model_name)
     # create new trainer object
     trainer_params = config["trainer_config"]
-    trainer = Trainer(
-        logger=wandb_logger,
-        callbacks=[checkpoint_callback, early_stopping_callback],
-        accelerator=device,
-        **trainer_params
-    )
+    trainer = Trainer(logger=wandb_logger, callbacks=callbacks, accelerator=device, **trainer_params)
 
     trainer.fit(model)
 
     # Recording the 'best' checkpoint according to the metric we are monitoring
     # so that we can load it again - do we want to save any other checkpoints?
-    wandb.config["best_checkpoint_path"] = checkpoint_callback.best_model_path
+    # The ModelCheckpoint is identified as the first callback to be stored in the
+    # callbacks list - I don't particularly like this
+    wandb.config["best_checkpoint_path"] = callbacks[0].best_model_path
 
     wandb.finish()
 
