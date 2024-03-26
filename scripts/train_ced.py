@@ -170,9 +170,8 @@ def train_model(
 
     trainer.fit(model)
 
-    # Haven't tested if the next line works or not... trying to work out how we
-    # record the 'best' checkpoint according to the metric we are monitoring
-    # so that we can load it again
+    # Recording the 'best' checkpoint according to the metric we are monitoring
+    # so that we can load it again - do we want to save any other checkpoints?
     wandb.config["best_checkpoint_path"] = checkpoint_callback.best_model_path
 
     wandb.finish()
