@@ -151,9 +151,9 @@ def train_model(
     early_stopping_callback = EarlyStopping(**early_stopping_params)
     # callback to log model checkpoints locally
     # also needs to monitor the same metric as the early stopping callback so that we can work out
-    # which is the best checkpoint for that metric
+    # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
     checkpoint_callback = ModelCheckpoint(
-        checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"]
+        checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"], mode="max"
     )
 
     # would be better if this was set earlier and then passed to functions as required
