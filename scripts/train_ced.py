@@ -1,3 +1,4 @@
+import argparse
 import os
 from datetime import datetime
 
@@ -15,6 +16,19 @@ from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
 
 
+def parse_args():
+    """
+    Construct argument parser.
+    """
+    parser = argparse.ArgumentParser(description="Get experiment config settings")
+
+    parser.add_argument("-g", "--group", required=True, help="Experiment group name")
+    parser.add_argument("-e", "--exp", required=True, help="Experiment name")
+    parser.add_argument("-s", "--seed", required=True, help="Seed")
+
+    return parser.parse_args()
+
+
 def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     """
     Gets paths to train and dev data from specification in config file
@@ -30,7 +44,7 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
         The name of the experiment
 
     Returns
-    ----------
+    -------
     LightningModule
         A QE model in inherited from CometKiwi, repurposed for clasification
     """
@@ -119,6 +133,7 @@ def train_model(
     checkpoint_dir: str
         The directory where the checkpoints will be stored
     """
+
     with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
         config = yaml.safe_load(stream)
 
@@ -126,7 +141,7 @@ def train_model(
     assert experiment_name in config["experiments"], (
         experiment_name + " does not exist in " + experiment_group_name + ".yaml"
     )
-    assert seed in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
+    assert int(seed) in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
 
     # Create model
     model = load_model_from_file(config, experiment_name)
@@ -177,7 +192,17 @@ def train_model(
     wandb.finish()
 
 
+def main():
+    args = parse_args()
+    experiment_group_name = args.group
+    experiment_name = args.exp
+    seed = args.seed
+
+    train_model(experiment_group_name, experiment_name, seed)
+
+
 if __name__ == "__main__":
     # For now, just hard-coded to run the first experiment in the test yaml file
     # Will need to parse args etc
-    train_model("experiment_group_1", "en-cs_frozen_100", 12)
+    # train_model("experiment_group_1", "en-cs_frozen_100", 12)
+    main()
