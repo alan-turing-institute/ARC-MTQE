@@ -14,6 +14,14 @@ class CEDModel(UnifiedMetric):
     New class created that inherits from the UnifiedMetric class from COMET
     This class overrides the val_dataloader and train_dataloader functions
     to overcome an error obtianed when running the first training approach
+
+    Attributes
+    ----------
+    TO DO
+
+    Methods
+    -------
+    TO DO
     """
 
     def __init__(
@@ -74,7 +82,16 @@ class CEDModel(UnifiedMetric):
         )
 
     def val_dataloader(self) -> DataLoader:
-        """Function that loads the validation sets."""
+        """
+        Function that loads the validation sets.
+        NOTE: this is overriden from the parent class because of an error when running
+        locally on a Macbook. The num_workers variables were changed from 2 to 0.
+        NOTE: A subset of training data is loaded for evaluation
+
+        Returns
+        -------
+        torch.utils.data.DataLoader
+        """
         val_data = [
             DataLoader(
                 dataset=self.train_subset,

@@ -107,7 +107,7 @@ def train_model(experiment_group_name: str, experiment_name: str, seed: int):
     trainer.fit(model)
 
     # Haven't tested if the next line works or not... trying to work out how we
-    # record the 'best' checkpoing according to the metric we are monitoring
+    # record the 'best' checkpoint according to the metric we are monitoring
     # so that we can load it again
     wandb.config["best_checkpoint_path"] = checkpoint_callback.best_model_path
 

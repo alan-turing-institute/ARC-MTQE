@@ -1,11 +1,11 @@
 from typing import Dict
 
 import torch
-from comet.models import RegressionMetric
+from comet.models.metrics import RegressionMetrics
 from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Precision, Recall
 
 
-class ClassificationMetrics(RegressionMetric):
+class ClassificationMetrics(RegressionMetrics):
     """
     New class to calculate classification metrics for the COMET CED model.
     This is similar to the RegressionMetrics class in the COMET repo
