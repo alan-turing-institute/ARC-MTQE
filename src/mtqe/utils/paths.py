@@ -35,6 +35,10 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
 # CHECKPOINTS
 CHECKPOINT_DIR = os.path.join(ROOT_DIR, "checkpoints")
 
+# SLURM SCRIPTS FOR TRAINING
+SLURM_DIR = os.path.join(ROOT_DIR, "scripts", "slurm_scripts")
+TEMPLATES_DIR = os.path.join(ROOT_DIR, "scripts", "templates")
+
 # MODELS (LOCAL)
 COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
 

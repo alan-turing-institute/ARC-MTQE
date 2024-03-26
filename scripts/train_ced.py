@@ -236,7 +236,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # For now, just hard-coded to run the first experiment in the test yaml file
-    # Will need to parse args etc
-    # train_model("experiment_group_1", "en-cs_frozen_100", 12)
     main()

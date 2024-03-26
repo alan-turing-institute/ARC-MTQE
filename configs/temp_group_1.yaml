@@ -11,6 +11,10 @@ seeds:
   - 77
   - 89
 
+# Any params for the slurm file that will be the same across all experiments
+slurm:
+  account: vjgo8416-mt-qual-est
+
 # These are model parameters that are fixed for each experiment
 hparams:
   activations: Tanh
@@ -72,8 +76,10 @@ experiments:
           - en-cs
     hparams:
       keep_embeddings_frozen: true
-
-en-cs_unfrozen:
+    slurm:
+      memory: 6G
+      time: 00:20:00
+  en-cs_unfrozen:
     name: en-cs_unfrozen
     train_data:
       train_1:
@@ -87,3 +93,6 @@ en-cs_unfrozen:
           - en-cs
     hparams:
       keep_embeddings_frozen: false
+    slurm:
+      memory: 32G
+      time: 01:00:00
