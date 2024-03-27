@@ -81,23 +81,6 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      learning_rate: 1.5e-05
-    slurm:
-      memory: 40G
-      time: 05:00:00
-  en-cs_hparams_3c:
-    name: en-cs_hparams_3c
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    hparams:
       learning_rate: 1.5e-04
     slurm:
       memory: 40G
