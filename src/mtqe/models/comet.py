@@ -86,7 +86,12 @@ class CEDModel(UnifiedMetric):
         Method that loads the validation sets.
         NOTE: this is overriden from the parent class because of an error when running
         locally on a Macbook. The num_workers variables were changed from 2 to 0.
-        NOTE: A subset of training data is loaded for evaluation
+        NOTE: A subset of training data is loaded for evaluation but is not mixed into
+        the validation dataset and the score on the train subset is recorded separately
+        to the score on the validation dataset
+        NOTE: While removing the train subset would save some computational cost, it
+        would require additional changes elsewhere in the COMET code, which would
+        require more testing.
 
         Returns
         -------

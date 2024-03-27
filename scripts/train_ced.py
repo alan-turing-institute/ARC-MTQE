@@ -39,14 +39,13 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     ----------
     config: dict
         Dictionary containing the config needed to load the model
-
     experiment_name: str
         The name of the experiment
 
     Returns
     -------
     LightningModule
-        A QE model in inherited from CometKiwi, repurposed for clasification
+        A QE model inherited from CometKiwi, repurposed for clasification
     """
     # set data paths
     train_paths = []
@@ -83,10 +82,8 @@ def create_model_name(experiment_group_name: str, experiment_name: str, seed: in
     ----------
     experiment_group_name: str
         The name of the group of experiments
-
     experiment_name: str
         The name of the experiment
-
     seed: int
         The initial random seed value
 
@@ -96,7 +93,7 @@ def create_model_name(experiment_group_name: str, experiment_name: str, seed: in
         A model name
     """
     now = datetime.now()
-    now_str = now.strftime("%Y%m%d_%H:%M:%S")
+    now_str = now.strftime("%Y%m%d_%H%M%S")
     model_name = experiment_group_name + "__" + experiment_name + "__" + str(seed) + "__" + now_str
     return model_name
 
@@ -115,19 +112,14 @@ def get_callbacks(
     ----------
     config: dict
         Dictionary holding the config for the trainer
-
     model_name: str
         The name of the model
-
     checkpoint_dir: str
         The directory where the checkpoints will be stored
 
     Returns
     -------
-    ModelCheckpoint
-
-
-    list
+    list[ModelCheckpoint]
         A list of callbacks that will be used.
     """
 
@@ -167,13 +159,10 @@ def train_model(
     ----------
     experiment_group_name: str
         The name of the group of experiments
-
     experiment_name: str
         The name of the experiment
-
     seed: int
         The initial random seed value
-
     config_dir: str
         The directory where the config files are stored
 
