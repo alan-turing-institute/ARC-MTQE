@@ -92,9 +92,10 @@ def generate_scripts(
         {
             "python_call": "python "
             + root_dir
-            + "scripts/train_ced.py "
+            + "/scripts/train_ced.py "
             + "--group "
             + experiment_group_name
+            + " "
             + f"--exp {experiment_name} "
             + f"--seed {seed}",
             "experiment_name": experiment_name + "__" + str(seed),
