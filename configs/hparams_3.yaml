@@ -1,4 +1,4 @@
-# This is a config file containing experiment runs to be used for hyperparameter seraching
+# This is a config file containing experiment runs to be used for hyperparameter searching
 
 # WandB names
 wandb:
@@ -16,6 +16,7 @@ slurm:
 # These are model parameters that are fixed for each experiment
 hparams:
   activations: Tanh
+  batch_size: 32
   class_identifier: ced_model
   dropout: 0.1
   encoder_learning_rate: 1.0e-06
@@ -31,10 +32,9 @@ hparams:
   layer_norm: false
   layer_transformation: sparsemax
   layerwise_decay: 0.95
-  learning_rate: 1.5e-05
   loss: cross-entropy
   loss_lambda: 0.65
-  keep_embeddings_frozen: false
+  keep_embeddings_frozen: true
   nr_frozen_epochs: 0.3
   optimizer: AdamW
   pool: avg
@@ -51,8 +51,8 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  en-cs_hparams_2a:
-    name: en-cs_hparams_2a
+  en-cs_hparams_3a:
+    name: en-cs_hparams_3a
     train_data:
       train_1:
         dataset_name: ced
@@ -64,7 +64,41 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      batch_size: 32
+      learning_rate: 1.5e-06
     slurm:
       memory: 40G
-      time: "10:00:00"
+      time: 05:00:00
+  en-cs_hparams_3b:
+    name: en-cs_hparams_3b
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      learning_rate: 1.5e-05
+    slurm:
+      memory: 40G
+      time: 05:00:00
+  en-cs_hparams_3c:
+    name: en-cs_hparams_3c
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      learning_rate: 1.5e-04
+    slurm:
+      memory: 40G
+      time: 05:00:00

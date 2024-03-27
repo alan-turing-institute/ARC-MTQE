@@ -1,4 +1,4 @@
-# This is a config file containing experiment runs to be used for regression testing
+# This is a config file containing experiment runs to be used for hyperparameter searching
 
 # WandB names
 wandb:
