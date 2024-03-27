@@ -6,7 +6,7 @@
 #SBATCH --gpus 1
 #SBATCH --tasks-per-node 1
 #SBATCH --mem {{memory}}
-#SBATCH --job-name ms2-{{experiment_name}}
+#SBATCH --job-name mtqe-{{experiment_name}}
 #SBATCH --output ./slurm_train_logs/{{experiment_name}}-train-%j.out
 
 

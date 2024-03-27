@@ -4,7 +4,7 @@ import os
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from mtqe.utils.paths import CONFIG_DIR, SLURM_DIR, TEMPLATES_DIR
+from mtqe.utils.paths import CONFIG_DIR, ROOT_DIR, SLURM_DIR, TEMPLATES_DIR
 
 
 def parse_args():
@@ -55,7 +55,9 @@ def write_slurm_script(
             f.write(script_content)
 
 
-def generate_scripts(experiment_group_name: str, config_dir: str = CONFIG_DIR, slurm_dir: str = SLURM_DIR):
+def generate_scripts(
+    experiment_group_name: str, config_dir: str = CONFIG_DIR, slurm_dir: str = SLURM_DIR, root_dir: str = ROOT_DIR
+):
     """
     This function generates slurm scripts that can then be run on an HPC cluster
     One script is generated for each model that will be trained
@@ -69,6 +71,8 @@ def generate_scripts(experiment_group_name: str, config_dir: str = CONFIG_DIR, s
         The path where the config files are stored
     slurm_dir: str
         The path where the generated slurm files will be stored
+    root_dir: str
+        The root directory for the project
     """
     # Load config
     with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
@@ -76,15 +80,19 @@ def generate_scripts(experiment_group_name: str, config_dir: str = CONFIG_DIR, s
 
     # path where the slurm scripts will be stored
     scripts_path = os.path.join(slurm_dir, experiment_group_name)
+    log_path = os.path.join(scripts_path, "slurm_train_logs")
     # make the directory, if it doesn't already exist
     if not os.path.isdir(scripts_path):
         os.mkdir(scripts_path)
+        os.mkdir(log_path)
     # Account name for our HPC (Baskerville)
     account_name = config["slurm"]["account"]
     # Generate config for the slurm file for each model that will run
     slurm_config = [
         {
-            "python_call": "python scripts/train_ced.py "
+            "python_call": "python "
+            + root_dir
+            + "scripts/train_ced.py "
             + "--group "
             + experiment_group_name
             + f"--exp {experiment_name} "
