@@ -2,7 +2,6 @@ import argparse
 import os
 from datetime import datetime
 
-import wandb
 import yaml
 from comet import download_model
 from pytorch_lightning import LightningModule, seed_everything
@@ -11,6 +10,7 @@ from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 from torch import cuda
 
+import wandb
 from mtqe.data.loaders import get_ced_data_paths
 from mtqe.models.comet import load_qe_model_from_checkpoint
 from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
