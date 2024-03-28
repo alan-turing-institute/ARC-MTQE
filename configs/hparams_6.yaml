@@ -87,8 +87,8 @@ experiments:
     slurm:
       memory: 40G
       time: 05:00:00
-  en-cs_hparams_7c:
-    name: en-cs_hparams_7c
+  en-cs_hparams_6c:
+    name: en-cs_hparams_6c
     train_data:
       train_1:
         dataset_name: ced
