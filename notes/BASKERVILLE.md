@@ -49,6 +49,14 @@ module load make/4.3-GCCcore-12.2.0
 make data
 ```
 
+To create a link to the project from your home directory:
+
+```
+ln -s /bask/projects/v/<project_space_name>
+```
+
+# Setting up Poetry
+
 To use Poetry:
 
 ```bash
@@ -69,6 +77,14 @@ poetry install
 ```
 
 Follow the login instructions in the README for HuggingFace and WandB.
+
+To activate your poetry environment:
+
+```
+source /bask/projects/v/<project_space_name>/.cache/pypoetry/virtualenvs/<env_name>/bin/activate
+
+export PYTHONPATH=$PYTHONPATH:/bask/projects/v/<project_space_name>/.cache/pypoetry/virtualenvs/<env_name>/bin/python
+```
 
 # Running jobs
 
