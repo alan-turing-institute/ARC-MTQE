@@ -80,7 +80,9 @@ Follow the login instructions in the README for HuggingFace and WandB.
 
 To activate your poetry environment:
 
-```
+```bash
+module load Python/3.10.8-GCCcore-12.2.0
+
 source /bask/projects/v/<project_space_name>/.cache/pypoetry/virtualenvs/<env_name>/bin/activate
 
 export PYTHONPATH=$PYTHONPATH:/bask/projects/v/<project_space_name>/.cache/pypoetry/virtualenvs/<env_name>/bin/python
