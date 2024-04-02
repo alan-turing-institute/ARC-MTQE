@@ -7,7 +7,7 @@ COMETKiwi is an instance of the [`UnifiedMetric`](https://github.com/Unbabel/COM
 As indicated in the notes, some of the parameters are harcoded in the model implementation and so get ignored.
 
 |Parameter|Default|Notes|
-|---|---|---|---|---|---|
+|---|---|---|
 |activations|Tanh|Activation function used inside the regression head (not the `final_activation`).|
 |batch_size|4||
 |class_identifier|unified_metric|We override this when creating our model.|
