@@ -69,7 +69,7 @@ experiments:
       encoder_learning_rate: 1.0e-07
     slurm:
       memory: 40G
-      time: 05:00:00
+      time: 08:00:00
   en-cs_hparams_9b:
     name: en-cs_hparams_9b
     train_data:
@@ -90,4 +90,4 @@ experiments:
       oversample_minority: true
     slurm:
       memory: 40G
-      time: 05:00:00
+      time: 08:00:00
