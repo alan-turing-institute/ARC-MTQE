@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import List, Optional, Union
 
+import pandas as pd
 import torch
 from comet.models import UnifiedMetric
 from torch import nn
-from torch.utils.data import DataLoader, RandomSampler
+from torch.utils.data import DataLoader, RandomSampler, WeightedRandomSampler
 
 from mtqe.models.metrics import ClassificationMetrics
 
@@ -51,6 +52,7 @@ class CEDModel(UnifiedMetric):
         word_level_training: bool = False,
         loss_lambda: float = 0.65,
         load_pretrained_weights: bool = True,
+        oversample_minority=False,
     ):
 
         super().__init__(
@@ -131,9 +133,19 @@ class CEDModel(UnifiedMetric):
         data_path = self.hparams.train_data[self.current_epoch % len(self.hparams.train_data)]
         train_dataset = self.read_training_data(data_path)
 
+        if self.hparams.oversample_minority:
+            df_train_dataset = pd.DataFrame(train_dataset)
+            class_counts = df_train_dataset.score.value_counts()
+            sample_weights = [1 / class_counts[i] for i in df_train_dataset.score.values]
+            sampler = WeightedRandomSampler(
+                weights=sample_weights, num_samples=df_train_dataset.shape[0], replacement=True
+            )
+        else:
+            sampler = RandomSampler(train_dataset)
+
         return DataLoader(
             dataset=train_dataset,
-            sampler=RandomSampler(train_dataset),
+            sampler=sampler,
             batch_size=self.hparams.batch_size,
             collate_fn=lambda s: self.prepare_sample(s, stage="fit"),
             num_workers=0,
