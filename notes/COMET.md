@@ -20,7 +20,7 @@ As indicated in the notes, some of the parameters are harcoded in the model impl
 |keep_embeddings_frozen|true|If `True` then keeps the encoder frozen during training.|
 |layer|mix|Encoder layer to be used for regression ('mix' for pooling info from all layers). Although this appears in the hparams file for the Huggingface model, I don't think this is actually being used. In the code it looks like `sent_layer` is being used to set the `layer` argument.|
 |layer_norm|false|Apply layer normalization to encoder.|
-|layer_transformation|`sparsemax`|Transformation applied when pooling info from all layers of the encoder. This [issue](https://github.com/Unbabel/COMET/issues/195) suggests this doesn't actually get applied. |
+|layer_transformation|sparsemax|Transformation applied when pooling info from all layers of the encoder. This [issue](https://github.com/Unbabel/COMET/issues/195) suggests this doesn't actually get applied. |
 |layerwise_decay|0.95|Learning rate % decay from top-to-bottom encoder layers.|
 |loss|mse|This isn't actually used in the UnifiedMetric, it is hardcoded within the class.  |
 |loss_lambda|0.65|The weight assigned to the word-level loss compared to sentence-level loss (if doing word-level training). |
@@ -38,7 +38,7 @@ As indicated in the notes, some of the parameters are harcoded in the model impl
 Other `UnifiedMetric` parameters:
 
 |Parameter|Default|Notes|
-|---|---|---|---|---|---|
+|---|---|---|
 |load_pretrained_weights||If set to False it avoids loading the weights of the pretrained model (e.g. XLM-R) before it loads the COMET checkpoint. Presumably this is always the desired behaviour. |
 
 ## Training
