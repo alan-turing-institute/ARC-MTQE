@@ -50,8 +50,8 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  en-cs_hparams_9c:
-    name: en-cs_hparams_9c
+  en-cs_hparams_9a:
+    name: en-cs_hparams_9a
     train_data:
       train_1:
         dataset_name: ced
