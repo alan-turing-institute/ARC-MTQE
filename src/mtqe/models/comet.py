@@ -51,7 +51,7 @@ class CEDModel(UnifiedMetric):
         input_segments: List[str] = ["mt", "src", "ref"],
         word_level_training: bool = False,
         loss_lambda: float = 0.65,
-        load_pretrained_weights: bool = True,
+        load_pretrained_weights: bool = False,
         oversample_minority=False,
     ):
 
