@@ -15,10 +15,20 @@ class CEDModel(UnifiedMetric):
     New class created that inherits from the UnifiedMetric class from COMET
     This class overrides the val_dataloader and train_dataloader functions
     to overcome an error obtianed when running the first training approach
+    Two new hparams have been added: `oversample_minority` and `exclude_outliers`
 
     Attributes
     ----------
     TO DO
+
+    oversample_minority:bool
+        Boolean value indicating whether or not to oversample the minority class
+        in the training data. If this is set to True, then it is expected that
+        `reload_dataloaders_every_n_epochs` is set to 1 in the Trainer config
+    exclude_outliers:int
+        If set to a value greater than zero, then any records where the target
+        (machine translated) text is longer than this value is excluded from
+        the training dataset.
 
     Methods
     -------
@@ -53,6 +63,7 @@ class CEDModel(UnifiedMetric):
         loss_lambda: float = 0.65,
         load_pretrained_weights: bool = False,
         oversample_minority=False,
+        exclude_outliers=0,
     ):
 
         super().__init__(
@@ -133,6 +144,21 @@ class CEDModel(UnifiedMetric):
         data_path = self.hparams.train_data[self.current_epoch % len(self.hparams.train_data)]
         train_dataset = self.read_training_data(data_path)
 
+        # If `exclude_outliers` is a value greater than zero, then any records where the
+        # machine translation is longer than this value is excluded from the training
+        # dataset
+        if self.hparams.exclude_outliers > 0:
+            df_train_dataset = pd.DataFrame(train_dataset)
+            df_train_dataset = df_train_dataset[df_train_dataset["mt"].str.len() < self.hparams.exclude_outliers]
+            train_dataset = df_train_dataset.to_dict("records")
+
+        # If `oversample_minority` is set to True, then a WeightedRandomSampler is used
+        # to oversample the minority class when constructing the training dataset.
+        # Having replacement = True means that the size of the training dataset can be
+        # kept at the same size as the original training dataset, but it does mean that
+        # samples in the minority class will be repeated in the training data. Also note
+        # there is no guarantee how many epochs will be required for the model to see all
+        # of the samples in the majority class.
         if self.hparams.oversample_minority:
             df_train_dataset = pd.DataFrame(train_dataset)
             class_counts = df_train_dataset.score.value_counts()
