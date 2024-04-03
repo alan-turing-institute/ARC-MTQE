@@ -64,6 +64,7 @@ class CEDModel(UnifiedMetric):
         load_pretrained_weights: bool = False,
         oversample_minority=False,
         exclude_outliers=0,
+        cross_entropy_weights=None,
     ):
 
         super().__init__(
@@ -182,7 +183,12 @@ class CEDModel(UnifiedMetric):
         Initializes Loss functions to be used.
         This overrides the method in the UnifiedMetric class to set the loss function to cross entropy
         """
-        self.sentloss = nn.CrossEntropyLoss()
+        if self.hparams.cross_entropy_weights is not None:
+            assert len(self.hparams.cross_entropy_weights) == 2
+            loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
+        else:
+            loss_weights = None
+        self.sentloss = nn.BCELoss(weight=loss_weights)
 
     def init_metrics(self) -> None:
         """
