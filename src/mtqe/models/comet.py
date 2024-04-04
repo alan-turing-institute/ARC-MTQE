@@ -31,7 +31,7 @@ class CEDModel(UnifiedMetric):
         If set to a value greater than zero, then any records where the target
         (machine translated) text is longer than this value is excluded from
         the training dataset.
-    error_weight:int
+    error_weight:float
         If set to a value greater than 1, then it is the weight applied to
         all samples classed as a critical error. All samples that are not a
         critical error will always have a weight of 1.
