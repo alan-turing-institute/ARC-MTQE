@@ -229,10 +229,10 @@ class CEDModel(UnifiedMetric):
         sentence_loss = self.sentloss(prediction.score, target.score)
         if self.hparams.error_weight > 1:
             # The weight for samples that don't contain a critical error will always be 1
-            # The weight for samples with a critical error is contained in `error_weight`
+            # The weight for samples with a critical error is the value `error_weight`
             # As samples without a critical error have a score of 1 we need to first get
             # a tensor with a 1 for every critical error `(1 - target.score)`. Then multiply
-            # by the error weight - 1 and add 1 to everything. This will give a weight of
+            # by the `(error_weight - 1)` and add 1 to everything. This will give a weight of
             # 1 to all samples without a critical error, and weight of `error_weight` to
             # those with a critical error.
             weights = (1 - target.score) * (self.hparams.error_weight - 1) + 1
