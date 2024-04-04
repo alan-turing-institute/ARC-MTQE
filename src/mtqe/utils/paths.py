@@ -53,10 +53,10 @@ def get_ced_data_path(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -
 
     if data_split == "test":
         text_data_path = os.path.join(
-            MLQE_PE_DIR, "catastrophic_errors", f"{lp.replace('-', '')}_majority_test_blind.tsv"
+            mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_test_blind.tsv"
         )
         labels_path = os.path.join(
-            MLQE_PE_DIR,
+            mlqepe_dir,
             "catastrophic_errors_goldlabels",
             f"{lp.replace('-', '')}_majority_test_goldlabels",
             "goldlabels.txt",
