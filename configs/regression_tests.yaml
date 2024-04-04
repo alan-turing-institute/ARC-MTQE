@@ -94,3 +94,39 @@ experiments:
     slurm:
       memory: 32G
       time: 01:00:00
+  en-cs_regression_3:
+    name: en-cs_regression_3
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      keep_embeddings_frozen: false
+      oversample_minority: true
+    slurm:
+      memory: 32G
+      time: 01:00:00
+  en-cs_regression_4:
+    name: en-cs_regression_4
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      keep_embeddings_frozen: false
+      error_weight: 4
+    slurm:
+      memory: 32G
+      time: 01:00:00

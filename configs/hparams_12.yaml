@@ -32,7 +32,7 @@ hparams:
   layer_norm: false
   layer_transformation: sparsemax
   layerwise_decay: 0.95
-  loss: cross-entropy
+  loss: binary-cross-entropy
   loss_lambda: 0.65
   nr_frozen_epochs: 0
   optimizer: AdamW
@@ -67,7 +67,7 @@ experiments:
       dropout: 0.1
       learning_rate: 1.5e-06
       encoder_learning_rate: 1.0e-07
-      cross_entropy_weights: [1, 2]
+      error_weight: 2
     slurm:
       memory: 40G
       time: 08:00:00
@@ -87,7 +87,67 @@ experiments:
       dropout: 0.1
       learning_rate: 1.5e-06
       encoder_learning_rate: 1.0e-07
-      cross_entropy_weights: [2, 1]
+      error_weight: 3
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-cs_hparams_12c:
+    name: en-cs_hparams_12c
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-06
+      encoder_learning_rate: 1.0e-07
+      error_weight: 4
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-cs_hparams_12d:
+    name: en-cs_hparams_12d
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-06
+      encoder_learning_rate: 1.0e-07
+      error_weight: 5
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-cs_hparams_12e:
+    name: en-cs_hparams_12e
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-06
+      encoder_learning_rate: 1.0e-07
+      error_weight: 6
     slurm:
       memory: 40G
       time: 08:00:00

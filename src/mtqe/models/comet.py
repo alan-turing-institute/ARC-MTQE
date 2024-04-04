@@ -4,6 +4,7 @@ from typing import List, Optional, Union
 import pandas as pd
 import torch
 from comet.models import UnifiedMetric
+from comet.models.utils import Prediction, Target
 from torch import nn
 from torch.utils.data import DataLoader, RandomSampler, WeightedRandomSampler
 
@@ -15,7 +16,8 @@ class CEDModel(UnifiedMetric):
     New class created that inherits from the UnifiedMetric class from COMET
     This class overrides the val_dataloader and train_dataloader functions
     to overcome an error obtianed when running the first training approach
-    Two new hparams have been added: `oversample_minority` and `exclude_outliers`
+    Three new hparams have been added: `oversample_minority`, `exclude_outliers`
+    and `error_weight`
 
     Attributes
     ----------
@@ -29,6 +31,10 @@ class CEDModel(UnifiedMetric):
         If set to a value greater than zero, then any records where the target
         (machine translated) text is longer than this value is excluded from
         the training dataset.
+    error_weight:int
+        If set to a value greater than zero, then it is the weight applied to
+        all samples classed as a critical error. All samples that are not a
+        critical error will always have a weight of 1.
 
     Methods
     -------
@@ -64,7 +70,7 @@ class CEDModel(UnifiedMetric):
         load_pretrained_weights: bool = False,
         oversample_minority=False,
         exclude_outliers=0,
-        cross_entropy_weights=None,
+        error_weight=0,
     ):
 
         super().__init__(
@@ -181,14 +187,16 @@ class CEDModel(UnifiedMetric):
     def init_losses(self) -> None:
         """
         Initializes Loss functions to be used.
-        This overrides the method in the UnifiedMetric class to set the loss function to cross entropy
+        This overrides the method in the UnifiedMetric class to set the loss function to binary cross entropy
         """
-        if self.hparams.cross_entropy_weights is not None:
-            assert len(self.hparams.cross_entropy_weights) == 2
-            loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
+        # if self.hparams.error_weight > 0:
+        #     loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
+        # else:
+        #     loss_weights = None
+        if self.hparams.error_weight > 1:
+            self.sentloss = nn.BCELoss(reduction="none")
         else:
-            loss_weights = None
-        self.sentloss = nn.BCELoss(weight=loss_weights)
+            self.sentloss = nn.BCELoss()
 
     def init_metrics(self) -> None:
         """
@@ -198,6 +206,29 @@ class CEDModel(UnifiedMetric):
         """
         self.train_corr = ClassificationMetrics(prefix="train")
         self.val_corr = nn.ModuleList([ClassificationMetrics(prefix=d) for d in self.hparams.validation_data])
+
+    def compute_loss(self, prediction: Prediction, target: Target) -> torch.Tensor:
+        """
+        Receives model batch prediction and respective targets and computes
+        a loss value.
+        This overrides the method in UnifiedMetric class to apply class weights
+
+        Parameters
+        ----------
+        prediction: Prediction
+            Batch prediction
+        target: Target
+            Batch targets
+
+        Returns
+        -------
+        torch.Tensor
+        """
+        sentence_loss = self.sentloss(prediction.score, target.score)
+        if self.hparams.error_weight > 1:
+            weights = (1 - target.score) * (self.hparams.error_weight - 1) + 1
+            sentence_loss = torch.mean(weights * sentence_loss)
+        return sentence_loss
 
 
 def load_qe_model_from_checkpoint(
