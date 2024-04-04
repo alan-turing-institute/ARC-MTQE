@@ -227,8 +227,9 @@ def get_ced_data_paths(
 
     file_paths = []
     for lp in lps:
-        fp = os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.csv")
-        file_paths.append(fp)
+        fp = get_ced_data_path(data_split, lp, mlqepe_dir)
+        fp_csv = fp.replace("tsv", "csv")
+        file_paths.append(fp_csv)
 
         # the CSV files get created when `make data` is called so this should not be necessary
         if not os.path.exists(fp):
