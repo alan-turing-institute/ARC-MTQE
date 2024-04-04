@@ -32,7 +32,7 @@ class CEDModel(UnifiedMetric):
         (machine translated) text is longer than this value is excluded from
         the training dataset.
     error_weight:int
-        If set to a value greater than zero, then it is the weight applied to
+        If set to a value greater than 1, then it is the weight applied to
         all samples classed as a critical error. All samples that are not a
         critical error will always have a weight of 1.
 
@@ -70,7 +70,7 @@ class CEDModel(UnifiedMetric):
         load_pretrained_weights: bool = False,
         oversample_minority=False,
         exclude_outliers=0,
-        error_weight=0,
+        error_weight=1,
     ):
 
         super().__init__(
@@ -194,9 +194,11 @@ class CEDModel(UnifiedMetric):
         # else:
         #     loss_weights = None
         if self.hparams.error_weight > 1:
+            # The reduction of `mean` will be calculated in method `compute_loss` using the weights
+            # so set to `none` here
             self.sentloss = nn.BCELoss(reduction="none")
         else:
-            self.sentloss = nn.BCELoss()
+            self.sentloss = nn.BCELoss(reduction="mean")
 
     def init_metrics(self) -> None:
         """
@@ -226,7 +228,15 @@ class CEDModel(UnifiedMetric):
         """
         sentence_loss = self.sentloss(prediction.score, target.score)
         if self.hparams.error_weight > 1:
+            # The weight for samples that don't contain a critical error will always be 1
+            # The weight for samples with a critical error is contained in `error_weight`
+            # As samples without a critical error have a score of 1 we need to first get
+            # a tensor with a 1 for every critical error `(1 - target.score)`. Then multiply
+            # by the error weight - 1 and add 1 to everything. This will give a weight of
+            # 1 to all samples without a critical error, and weight of `error_weight` to
+            # those with a critical error.
             weights = (1 - target.score) * (self.hparams.error_weight - 1) + 1
+            # Multiple `weights` by `sentence_loss` and take the mean value
             sentence_loss = torch.mean(weights * sentence_loss)
         return sentence_loss
 
