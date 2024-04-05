@@ -17,7 +17,7 @@ def main():
     model = load_comet_model()
 
     # save results here
-    out_dir = os.path.join(PREDICTIONS_DIR, "ced_test_data")
+    out_dir = os.path.join(PREDICTIONS_DIR, "ced_data")
     os.makedirs(out_dir, exist_ok=True)
 
     # make predictions for all language pairs listed here
