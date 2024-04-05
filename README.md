@@ -80,7 +80,7 @@ It is also possible to make predictions with the COMETKiwi-XL 2023 model but not
 make analyse_da_xl
 ```
 
-To make COMETKiwi-22 predictions for the  CED test data:
+To make COMETKiwi-22 predictions for the  CED test and validation data:
 
 ```bash
 make analyse_ced
