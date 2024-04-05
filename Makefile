@@ -92,3 +92,6 @@ eval_da:
 
 analyse_ced:
 	poetry run python scripts/predict_ced.py
+
+baseline_ced:
+	poetry run python scripts/baseline_eval.py

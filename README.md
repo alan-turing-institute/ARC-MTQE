@@ -93,3 +93,9 @@ To create a latex table in the outputs directory with performance scores of the 
 ```bash
 make eval_da
 ```
+
+To make a latex table of the baseline COMETKiwi results:
+
+```bash
+make baseline_ced
+```
