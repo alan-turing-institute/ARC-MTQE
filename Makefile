@@ -92,4 +92,3 @@ eval_da:
 
 analyse_ced:
 	poetry run python scripts/predict_ced.py
-	poetry run python scripts/eval_ced.py -p ./predictions/ced_test_data/
