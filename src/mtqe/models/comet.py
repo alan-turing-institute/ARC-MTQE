@@ -73,6 +73,7 @@ class CEDModel(UnifiedMetric):
         error_weight=1,
         num_sentence_classes=1,
         random_weights=False,
+        initializer_range=0.2,
     ):
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
@@ -108,6 +109,9 @@ class CEDModel(UnifiedMetric):
             assert self.hparams.loss == "cross_entropy"
             final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
+        if self.hparams.random_weights:
+            self.estimator.ff.apply(self._init_weights)
+            print("hello")
         # if self.hparams.random_weights:
         #     for layer in self.estimator.ff:
         #         if isinstance(layer, nn.Linear):
@@ -115,6 +119,12 @@ class CEDModel(UnifiedMetric):
         #             nn.init.uniform_(layer.weight)
         #             print(layer.weight[0])
         #             layer.bias.data.fill_()
+
+    def _init_weights(self, module: nn.Module):
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=self.hparams.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
 
     def read_training_data(self, path: str) -> List[dict]:
         """Reads a csv file with training data.

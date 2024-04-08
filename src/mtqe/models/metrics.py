@@ -95,11 +95,11 @@ def calculate_metrics(
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # create metrics objects
-    mcc = MatthewsCorrCoef(num_classes=2).to(device)
-    score_precision = Precision().to(device)
-    score_recall = Recall().to(device)
-    score_f1 = F1Score().to(device)
-    score_acc = Accuracy().to(device)
+    mcc = MatthewsCorrCoef(task="binary", num_classes=2).to(device)
+    score_precision = Precision(task="binary").to(device)
+    score_recall = Recall(task="binary").to(device)
+    score_f1 = F1Score(task="binary").to(device)
+    score_acc = Accuracy(task="binary").to(device)
 
     # create dictionary with metric values
     report = {
