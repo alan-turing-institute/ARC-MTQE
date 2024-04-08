@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import torch
@@ -71,8 +71,8 @@ class CEDModel(UnifiedMetric):
         oversample_minority=False,
         exclude_outliers=0,
         error_weight=1,
+        num_sentence_classes=1,
     ):
-
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
             keep_embeddings_frozen=keep_embeddings_frozen,
@@ -100,6 +100,108 @@ class CEDModel(UnifiedMetric):
             loss_lambda=loss_lambda,
             load_pretrained_weights=load_pretrained_weights,
         )
+
+    def update_final_layer(self):
+        if self.hparams.num_sentence_classes > 1:
+            final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
+            self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
+
+    def read_training_data(self, path: str) -> List[dict]:
+        """Reads a csv file with training data.
+
+        Args:
+            path (str): Path to the csv file to be loaded.
+
+        Returns:
+            List[dict]: Returns a list of training examples.
+        """
+        df = pd.read_csv(path)
+        # Deep copy input segments
+        columns = self.hparams.input_segments[:]
+        data = self._read_data(df, columns)
+        return data
+
+    def read_validation_data(self, path: str) -> List[dict]:
+        """Reads a csv file with validation data.
+
+        Args:
+            path (str): Path to the csv file to be loaded.
+
+        Returns:
+            List[dict]: Returns a list of validation examples.
+        """
+        df = pd.read_csv(path)
+        # Deep copy input segments
+        columns = self.hparams.input_segments[:]
+        # If system in columns we will use this to calculate system-level accuracy
+        if "system" in df.columns:
+            columns.append("system")
+        data = self._read_data(df, columns)
+        return data
+
+    def _read_data(self, df: pd.DataFrame, columns: list) -> List[dict]:
+        # Make sure everything except score is str type
+        for col in columns:
+            df[col] = df[col].astype(str)
+        columns.append("score")
+        df["score"] = df["score"].astype("float16")
+        if self.hparams.num_sentence_classes == 2:
+            df["score"] = df.apply(update_score_two_cols, axis=1)
+        else:
+            assert self.hparams.num_sentence_classes == 1, "Number of sentence classes should be 1 or 2"
+        df = df[columns]
+        return df.to_dict("records")
+
+    def prepare_sample(
+        self, sample: List[Dict[str, Union[str, float]]], stage: str = "fit"
+    ) -> Union[Tuple[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
+        """Tokenizes input data and prepares targets for training.
+
+        Args:
+            sample (List[Dict[str, Union[str, float]]]): Mini-batch
+            stage (str, optional): Model stage ('train' or 'predict'). Defaults to "fit".
+
+        Returns:
+            Union[Tuple[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]: Model input
+                and targets.
+        """
+        inputs = {k: [d[k] for d in sample] for k in sample[0]}
+        input_sequences = [
+            self.encoder.prepare_sample(inputs["mt"], self.word_level, None),
+        ]
+
+        src_input, ref_input = False, False
+        if ("src" in inputs) and ("src" in self.hparams.input_segments):
+            input_sequences.append(self.encoder.prepare_sample(inputs["src"]))
+            src_input = True
+
+        if ("ref" in inputs) and ("ref" in self.hparams.input_segments):
+            input_sequences.append(self.encoder.prepare_sample(inputs["ref"]))
+            ref_input = True
+
+        unified_input = src_input and ref_input
+        model_inputs = self.concat_inputs(input_sequences, unified_input)
+        if stage == "predict":
+            return model_inputs["inputs"]
+
+        if self.hparams.num_sentence_classes == 2:
+            scores = [s for s in inputs["score"]]
+        else:
+            scores = [float(s) for s in inputs["score"]]
+        targets = Target(score=torch.tensor(scores, dtype=torch.float))
+
+        if "system" in inputs:
+            targets["system"] = inputs["system"]
+
+        if self.word_level:
+            # Labels will be the same accross all inputs because we are only
+            # doing sequence tagging on the MT. We will only use the mask corresponding
+            # to the MT segment.
+            seq_len = model_inputs["mt_length"].max()
+            targets["mt_length"] = model_inputs["mt_length"]
+            targets["labels"] = model_inputs["inputs"][0]["label_ids"][:, :seq_len]
+
+        return model_inputs["inputs"], targets
 
     def val_dataloader(self) -> DataLoader:
         """
@@ -189,16 +291,31 @@ class CEDModel(UnifiedMetric):
         Initializes Loss functions to be used.
         This overrides the method in the UnifiedMetric class to set the loss function to binary cross entropy
         """
-        # if self.hparams.error_weight > 0:
-        #     loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
-        # else:
-        #     loss_weights = None
         if self.hparams.error_weight > 1:
-            # The reduction of `mean` will be calculated in method `compute_loss` using the weights
-            # so set to `none` here
-            self.sentloss = nn.BCELoss(reduction="none")
+            reduction = "none"
         else:
-            self.sentloss = nn.BCELoss(reduction="mean")
+            reduction = "mean"
+
+        if self.hparams.loss == "cross_entropy":
+            self.sentloss = nn.CrossEntropyLoss(reduction=reduction)
+        elif self.hprams.loss == "binary_cross_entropy":
+            self.sentloss = nn.BCELoss(reduction=reduction)
+        else:
+            raise Exception(
+                "Expecting loss function of 'cross_entropy' or 'binary_cross_entropy', instead got:", self.hparams.loss
+            )
+        # # if self.hparams.error_weight > 0:
+        # #     loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
+        # # else:
+        # #     loss_weights = None
+        # if self.hparams.error_weight > 1:
+        #     # The reduction of `mean` will be calculated in method `compute_loss` using the weights
+        #     # so set to `none` here
+        #     #self.sentloss = nn.BCELoss(reduction="none")
+        #     self.sentloss = nn.CrossEntropyLoss()
+        # else:
+        #     #self.sentloss = nn.BCELoss(reduction="mean")
+        #     self.sentloss = nn.CrossEntropyLoss()
 
     def init_metrics(self) -> None:
         """
@@ -240,6 +357,54 @@ class CEDModel(UnifiedMetric):
             sentence_loss = torch.mean(weights * sentence_loss)
         return sentence_loss
 
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        token_type_ids: Optional[torch.Tensor] = None,
+        **kwargs
+    ) -> Dict[str, torch.Tensor]:
+        """Forward function.
+
+        Args:
+            input_ids (torch.Tensor): Input sequence.
+            attention_mask (torch.Tensor): Attention mask.
+            token_type_ids (Optional[torch.Tensor], optional): Token type ids for
+                BERT-like models. Defaults to None.
+
+        Raises:
+            Exception: Invalid model word/sent layer if self.{word/sent}_layer are not
+                valid encoder model layers .
+
+        Returns:
+            Dict[str, torch.Tensor]: Sentence scores and word-level logits (if
+                word_level_training = True)
+        """
+        encoder_out = self.encoder(input_ids, attention_mask, token_type_ids=token_type_ids)
+
+        # Word embeddings used for the word-level classification task
+        if self.word_level:
+            if isinstance(self.hparams.word_layer, int) and 0 <= self.hparams.word_layer < self.encoder.num_layers:
+                wordemb = encoder_out["all_layers"][self.hparams.word_layer]
+            else:
+                raise Exception("Invalid model word layer {}.".format(self.hparams.word_layer))
+
+        # embeddings used for the sentence-level regression task
+        if self.layerwise_attention:
+            embeddings = self.layerwise_attention(encoder_out["all_layers"], attention_mask)
+        elif isinstance(self.hparams.sent_layer, int) and 0 <= self.hparams.sent_layer < self.encoder.num_layers:
+            embeddings = encoder_out["all_layers"][self.hparams.sent_layer]
+        else:
+            raise Exception("Invalid model sent layer {}.".format(self.hparams.word_layer))
+        sentemb = embeddings[:, 0, :]  # We take the CLS token as sentence-embedding
+
+        if self.word_level:
+            sentence_output = self.estimator(sentemb)
+            word_output = self.hidden2tag(wordemb)
+            return Prediction(score=sentence_output.view(-1), logits=word_output)
+
+        return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.num_sentence_classes))
+
 
 def load_qe_model_from_checkpoint(
     checkpoint_path: str,
@@ -272,4 +437,12 @@ def load_qe_model_from_checkpoint(
             validation_data=paths_dev_data,
             **kwargs
         )
+        model.update_final_layer()
         return model
+
+
+def update_score_two_cols(row):
+    if row["score"] == 1:
+        return [0.0, 1.0]
+    else:
+        return [1.0, 0.0]
