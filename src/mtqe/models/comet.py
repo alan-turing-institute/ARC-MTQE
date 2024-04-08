@@ -103,6 +103,8 @@ class CEDModel(UnifiedMetric):
 
     def update_final_layer(self):
         if self.hparams.num_sentence_classes > 1:
+            assert self.hparams.final_activation is None
+            assert self.hparams.loss == "cross_entropy"
             final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
 
@@ -145,10 +147,10 @@ class CEDModel(UnifiedMetric):
             df[col] = df[col].astype(str)
         columns.append("score")
         df["score"] = df["score"].astype("float16")
-        if self.hparams.num_sentence_classes == 2:
-            df["score"] = df.apply(update_score_two_cols, axis=1)
-        else:
-            assert self.hparams.num_sentence_classes == 1, "Number of sentence classes should be 1 or 2"
+        # if self.hparams.num_sentence_classes == 2:
+        #     df["score"] = df.apply(update_score_two_cols, axis=1)
+        # else:
+        #     assert self.hparams.num_sentence_classes == 1, "Number of sentence classes should be 1 or 2"
         df = df[columns]
         return df.to_dict("records")
 
@@ -292,30 +294,20 @@ class CEDModel(UnifiedMetric):
         This overrides the method in the UnifiedMetric class to set the loss function to binary cross entropy
         """
         if self.hparams.error_weight > 1:
+            # The reduction of `mean` will be calculated in method `compute_loss` using the weights
+            # so set to `none` here
             reduction = "none"
         else:
             reduction = "mean"
 
         if self.hparams.loss == "cross_entropy":
             self.sentloss = nn.CrossEntropyLoss(reduction=reduction)
-        elif self.hprams.loss == "binary_cross_entropy":
+        elif self.hparams.loss == "binary_cross_entropy":
             self.sentloss = nn.BCELoss(reduction=reduction)
         else:
             raise Exception(
                 "Expecting loss function of 'cross_entropy' or 'binary_cross_entropy', instead got:", self.hparams.loss
             )
-        # # if self.hparams.error_weight > 0:
-        # #     loss_weights = torch.tensor(self.hparams.cross_entropy_weights)
-        # # else:
-        # #     loss_weights = None
-        # if self.hparams.error_weight > 1:
-        #     # The reduction of `mean` will be calculated in method `compute_loss` using the weights
-        #     # so set to `none` here
-        #     #self.sentloss = nn.BCELoss(reduction="none")
-        #     self.sentloss = nn.CrossEntropyLoss()
-        # else:
-        #     #self.sentloss = nn.BCELoss(reduction="mean")
-        #     self.sentloss = nn.CrossEntropyLoss()
 
     def init_metrics(self) -> None:
         """
@@ -323,8 +315,19 @@ class CEDModel(UnifiedMetric):
         This overrides the method in UnifiedMetric class to use the ClassificationMetrics class instead of
         RegressionMetrics
         """
-        self.train_corr = ClassificationMetrics(prefix="train")
-        self.val_corr = nn.ModuleList([ClassificationMetrics(prefix=d) for d in self.hparams.validation_data])
+        if self.hparams.loss == "binary_cross_entropy":
+            binary = True
+            num_classes = 2
+        else:
+            binary = False
+            num_classes = self.hparams.num_sentence_classes
+        self.train_corr = ClassificationMetrics(prefix="train", binary=binary, num_classes=num_classes)
+        self.val_corr = nn.ModuleList(
+            [
+                ClassificationMetrics(prefix=d, binary=binary, num_classes=num_classes)
+                for d in self.hparams.validation_data
+            ]
+        )
 
     def compute_loss(self, prediction: Prediction, target: Target) -> torch.Tensor:
         """
@@ -403,7 +406,10 @@ class CEDModel(UnifiedMetric):
             word_output = self.hidden2tag(wordemb)
             return Prediction(score=sentence_output.view(-1), logits=word_output)
 
-        return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.num_sentence_classes))
+        if self.hparams.num_sentence_classes > 1:
+            return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.num_sentence_classes))
+        else:
+            return Prediction(score=self.estimator(sentemb).view(-1))
 
 
 def load_qe_model_from_checkpoint(
