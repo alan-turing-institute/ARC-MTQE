@@ -92,7 +92,7 @@ experiments:
       memory: 40G
       time: 08:00:00
   en-cs_bce_logits_pretrained_head:
-    name: en-cs_bce_pretrained_head
+    name: en-cs_bce_logits_pretrained_head
     train_data:
       train_1:
         dataset_name: ced
