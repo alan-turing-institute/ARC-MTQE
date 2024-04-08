@@ -186,11 +186,12 @@ class CEDModel(UnifiedMetric):
         if stage == "predict":
             return model_inputs["inputs"]
 
-        if self.hparams.num_sentence_classes == 2:
+        if self.hparams.num_sentence_classes > 1:
             scores = [s for s in inputs["score"]]
+            targets = Target(score=torch.tensor(scores, dtype=torch.long))
         else:
             scores = [float(s) for s in inputs["score"]]
-        targets = Target(score=torch.tensor(scores, dtype=torch.float))
+            targets = Target(score=torch.tensor(scores, dtype=torch.float))
 
         if "system" in inputs:
             targets["system"] = inputs["system"]
