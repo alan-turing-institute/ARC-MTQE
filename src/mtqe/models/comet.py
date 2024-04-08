@@ -72,6 +72,7 @@ class CEDModel(UnifiedMetric):
         exclude_outliers=0,
         error_weight=1,
         num_sentence_classes=1,
+        random_weights=False,
     ):
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
@@ -101,12 +102,19 @@ class CEDModel(UnifiedMetric):
             load_pretrained_weights=load_pretrained_weights,
         )
 
-    def update_final_layer(self):
+    def update_estimator(self):
         if self.hparams.num_sentence_classes > 1:
             assert self.hparams.final_activation is None
             assert self.hparams.loss == "cross_entropy"
             final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
+        # if self.hparams.random_weights:
+        #     for layer in self.estimator.ff:
+        #         if isinstance(layer, nn.Linear):
+        #             print(layer.weight[0])
+        #             nn.init.uniform_(layer.weight)
+        #             print(layer.weight[0])
+        #             layer.bias.data.fill_()
 
     def read_training_data(self, path: str) -> List[dict]:
         """Reads a csv file with training data.
@@ -305,6 +313,8 @@ class CEDModel(UnifiedMetric):
             self.sentloss = nn.CrossEntropyLoss(reduction=reduction)
         elif self.hparams.loss == "binary_cross_entropy":
             self.sentloss = nn.BCELoss(reduction=reduction)
+        elif self.hparams.loss == "binary_cross_entropy_with_logits":
+            self.sentloss = nn.BCEWithLogitsLoss(reduction=reduction)
         else:
             raise Exception(
                 "Expecting loss function of 'cross_entropy' or 'binary_cross_entropy', instead got:", self.hparams.loss
@@ -444,12 +454,5 @@ def load_qe_model_from_checkpoint(
             validation_data=paths_dev_data,
             **kwargs
         )
-        model.update_final_layer()
+        model.update_estimator()
         return model
-
-
-def update_score_two_cols(row):
-    if row["score"] == 1:
-        return [0.0, 1.0]
-    else:
-        return [1.0, 0.0]

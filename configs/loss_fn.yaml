@@ -91,3 +91,23 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
+  en-cs_bce_logits_pretrained_head:
+    name: en-cs_bce_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+    slurm:
+      memory: 40G
+      time: 08:00:00
