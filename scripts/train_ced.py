@@ -177,13 +177,13 @@ def train_model(
     )
     assert int(seed) in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
 
+    # Initialise random seed
+    seed_everything(seed, workers=True)
+
     # Create model
     model = load_model_from_file(config, experiment_name)
     # Name for this model / experiment
     model_name = create_model_name(experiment_group_name, experiment_name, seed)
-
-    # Initialise random seed
-    seed_everything(seed, workers=True)
 
     # Create wandb logger
     wandb_params = config["wandb"]

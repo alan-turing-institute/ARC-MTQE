@@ -74,6 +74,7 @@ class CEDModel(UnifiedMetric):
         num_sentence_classes=1,
         random_weights=False,
         initializer_range=0.2,
+        calc_threshold=False,
     ):
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
@@ -342,7 +343,9 @@ class CEDModel(UnifiedMetric):
         else:
             binary = False
             num_classes = self.hparams.num_sentence_classes
-        self.train_corr = ClassificationMetrics(prefix="train", binary=binary, num_classes=num_classes)
+        self.train_corr = ClassificationMetrics(
+            prefix="train", binary=binary, num_classes=num_classes, calc_threshold=self.hparams.calc_threshold
+        )
         self.val_corr = nn.ModuleList(
             [
                 ClassificationMetrics(prefix=d, binary=binary, num_classes=num_classes)
@@ -431,6 +434,42 @@ class CEDModel(UnifiedMetric):
             return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.num_sentence_classes))
         else:
             return Prediction(score=self.estimator(sentemb).view(-1))
+
+    def on_validation_epoch_end(self, *args, **kwargs) -> None:
+        """Computes and logs metrics - overriding COMET code"""
+        train_dict, threshold = self.train_corr.compute()
+        self.log_dict(train_dict, prog_bar=False, sync_dist=True)
+        self.train_corr.reset()
+
+        if self.word_level:
+            self.log_dict(self.train_mcc.compute(), prog_bar=False, sync_dist=True)
+            self.train_mcc.reset()
+
+        val_metrics = []
+        for i in range(len(self.hparams.validation_data)):
+            corr_metrics, _ = self.val_corr[i].compute(threshold=threshold)
+            self.val_corr[i].reset()
+            if self.word_level:
+                cls_metric = self.val_mcc[i].compute()
+                self.val_mcc[i].reset()
+                results = {**corr_metrics, **cls_metric}
+            else:
+                results = corr_metrics
+
+            # Log to tensorboard the results for this validation set.
+            self.log_dict(results, prog_bar=False, sync_dist=True)
+            val_metrics.append(results)
+
+        average_results = {"val_" + k.split("_")[-1]: [] for k in val_metrics[0].keys()}
+        for i in range(len(val_metrics)):
+            for k, v in val_metrics[i].items():
+                average_results["val_" + k.split("_")[-1]].append(v)
+
+        self.log_dict(
+            {k: sum(v) / len(v) for k, v in average_results.items()},
+            prog_bar=True,
+            sync_dist=True,
+        )
 
 
 def load_qe_model_from_checkpoint(

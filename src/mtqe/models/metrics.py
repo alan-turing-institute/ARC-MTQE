@@ -1,5 +1,6 @@
 from typing import Any, Callable, Dict, Optional
 
+import numpy as np
 import torch
 from comet.models.metrics import RegressionMetrics
 from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Precision, Recall
@@ -20,14 +21,30 @@ class ClassificationMetrics(RegressionMetrics):
         dist_sync_fn: Optional[Callable] = None,
         binary=True,
         num_classes=2,
+        calc_threshold=False,
     ) -> None:
         super().__init__(
             prefix=prefix, dist_sync_on_step=dist_sync_on_step, process_group=process_group, dist_sync_fn=dist_sync_fn
         )
         self.binary_loss = binary
         self.num_classes = num_classes
+        self.calc_threshold = calc_threshold
+        self.max_vals = {
+            prefix + "_max_MCC": -1,
+            prefix + "_max_precision": 0,
+            prefix + "_max_recall": 0,
+            prefix + "_max_f1": 0,
+            prefix + "_max_acc": 0,
+        }
+        self.vals_at_max_mcc = {
+            prefix + "_val_at_max_mcc_threshold": 0.5,
+            prefix + "_val_at_max_mcc_precision": 0,
+            prefix + "_val_at_max_mcc_recall": 0,
+            prefix + "_val_at_max_mcc_f1": 0,
+            prefix + "_val_at_max_mcc_acc": 0,
+        }
 
-    def compute(self) -> torch.Tensor:
+    def compute(self, threshold: float = 0.5) -> torch.Tensor:
         """Computes classification metrics."""
         try:
             preds = torch.cat(self.preds, dim=0)
@@ -36,21 +53,45 @@ class ClassificationMetrics(RegressionMetrics):
             preds = self.preds
             targets = self.target
 
-        # Threshold currently fixed, might want to experiment at some point
-        # when analysing the results with identifying the 'best' threshold
-        # according to some metric
-        threshold = 0.5
-
         if self.binary_loss:
+            if self.calc_threshold:
+                threshold = calculate_threshold(preds, targets)
+            else:
+                threshold = threshold
             # make the predictions
             preds = preds > threshold
             preds = preds.long()
         else:
             _, preds = torch.max(preds, 1)
 
+        # higher COMET score --> higher confidence it is NOT an error
+        # However, we want the positive class to represent ERRORS
+        # Therefore we change the labels to:  ERROR = 1, NOT = 0
+        preds = 1 - preds
+        targets = 1 - targets
+
         report = calculate_metrics(self.prefix, preds, targets, threshold, self.num_classes)
 
-        return report
+        return report, threshold
+
+
+def calculate_threshold(preds: torch.Tensor, targets: torch.Tensor) -> float:
+    min_threshold = round(float(preds.min()), 2)
+    max_threshold = round(float(preds.max()), 2)
+
+    thresholds = np.arange(min_threshold, max_threshold, 0.01)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    mcc = MatthewsCorrCoef(task="binary", num_classes=2).to(device)
+    mccs = []
+    for t in thresholds:
+        preds_temp = (preds >= t).int()
+        mcc_val = mcc(targets, preds_temp)
+        mccs.append(mcc_val)
+
+    idx_max = np.argmax(mccs)
+    best_threshold = thresholds[idx_max]
+
+    return best_threshold
 
 
 # Expect we will want to call this function outside of instances of ClassificationMetrics
@@ -66,7 +107,7 @@ def calculate_metrics(
     - Accuracy
     - Precision
     - Recall
-    NOTE: This code changes the positive class to mean there is an ERROR
+    NOTE: Expecting the positive class to mean there is an ERROR
 
     Parameters
     ----------
@@ -84,11 +125,6 @@ def calculate_metrics(
     dict
         Dictionary containing the classification metrics for the predictions and target values
     """
-    # higher COMET score --> higher confidence it is NOT an error
-    # However, we want the positive class to represent ERRORS
-    # Therefore we change the labels to:  ERROR = 1, NOT = 0
-    preds = 1 - preds
-    targets = 1 - targets
 
     # would be better if this was set once (in train_ced.py) and passed
     # to functions when needed - currently also set in comet.py
