@@ -8,6 +8,7 @@ wandb:
 # The experiments defined in this file will be run once for each of the following seeds
 seeds:
   - 42
+  - 107
 
 # Any params for the slurm file that will be the same across all experiments
 slurm:
@@ -167,6 +168,133 @@ experiments:
         dataset_name: ced
         language_pairs:
           - en-cs
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      random_weights: true
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_ce_pretrained_head:
+    name: en-ja_ce_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      num_sentence_classes: 2
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_bce_pretrained_head:
+    name: en-ja_bce_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy
+      final_activation: sigmoid
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_bce_logits_pretrained_head:
+    name: en-ja_bce_logits_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_ce_random_init:
+    name: en-ja_ce_random_init
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      num_sentence_classes: 2
+      random_weights: true
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_bce_random_init:
+    name: en-ja_bce_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy
+      final_activation: sigmoid
+      random_weights: true
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  en-ja_bce_logits_random_init:
+    name: en-ja_bce_logits_pretrained_head
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
     hparams:
       dropout: 0.1
       learning_rate: 1.0e-06
