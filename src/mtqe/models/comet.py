@@ -336,7 +336,7 @@ class CEDModel(UnifiedMetric):
         This overrides the method in UnifiedMetric class to use the ClassificationMetrics class instead of
         RegressionMetrics
         """
-        if self.hparams.loss == "binary_cross_entropy":
+        if self.hparams.loss in ["binary_cross_entropy", "binary_cross_entropy_with_logits"]:
             binary = True
             num_classes = 2
         else:
