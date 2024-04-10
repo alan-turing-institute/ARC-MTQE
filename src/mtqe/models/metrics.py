@@ -37,11 +37,11 @@ class ClassificationMetrics(RegressionMetrics):
             prefix + "_max_acc": 0,
         }
         self.vals_at_max_mcc = {
-            prefix + "_val_at_max_mcc_threshold": 0.5,
-            prefix + "_val_at_max_mcc_precision": 0,
-            prefix + "_val_at_max_mcc_recall": 0,
-            prefix + "_val_at_max_mcc_f1": 0,
-            prefix + "_val_at_max_mcc_acc": 0,
+            prefix + "_at_max_mcc_threshold": 0.5,
+            prefix + "_at_max_mcc_precision": 0,
+            prefix + "_at_max_mcc_recall": 0,
+            prefix + "_at_max_mcc_f1": 0,
+            prefix + "_at_max_mcc_acc": 0,
         }
 
     def compute(self, threshold: float = 0.5) -> torch.Tensor:
@@ -70,9 +70,14 @@ class ClassificationMetrics(RegressionMetrics):
         preds = 1 - preds
         targets = 1 - targets
 
-        report = calculate_metrics(self.prefix, preds, targets, threshold, self.num_classes)
+        report, max_vals, vals_at_max_mcc = calculate_metrics(
+            self.prefix, preds, targets, threshold, self.num_classes, self.max_vals, self.vals_at_max_mcc
+        )
 
-        return report, threshold
+        self.max_vals = max_vals
+        self.vals_at_max_mcc = vals_at_max_mcc
+
+        return report, max_vals, vals_at_max_mcc, threshold
 
 
 def calculate_threshold(preds: torch.Tensor, targets: torch.Tensor) -> float:
@@ -86,7 +91,7 @@ def calculate_threshold(preds: torch.Tensor, targets: torch.Tensor) -> float:
     for t in thresholds:
         preds_temp = (preds >= t).int()
         mcc_val = mcc(targets, preds_temp)
-        mccs.append(mcc_val)
+        mccs.append(mcc_val.item())
 
     idx_max = np.argmax(mccs)
     best_threshold = thresholds[idx_max]
@@ -97,7 +102,13 @@ def calculate_threshold(preds: torch.Tensor, targets: torch.Tensor) -> float:
 # Expect we will want to call this function outside of instances of ClassificationMetrics
 # e.g., when calculating metrics on test data or calculating metrics from LLM output.
 def calculate_metrics(
-    prefix: str, preds: torch.Tensor, targets: torch.Tensor, threshold: int, num_classes: int
+    prefix: str,
+    preds: torch.Tensor,
+    targets: torch.Tensor,
+    threshold: int,
+    num_classes: int,
+    max_vals: dict = None,
+    vals_at_max_mcc: dict = None,
 ) -> Dict:
     """
     Calculates and returns classification metrics given the true values and predictions.
@@ -130,21 +141,44 @@ def calculate_metrics(
     # to functions when needed - currently also set in comet.py
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    # create metrics objects
-    mcc = MatthewsCorrCoef(task="binary", num_classes=2).to(device)
+    # create metrics objects and score predictions
+    mcc = MatthewsCorrCoef(task="binary", num_classes=num_classes).to(device)
+    mcc_val = mcc(targets, preds)
     score_precision = Precision(task="binary").to(device)
+    precision_val = score_precision(targets, preds)
     score_recall = Recall(task="binary").to(device)
+    recall_val = score_recall(targets, preds)
     score_f1 = F1Score(task="binary").to(device)
+    f1_val = score_f1(targets, preds)
     score_acc = Accuracy(task="binary").to(device)
+    acc_val = score_acc(targets, preds)
 
     # create dictionary with metric values
     report = {
         prefix + "_threshold": threshold,
-        prefix + "_MCC": mcc(targets, preds),
-        prefix + "_precision": score_precision(targets, preds),
-        prefix + "_recall": score_recall(targets, preds),
-        prefix + "_f1": score_f1(targets, preds),
-        prefix + "_acc": score_acc(targets, preds),
+        prefix + "_MCC": mcc_val,
+        prefix + "_precision": precision_val,
+        prefix + "_recall": recall_val,
+        prefix + "_f1": f1_val,
+        prefix + "_acc": acc_val,
     }
 
-    return report
+    if max_vals is not None:
+        assert vals_at_max_mcc is not None, "If passing `max_vals` dict, expect `vals_at_max_mcc` too."
+        if mcc_val > max_vals[prefix + "_max_MCC"]:
+            max_vals[prefix + "_max_MCC"] = mcc_val
+            vals_at_max_mcc[prefix + "_at_max_mcc_threshold"] = threshold
+            vals_at_max_mcc[prefix + "_at_max_mcc_precision"] = precision_val
+            vals_at_max_mcc[prefix + "_at_max_mcc_recall"] = recall_val
+            vals_at_max_mcc[prefix + "_at_max_mcc_f1"] = f1_val
+            vals_at_max_mcc[prefix + "_at_max_mcc_acc"] = acc_val
+        if precision_val > max_vals[prefix + "_max_precision"]:
+            max_vals[prefix + "_max_precision"] = precision_val
+        if recall_val > max_vals[prefix + "_max_recall"]:
+            max_vals[prefix + "_max_recall"] = recall_val
+        if f1_val > max_vals[prefix + "_max_f1"]:
+            max_vals[prefix + "_max_f1"] = f1_val
+        if acc_val > max_vals[prefix + "_max_acc"]:
+            max_vals[prefix + "_max_acc"] = acc_val
+
+    return report, max_vals, vals_at_max_mcc

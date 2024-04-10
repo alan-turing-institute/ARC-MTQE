@@ -437,8 +437,10 @@ class CEDModel(UnifiedMetric):
 
     def on_validation_epoch_end(self, *args, **kwargs) -> None:
         """Computes and logs metrics - overriding COMET code"""
-        train_dict, threshold = self.train_corr.compute()
+        train_dict, train_max_metric_vals, train_at_max_mcc_vals, threshold = self.train_corr.compute()
         self.log_dict(train_dict, prog_bar=False, sync_dist=True)
+        self.log_dict(train_max_metric_vals, prog_bar=False, sync_dist=True)
+        self.log_dict(train_at_max_mcc_vals, prog_bar=False, sync_dist=True)
         self.train_corr.reset()
 
         if self.word_level:
@@ -447,7 +449,9 @@ class CEDModel(UnifiedMetric):
 
         val_metrics = []
         for i in range(len(self.hparams.validation_data)):
-            corr_metrics, _ = self.val_corr[i].compute(threshold=threshold)
+            corr_metrics, val_max_metric_vals, val_at_max_mcc_vals, _ = self.val_corr[i].compute(threshold=threshold)
+            self.log_dict(val_max_metric_vals, prog_bar=False, sync_dist=True)
+            self.log_dict(val_at_max_mcc_vals, prog_bar=False, sync_dist=True)
             self.val_corr[i].reset()
             if self.word_level:
                 cls_metric = self.val_mcc[i].compute()
