@@ -1,12 +1,13 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 import torch
 from comet.models import UnifiedMetric
 from comet.models.utils import Prediction, Target
 from torch import nn
-from torch.utils.data import DataLoader, RandomSampler, WeightedRandomSampler
+from torch.utils.data import DataLoader, RandomSampler, Subset, WeightedRandomSampler
 
 from mtqe.models.metrics import ClassificationMetrics
 
@@ -35,6 +36,16 @@ class CEDModel(UnifiedMetric):
         If set to a value greater than 1, then it is the weight applied to
         all samples classed as a critical error. All samples that are not a
         critical error will always have a weight of 1.
+    num_sentence_classes:int
+        To do
+    random_weights:bool
+        To do
+    initializer_range:float
+        To do
+    calc_threshold:bool
+        To do
+    train_subset_size:int
+        To do
 
     Methods
     -------
@@ -75,6 +86,8 @@ class CEDModel(UnifiedMetric):
         random_weights=False,
         initializer_range=0.2,
         calc_threshold=False,
+        train_subset_size=1000,
+        train_subset_replace=True,
     ):
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
@@ -103,88 +116,95 @@ class CEDModel(UnifiedMetric):
             loss_lambda=loss_lambda,
             load_pretrained_weights=load_pretrained_weights,
         )
+        # Check the validity of some combinations of parameters
+        self._check_param_combinations()
 
-    def update_estimator(self):
+    def _check_param_combinations(self) -> None:
+        """
+        Method to check that valid combinations of hyperparameters have been provided.
+        The code may not function or may not have been tested on other combinations
+        NOTE: These checks might not be exhaustive and may want to add others
+        """
+        assert self.hparams.loss in ["cross_entropy", "binary_cross_entropy", "binary_cross_entropy_with_logits"], (
+            "Unexpected loss function, expecting `cross_entropy`, `binary_cross_entropy` or "
+            + "`binary_cross_entropy_with_logits` and got: "
+            + self.hparams.loss
+        )
+        if self.hparams.loss == "cross_entropy":
+            assert self.hparams.num_sentence_classes > 1, "Cross entropy loss must have at least two class outputs"
+            assert (
+                self.hparams.final_activation is None
+            ), "Final activation for cross entropy loss not valid - expecting `None`"
+        if self.hparams.loss == "binary_cross_entropy":
+            assert self.hparams.num_sentence_classes == 1, (
+                "Only one sentence class expected for binary cross entropy, "
+                + self.hparams.num_sentence_classes
+                + " provided"
+            )
+            assert self.hparams.final_activation == "sigmoid", (
+                "Final activation function for binary cross entropy should be set to sigmoid, "
+                + self.hparams.final_activation
+                + " provided"
+            )
+        if self.hparams.loss == "binary_cross_entropy_with_logits":
+            assert self.hparams.num_sentence_classes == 1, (
+                "Only one sentence class expected for binary cross entropy, "
+                + self.hparams.num_sentence_classes
+                + " provided"
+            )
+            assert (
+                self.hparams.final_activation is None
+            ), "Final activation for cross entropy loss not valid - expecting `None`"
+
+    def update_estimator(self) -> None:
+        """
+        Method that makes changes to the feed-forward head of the model if
+        prescribed by the hyperparameters. The current changes that can be
+        made are:
+         - Updating the number of output nodes (if the loss function
+        is cross entropy), this is controlled by the hparam `num_sentence_classes`
+         - Randomly initialising the weights, this is controlled by hparam `random_weights`
+        """
         if self.hparams.num_sentence_classes > 1:
-            assert self.hparams.final_activation is None
-            assert self.hparams.loss == "cross_entropy"
             final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
         if self.hparams.random_weights:
             self.estimator.ff.apply(self._init_weights)
-            print("hello")
-        # if self.hparams.random_weights:
-        #     for layer in self.estimator.ff:
-        #         if isinstance(layer, nn.Linear):
-        #             print(layer.weight[0])
-        #             nn.init.uniform_(layer.weight)
-        #             print(layer.weight[0])
-        #             layer.bias.data.fill_()
 
     def _init_weights(self, module: nn.Module):
+        """
+        Randomly initialises the weights of a layer of a neural network
+        using the normal distribution with mean of 0 and a configurable
+        standard deviation (controlled by hparam `initializer_range`)
+        """
         if isinstance(module, nn.Linear):
             module.weight.data.normal_(mean=0.0, std=self.hparams.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
 
-    def read_training_data(self, path: str) -> List[dict]:
-        """Reads a csv file with training data.
-
-        Args:
-            path (str): Path to the csv file to be loaded.
-
-        Returns:
-            List[dict]: Returns a list of training examples.
-        """
-        df = pd.read_csv(path)
-        # Deep copy input segments
-        columns = self.hparams.input_segments[:]
-        data = self._read_data(df, columns)
-        return data
-
-    def read_validation_data(self, path: str) -> List[dict]:
-        """Reads a csv file with validation data.
-
-        Args:
-            path (str): Path to the csv file to be loaded.
-
-        Returns:
-            List[dict]: Returns a list of validation examples.
-        """
-        df = pd.read_csv(path)
-        # Deep copy input segments
-        columns = self.hparams.input_segments[:]
-        # If system in columns we will use this to calculate system-level accuracy
-        if "system" in df.columns:
-            columns.append("system")
-        data = self._read_data(df, columns)
-        return data
-
-    def _read_data(self, df: pd.DataFrame, columns: list) -> List[dict]:
-        # Make sure everything except score is str type
-        for col in columns:
-            df[col] = df[col].astype(str)
-        columns.append("score")
-        df["score"] = df["score"].astype("float16")
-        # if self.hparams.num_sentence_classes == 2:
-        #     df["score"] = df.apply(update_score_two_cols, axis=1)
-        # else:
-        #     assert self.hparams.num_sentence_classes == 1, "Number of sentence classes should be 1 or 2"
-        df = df[columns]
-        return df.to_dict("records")
-
     def prepare_sample(
         self, sample: List[Dict[str, Union[str, float]]], stage: str = "fit"
     ) -> Union[Tuple[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
-        """Tokenizes input data and prepares targets for training.
+        """
+        This method tokenizes input data and prepares targets for training.
+        This is overriden from the COMET code to amend the format of the
+        scores and targets when there are multiple classes (in the case
+        of cross entropy loss function)
 
-        Args:
-            sample (List[Dict[str, Union[str, float]]]): Mini-batch
-            stage (str, optional): Model stage ('train' or 'predict'). Defaults to "fit".
+        Parameters
+        ----------
+        sample: List[Dict[str, Union[str, float]]]
+            Mini-batch
+        stage: str
+            Model stage ('train' or 'predict'). Defaults to "fit".
 
-        Returns:
-            Union[Tuple[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]: Model input
-                and targets.
+        Returns
+        -------
+        model_inputs["inputs"]: Tuple[Dict[str, torch.Tensor]]
+            Tokenised input sequence
+        targets: Dict[str, torch.Tensor]
+            Dictionary containing the target values - only returned if the stage
+            is not `predict`
         """
         inputs = {k: [d[k] for d in sample] for k in sample[0]}
         input_sequences = [
@@ -225,6 +245,32 @@ class CEDModel(UnifiedMetric):
 
         return model_inputs["inputs"], targets
 
+    def setup(self, stage: str) -> None:
+        """
+        Data preparation function called before training by Lightning.
+        Overriden from COMET code to allow for configuring the size of the
+        training subset used for validation. Controlled with hparams
+        `train_subset_size` and `train_subset_replace`
+
+        Parameters
+        ----------
+        stage: str
+            either 'fit', 'validate', 'test', or 'predict'
+        """
+        if stage in (None, "fit"):
+            train_dataset = self.read_training_data(self.hparams.train_data[0])
+
+            self.validation_sets = [self.read_validation_data(d) for d in self.hparams.validation_data]
+
+            self.first_epoch_total_steps = len(train_dataset) // (
+                self.hparams.batch_size * max(1, self.trainer.num_devices)
+            )
+            # Always validate the model with part of training.
+            train_subset = np.random.choice(
+                a=len(train_dataset), size=self.hparams.train_subset_size, replace=self.hparams.train_subset_replace
+            )
+            self.train_subset = Subset(train_dataset, train_subset)
+
     def val_dataloader(self) -> DataLoader:
         """
         Method that loads the validation sets.
@@ -233,13 +279,10 @@ class CEDModel(UnifiedMetric):
         NOTE: A subset of training data is loaded for evaluation but is not mixed into
         the validation dataset and the score on the train subset is recorded separately
         to the score on the validation dataset
-        NOTE: While removing the train subset would save some computational cost, it
-        would require additional changes elsewhere in the COMET code, which would
-        require more testing.
 
         Returns
         -------
-        torch.utils.data.DataLoader
+        val_data: torch.utils.data.DataLoader
         """
         val_data = [
             DataLoader(
@@ -264,8 +307,14 @@ class CEDModel(UnifiedMetric):
         """
         Method that loads the train dataloader. Can be called every epoch to load a
         different trainset if `reload_dataloaders_every_n_epochs=1` in Lightning
-        Trainer.
-        NOTE: this is overriden from the parent class because of an error when running
+        Trainer. This is overriden from the COMET code to provide some additional
+        functionality:
+         - Records with text over a given length can be excluded from the dataset, this
+           is controlled with the hparam `exclude_outliers`
+         - Allows for the minority class to be oversampled in the dataset, this is
+           controlled with the hparam `oversample_minority`
+
+        NOTE: this also overrides from the parent class because of an error when running
         locally on a Macbook. The num_workers variables were changed from 2 to 0.
 
         Returns
@@ -311,7 +360,10 @@ class CEDModel(UnifiedMetric):
     def init_losses(self) -> None:
         """
         Initializes Loss functions to be used.
-        This overrides the method in the UnifiedMetric class to set the loss function to binary cross entropy
+        This overrides the method in the COMET code to set the loss function for classification
+        Also determins the reduction of the loss function based on whether class weights are
+        applied. If class weights are applied then the reduction is carried out when computing
+        the loss and the rediction here is set to `none`. Otherwise a `mean` reduction is used.
         """
         if self.hparams.error_weight > 1:
             # The reduction of `mean` will be calculated in method `compute_loss` using the weights
@@ -328,21 +380,28 @@ class CEDModel(UnifiedMetric):
             self.sentloss = nn.BCEWithLogitsLoss(reduction=reduction)
         else:
             raise Exception(
-                "Expecting loss function of 'cross_entropy' or 'binary_cross_entropy', instead got:", self.hparams.loss
+                "Expecting loss function of `cross_entropy`, `binary_cross_entropy`, "
+                + "or `binary_cross_entropy_with_logits`, instead got:",
+                self.hparams.loss,
             )
 
     def init_metrics(self) -> None:
         """
         Initializes training and validation classification metrics
-        This overrides the method in UnifiedMetric class to use the ClassificationMetrics class instead of
+        This overrides the method in the COMET code to use the ClassificationMetrics class instead of
         RegressionMetrics
+        NOTE: the names of the objects that store the classification metrics have not been overriden
+        so still read `train_corr` and `val_corr` even though they are not just representing
+        correlations
         """
+        # Set params used for calculating metrics
         if self.hparams.loss in ["binary_cross_entropy", "binary_cross_entropy_with_logits"]:
             binary = True
             num_classes = 2
         else:
             binary = False
             num_classes = self.hparams.num_sentence_classes
+        #
         self.train_corr = ClassificationMetrics(
             prefix="train", binary=binary, num_classes=num_classes, calc_threshold=self.hparams.calc_threshold
         )
@@ -355,9 +414,10 @@ class CEDModel(UnifiedMetric):
 
     def compute_loss(self, prediction: Prediction, target: Target) -> torch.Tensor:
         """
-        Receives model batch prediction and respective targets and computes
-        a loss value.
-        This overrides the method in UnifiedMetric class to apply class weights
+        Receives model batch prediction and respective targets and computes a loss value.
+        This overrides the method in the COMET code to apply class weights if the hparam
+        `error_weight` is set to a value greater than 1.
+        NOTE: the word-level loss function is not included here at all
 
         Parameters
         ----------
@@ -391,21 +451,30 @@ class CEDModel(UnifiedMetric):
         token_type_ids: Optional[torch.Tensor] = None,
         **kwargs
     ) -> Dict[str, torch.Tensor]:
-        """Forward function.
+        """
+        Forward function.
+        Overriden from the COMET code to change the dimensions of the output
+        if `num_sentence_classes` greater than 1 (i.e., if cross-entropy is
+        being employed).
 
-        Args:
-            input_ids (torch.Tensor): Input sequence.
-            attention_mask (torch.Tensor): Attention mask.
-            token_type_ids (Optional[torch.Tensor], optional): Token type ids for
-                BERT-like models. Defaults to None.
+        Parameters
+        ----------
+        input_ids: torch.Tensor
+            Input sequence.
+        attention_mask: torch.Tensor
+            Attention mask.
+        token_type_ids: Optional[torch.Tensor]
+            Token type ids for BERT-like models. Defaults to None.
 
-        Raises:
-            Exception: Invalid model word/sent layer if self.{word/sent}_layer are not
-                valid encoder model layers .
+        Returns
+        -------
+        Dict[str, torch.Tensor]
+            Sentence scores and word-level logits (if word_level_training = True)
 
-        Returns:
-            Dict[str, torch.Tensor]: Sentence scores and word-level logits (if
-                word_level_training = True)
+        Raises
+        ------
+        Exception
+            Invalid model word/sent layer if self.{word/sent}_layer are not valid encoder model layers.
         """
         encoder_out = self.encoder(input_ids, attention_mask, token_type_ids=token_type_ids)
 
@@ -436,7 +505,10 @@ class CEDModel(UnifiedMetric):
             return Prediction(score=self.estimator(sentemb).view(-1))
 
     def on_validation_epoch_end(self, *args, **kwargs) -> None:
-        """Computes and logs metrics - overriding COMET code"""
+        """
+        Computes and logs metrics
+        This overrides the COMET code to log additional metrics
+        """
         train_dict, train_max_metric_vals, train_at_max_mcc_vals, threshold = self.train_corr.compute()
         self.log_dict(train_dict, prog_bar=False, sync_dist=True)
         self.log_dict(train_max_metric_vals, prog_bar=False, sync_dist=True)
