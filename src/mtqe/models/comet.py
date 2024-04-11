@@ -38,7 +38,7 @@ class CEDModel(UnifiedMetric):
         all samples classed as a critical error. All samples that are not a
         critical error will always have a weight of 1.
     num_sentence_classes:int
-        To do
+        The number of classes in the model
     random_weights:bool
         To do
     initializer_range:float
