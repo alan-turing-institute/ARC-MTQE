@@ -37,16 +37,20 @@ class CEDModel(UnifiedMetric):
         If set to a value greater than 1, then it is the weight applied to
         all samples classed as a critical error. All samples that are not a
         critical error will always have a weight of 1.
-    num_sentence_classes:int
-        The number of classes in the model
+    out_dim:int
+        The number of outputs in the model
     random_weights:bool
-        To do
-    initializer_range:float
-        To do
+        A boolean value that determines whether the weights of the feed forward
+        head network are randomly initialised (`True`) or whether the default
+        weights from the checkpoint are used (`False`)
     calc_threshold:bool
-        To do
+        A boolean value that determines whether the value for setting the threshold
+        for determining the class is calculated using the training data (`True`)
+        or whether it is fixed at 0.5 (`False`) - will only take effect if the
+        loss function is binary cross entropy.
     train_subset_size:int
-        To do
+        The size of the training subset used for validation (and be extension also
+        used to determine the threshold if `calc_threshol` is `True`)
 
     Methods
     -------
@@ -83,9 +87,8 @@ class CEDModel(UnifiedMetric):
         oversample_minority=False,
         exclude_outliers=0,
         error_weight=1,
-        num_sentence_classes=1,
+        out_dim=1,
         random_weights=False,
-        initializer_range=0.2,
         calc_threshold=False,
         train_subset_size=1000,
         train_subset_replace=True,
@@ -132,15 +135,13 @@ class CEDModel(UnifiedMetric):
             + self.hparams.loss
         )
         if self.hparams.loss == "cross_entropy":
-            assert self.hparams.num_sentence_classes > 1, "Cross entropy loss must have at least two class outputs"
+            assert self.hparams.out_dim > 1, "Cross entropy loss must have at least two class outputs"
             assert (
                 self.hparams.final_activation is None
             ), "Final activation for cross entropy loss not valid - expecting `None`"
         if self.hparams.loss == "binary_cross_entropy":
-            assert self.hparams.num_sentence_classes == 1, (
-                "Only one sentence class expected for binary cross entropy, "
-                + self.hparams.num_sentence_classes
-                + " provided"
+            assert self.hparams.out_dim == 1, (
+                "Only one sentence class expected for binary cross entropy, " + self.hparams.out_dim + " provided"
             )
             assert self.hparams.final_activation == "sigmoid", (
                 "Final activation function for binary cross entropy should be set to sigmoid, "
@@ -148,10 +149,8 @@ class CEDModel(UnifiedMetric):
                 + " provided"
             )
         if self.hparams.loss == "binary_cross_entropy_with_logits":
-            assert self.hparams.num_sentence_classes == 1, (
-                "Only one sentence class expected for binary cross entropy, "
-                + self.hparams.num_sentence_classes
-                + " provided"
+            assert self.hparams.out_dim == 1, (
+                "Only one sentence class expected for binary cross entropy, " + self.hparams.out_dim + " provided"
             )
             assert (
                 self.hparams.final_activation is None
@@ -164,7 +163,7 @@ class CEDModel(UnifiedMetric):
         made are:
          - Randomly initialising the weights, this is controlled by hparam `random_weights`
          - Updating the number of output nodes (if the loss function
-        is cross entropy), this is controlled by the hparam `num_sentence_classes`
+        is cross entropy), this is controlled by the hparam `out_dim`
         """
         if self.hparams.random_weights:
             self.estimator = FeedForward(
@@ -174,8 +173,8 @@ class CEDModel(UnifiedMetric):
                 dropout=self.hparams.dropout,
                 final_activation=self.hparams.final_activation,
             )
-        if self.hparams.num_sentence_classes > 1:
-            final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
+        if self.hparams.out_dim > 1:
+            final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.out_dim)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
 
     def prepare_sample(
@@ -221,7 +220,7 @@ class CEDModel(UnifiedMetric):
         if stage == "predict":
             return model_inputs["inputs"]
 
-        if self.hparams.num_sentence_classes > 1:
+        if self.hparams.out_dim > 1:
             scores = [s for s in inputs["score"]]
             targets = Target(score=torch.tensor(scores, dtype=torch.long))
         else:
@@ -396,7 +395,7 @@ class CEDModel(UnifiedMetric):
             num_classes = 2
         else:
             binary = False
-            num_classes = self.hparams.num_sentence_classes
+            num_classes = self.hparams.out_dim
         #
         self.train_corr = ClassificationMetrics(
             prefix="train", binary=binary, num_classes=num_classes, calc_threshold=self.hparams.calc_threshold
@@ -450,7 +449,7 @@ class CEDModel(UnifiedMetric):
         """
         Forward function.
         Overriden from the COMET code to change the dimensions of the output
-        if `num_sentence_classes` greater than 1 (i.e., if cross-entropy is
+        if `out_dim` greater than 1 (i.e., if cross-entropy is
         being employed).
 
         Parameters
@@ -495,8 +494,8 @@ class CEDModel(UnifiedMetric):
             word_output = self.hidden2tag(wordemb)
             return Prediction(score=sentence_output.view(-1), logits=word_output)
 
-        if self.hparams.num_sentence_classes > 1:
-            return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.num_sentence_classes))
+        if self.hparams.out_dim > 1:
+            return Prediction(score=self.estimator(sentemb).view(-1, self.hparams.out_dim))
         else:
             return Prediction(score=self.estimator(sentemb).view(-1))
 
