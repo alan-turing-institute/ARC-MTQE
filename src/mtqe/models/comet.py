@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from comet.models import UnifiedMetric
 from comet.models.utils import Prediction, Target
+from comet.modules import FeedForward
 from torch import nn
 from torch.utils.data import DataLoader, RandomSampler, Subset, WeightedRandomSampler
 
@@ -159,28 +160,23 @@ class CEDModel(UnifiedMetric):
     def update_estimator(self) -> None:
         """
         Method that makes changes to the feed-forward head of the model if
-        prescribed by the hyperparameters. The current changes that can be
+        prescribed by the hyperparameters. The changes that can be
         made are:
+         - Randomly initialising the weights, this is controlled by hparam `random_weights`
          - Updating the number of output nodes (if the loss function
         is cross entropy), this is controlled by the hparam `num_sentence_classes`
-         - Randomly initialising the weights, this is controlled by hparam `random_weights`
         """
+        if self.hparams.random_weights:
+            self.estimator = FeedForward(
+                in_dim=self.encoder.output_units,
+                hidden_sizes=self.hparams.hidden_sizes,
+                activations=self.hparams.activations,
+                dropout=self.hparams.dropout,
+                final_activation=self.hparams.final_activation,
+            )
         if self.hparams.num_sentence_classes > 1:
             final_layer = nn.Linear(self.hparams.hidden_sizes[-1], self.hparams.num_sentence_classes)
             self.estimator.ff = nn.Sequential(*self.estimator.ff[:-1], final_layer)
-        if self.hparams.random_weights:
-            self.estimator.ff.apply(self._init_weights)
-
-    def _init_weights(self, module: nn.Module):
-        """
-        Randomly initialises the weights of a layer of a neural network
-        using the normal distribution with mean of 0 and a configurable
-        standard deviation (controlled by hparam `initializer_range`)
-        """
-        if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.hparams.initializer_range)
-            if module.bias is not None:
-                module.bias.data.zero_()
 
     def prepare_sample(
         self, sample: List[Dict[str, Union[str, float]]], stage: str = "fit"
