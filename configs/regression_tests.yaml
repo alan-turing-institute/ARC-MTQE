@@ -73,7 +73,7 @@ experiments:
     hparams:
       keep_embeddings_frozen: true
       loss: cross_entropy
-      num_sentence_classes: 2
+      out_dim: 2
     slurm:
       memory: 6G
       time: 00:20:00

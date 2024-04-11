@@ -129,8 +129,8 @@ class CEDModel(UnifiedMetric):
         The code may not function or may not have been tested on other combinations
         NOTE: These checks might not be exhaustive and may want to add others
         """
-        assert self.hparams.loss in ["cross_entropy", "binary_cross_entropy", "binary_cross_entropy_with_logits"], (
-            "Unexpected loss function, expecting `cross_entropy`, `binary_cross_entropy` or "
+        assert self.hparams.loss in ["cross_entropy", "binary_cross_entropy_with_logits"], (
+            "Unexpected loss function, expecting `cross_entropy`, or "
             + "`binary_cross_entropy_with_logits` and got: "
             + self.hparams.loss
         )
@@ -139,15 +139,6 @@ class CEDModel(UnifiedMetric):
             assert (
                 self.hparams.final_activation is None
             ), "Final activation for cross entropy loss not valid - expecting `None`"
-        if self.hparams.loss == "binary_cross_entropy":
-            assert self.hparams.out_dim == 1, (
-                "Only one sentence class expected for binary cross entropy, " + self.hparams.out_dim + " provided"
-            )
-            assert self.hparams.final_activation == "sigmoid", (
-                "Final activation function for binary cross entropy should be set to sigmoid, "
-                + self.hparams.final_activation
-                + " provided"
-            )
         if self.hparams.loss == "binary_cross_entropy_with_logits":
             assert self.hparams.out_dim == 1, (
                 "Only one sentence class expected for binary cross entropy, " + self.hparams.out_dim + " provided"
@@ -221,7 +212,7 @@ class CEDModel(UnifiedMetric):
             return model_inputs["inputs"]
 
         if self.hparams.out_dim > 1:
-            scores = [s for s in inputs["score"]]
+            scores = inputs["score"]
             targets = Target(score=torch.tensor(scores, dtype=torch.long))
         else:
             scores = [float(s) for s in inputs["score"]]
@@ -369,14 +360,11 @@ class CEDModel(UnifiedMetric):
 
         if self.hparams.loss == "cross_entropy":
             self.sentloss = nn.CrossEntropyLoss(reduction=reduction)
-        elif self.hparams.loss == "binary_cross_entropy":
-            self.sentloss = nn.BCELoss(reduction=reduction)
         elif self.hparams.loss == "binary_cross_entropy_with_logits":
             self.sentloss = nn.BCEWithLogitsLoss(reduction=reduction)
         else:
             raise Exception(
-                "Expecting loss function of `cross_entropy`, `binary_cross_entropy`, "
-                + "or `binary_cross_entropy_with_logits`, instead got:",
+                "Expecting loss function of `cross_entropy`, " + "or `binary_cross_entropy_with_logits`, instead got:",
                 self.hparams.loss,
             )
 
@@ -390,7 +378,7 @@ class CEDModel(UnifiedMetric):
         correlations
         """
         # Set params used for calculating metrics
-        if self.hparams.loss in ["binary_cross_entropy", "binary_cross_entropy_with_logits"]:
+        if self.hparams.loss == "binary_cross_entropy_with_logits":
             binary = True
             num_classes = 2
         else:

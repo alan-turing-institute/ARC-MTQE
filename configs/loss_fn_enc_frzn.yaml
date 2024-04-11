@@ -67,7 +67,7 @@ experiments:
       learning_rate: 1.0e-06
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
-      num_sentence_classes: 2
+      out_dim: 2
     slurm:
       memory: 40G
       time: 08:00:00
@@ -130,7 +130,7 @@ experiments:
       learning_rate: 1.0e-06
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
-      num_sentence_classes: 2
+      out_dim: 2
       random_weights: true
     slurm:
       memory: 40G
@@ -196,7 +196,7 @@ experiments:
       learning_rate: 1.0e-06
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
-      num_sentence_classes: 2
+      out_dim: 2
     slurm:
       memory: 40G
       time: 08:00:00
@@ -259,7 +259,7 @@ experiments:
       learning_rate: 1.0e-06
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
-      num_sentence_classes: 2
+      out_dim: 2
       random_weights: true
     slurm:
       memory: 40G
