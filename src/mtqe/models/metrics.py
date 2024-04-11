@@ -11,6 +11,14 @@ class ClassificationMetrics(RegressionMetrics):
     New class to calculate classification metrics for the COMET CED model.
     This is similar to the RegressionMetrics class in the COMET repo
     NOTE: a higher value is assumed to be a better value for all calculated metrics.
+
+    Attributes
+    ----------
+    To do
+
+    Methods
+    -------
+    To do
     """
 
     def __init__(
@@ -81,6 +89,26 @@ class ClassificationMetrics(RegressionMetrics):
 
 
 def calculate_threshold(preds: torch.Tensor, targets: torch.Tensor) -> float:
+    """
+    This function uses a set of predictions and targets to determine the
+    threshold value that provides the highest MCC value. The predictions are
+    expected in a one-dimensional tensor, i.e. from a model using binary
+    cross entropy
+
+    Parameters
+    ----------
+    preds: torch.Tensor
+        One dimensional tensor of prediction values
+    targets: torch.Tensor
+        Tensor of true values (either 0 or 1)
+
+    Returns
+    -------
+    best_threshold: float
+        A float value representing the threshold that gives the highest
+        MCC value
+
+    """
     min_threshold = round(float(preds.min()), 2)
     max_threshold = round(float(preds.max()), 2)
 
@@ -124,17 +152,20 @@ def calculate_metrics(
     ----------
     prefix: str
         Text to be prefixed to the metric names
-
     preds: torch.Tensor
-        Tensor of sigmoid predictions (between 0 and 1)
-
+        Tensor of predictions
     targets: torch.Tensor
         Tensor of true values (either 0 or 1)
 
     Returns
     ----------
-    dict
+    report: dict
         Dictionary containing the classification metrics for the predictions and target values
+    max_vals: dict
+        Dictionary containing the maximum values achieved over all epochs
+    vals_at_max_mcc: dict
+        Dictionary containing the values of the metrics at the point the maximum MCC was achieved.
+
     """
 
     # would be better if this was set once (in train_ced.py) and passed
