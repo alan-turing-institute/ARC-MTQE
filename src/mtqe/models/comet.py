@@ -16,15 +16,21 @@ from mtqe.models.metrics import ClassificationMetrics
 class CEDModel(UnifiedMetric):
     """
     New class created that inherits from the UnifiedMetric class from COMET
-    This class overrides the val_dataloader and train_dataloader functions
-    to overcome an error obtianed when running the first training approach
-    Three new hparams have been added: `oversample_minority`, `exclude_outliers`
-    and `error_weight`
+    This class overrides the following methods:
+    - prepare_sample
+    - setup
+    - val_dataloader
+    - train_dataloader
+    - init_losses
+    - init_metrics
+    - compute_loss
+    - forward
+    - on_validation_epoch_end
+    Additionally, new methods and hparams have been added.
 
     Attributes
     ----------
-    TO DO
-
+    TO DO - inherited attributes
     oversample_minority:bool
         Boolean value indicating whether or not to oversample the minority class
         in the training data. If this is set to True, then it is expected that
@@ -51,10 +57,17 @@ class CEDModel(UnifiedMetric):
     train_subset_size:int
         The size of the training subset used for validation (and be extension also
         used to determine the threshold if `calc_threshol` is `True`)
+    train_subset_replace: bool
+        A boolean that determines whether the training subset is sampled with replacement or not.
 
     Methods
     -------
-    TO DO
+    TO DO - inherited methods
+    _check_param_combinations()
+        Checks that valid combinations of hyperparameters have been provided.
+    update_estimator()
+        Updates the feed-forward head of the model if prescribed by the hyperparameters
+
     """
 
     def __init__(
@@ -146,12 +159,19 @@ class CEDModel(UnifiedMetric):
             assert (
                 self.hparams.final_activation is None
             ), "Final activation for cross entropy loss not valid - expecting `None`"
+        assert self.hparams.out_dim <= 2, (
+            "Not tested the implementation for greater than two outputs, there will also be some code that needs "
+            + "updating for handling more than two outputs, such as setting error weights."
+        )
+        assert not (self.hparams.oversample_minority and self.hparams.error_weight > 1), (
+            "Oversampling the minority class and setting weights for the error class are not expected to be used "
+            + "simultaneously."
+        )
 
     def update_estimator(self) -> None:
         """
         Method that makes changes to the feed-forward head of the model if
-        prescribed by the hyperparameters. The changes that can be
-        made are:
+        prescribed by the hyperparameters. The changes that can be made are:
          - Randomly initialising the weights, this is controlled by hparam `random_weights`
          - Updating the number of output nodes (if the loss function
         is cross entropy), this is controlled by the hparam `out_dim`
@@ -401,6 +421,8 @@ class CEDModel(UnifiedMetric):
         This overrides the method in the COMET code to apply class weights if the hparam
         `error_weight` is set to a value greater than 1.
         NOTE: the word-level loss function is not included here at all
+        NOTE: this would need updating if the code were extended to allow for more than
+        two classes.
 
         Parameters
         ----------
@@ -543,6 +565,23 @@ def load_qe_model_from_checkpoint(
     This code is copied from the load_from_checkpoint function imported
     from the comet repo - the difference is that the class is hard-coded
     to be CEDModel and the device is set to cuda, if available.
+
+    Parameters
+    ----------
+    checkpoint_path: str
+        Path to a model checkpoint
+    paths_train_data: list
+        List of paths to training datasets
+    paths_val_data: list
+        List of paths to validation datasets
+    strict: bool
+        Strictly enforce that the keys in checkpoint_path match the
+        keys returned by this module's state dict. Defaults to False
+    reload_hparams: bool
+        hparams.yaml file located in the parent folder is only use for
+        deciding the `class_identifier`. By setting this flag to True all
+        hparams will be reloaded.
+
     """
     checkpoint_path = Path(checkpoint_path)
     parent_folder = checkpoint_path.parents[1]
