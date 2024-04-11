@@ -400,13 +400,14 @@ class CEDModel(UnifiedMetric):
         # Set params used for calculating metrics
         if self.hparams.loss == "binary_cross_entropy_with_logits":
             binary_loss = True
-            binary_loss = 2
             activation_fn = torch.sigmoid
             activation_fn_args = {}
-        else:
+        elif self.hparams.loss == "cross_entropy":
             binary_loss = False
             activation_fn = torch.softmax
             activation_fn_args = {"dim": 1}
+        else:
+            raise NotImplementedError("Loss function not implemented:" + self.hparams.loss)
 
         self.train_corr = ClassificationMetrics(
             prefix="train",

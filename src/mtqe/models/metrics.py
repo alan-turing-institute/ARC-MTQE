@@ -28,6 +28,9 @@ class ClassificationMetrics(RegressionMetrics):
     activation_fn: Optional[Callable]
         The function to be applied to the predictions from the model, default is None
         Allowed values are `softmax` or `sigmoid`
+    activation_fn_args: dict
+        Dictionary of arguments to be passed to the activation function. If no args are
+        required then an empty dictionary should be used.
 
     Methods
     -------
@@ -44,7 +47,7 @@ class ClassificationMetrics(RegressionMetrics):
         num_classes: int = 2,
         calc_threshold: bool = False,
         activation_fn: Optional[Callable] = None,
-        activation_fn_args=Optional[dict],
+        activation_fn_args: dict = {},
     ) -> None:
         super().__init__(
             prefix=prefix, dist_sync_on_step=dist_sync_on_step, process_group=process_group, dist_sync_fn=dist_sync_fn
@@ -61,13 +64,7 @@ class ClassificationMetrics(RegressionMetrics):
             prefix + "_max_f1": 0,
             prefix + "_max_acc": 0,
         }
-        self.vals_at_max_mcc = {
-            prefix + "_at_max_mcc_threshold": 0.5,
-            prefix + "_at_max_mcc_precision": 0,
-            prefix + "_at_max_mcc_recall": 0,
-            prefix + "_at_max_mcc_f1": 0,
-            prefix + "_at_max_mcc_acc": 0,
-        }
+        self.vals_at_max_mcc = {}
 
     def compute(self, threshold: float = 0.5) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], float]:
         """
