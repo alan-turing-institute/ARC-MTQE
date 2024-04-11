@@ -17,14 +17,17 @@ class ClassificationMetrics(RegressionMetrics):
     Attributes
     ----------
     To do - inherited attributes
-    binary: bool
+    binary_loss: bool
         Is set to `True` if the loss function is binary cross entropy, `False` otherwise
         (assumed cross entropy)
     num_classes: int
-        Number of classes that predictions are made for
+        Number of classes that the predictions are made over
     calc_threshold: bool
         Is set to `False` if the threshold will be fixed, and `True` if it is to be
         calculated to find the best threshold for a given set of predictions
+    activation_fn: Optional[Callable]
+        The function to be applied to the predictions from the model, default is None
+        Allowed values are `softmax` or `sigmoid`
 
     Methods
     -------
@@ -37,16 +40,20 @@ class ClassificationMetrics(RegressionMetrics):
         dist_sync_on_step: bool = False,
         process_group: Optional[Any] = None,
         dist_sync_fn: Optional[Callable] = None,
-        binary=True,
-        num_classes=2,
-        calc_threshold=False,
+        binary_loss: bool = True,
+        num_classes: int = 2,
+        calc_threshold: bool = False,
+        activation_fn: Optional[Callable] = None,
+        activation_fn_args=Optional[dict],
     ) -> None:
         super().__init__(
             prefix=prefix, dist_sync_on_step=dist_sync_on_step, process_group=process_group, dist_sync_fn=dist_sync_fn
         )
-        self.binary_loss = binary
+        self.binary_loss = binary_loss
         self.num_classes = num_classes
         self.calc_threshold = calc_threshold
+        self.activation_fn = activation_fn
+        self.activation_fn_args = activation_fn_args
         self.max_vals = {
             prefix + "_max_MCC": -1,
             prefix + "_max_precision": 0,
@@ -88,6 +95,10 @@ class ClassificationMetrics(RegressionMetrics):
         except TypeError:
             preds = self.preds
             targets = self.target
+
+        # Apply final activation function to the predictions, if one exists
+        if self.activation_fn is not None:
+            preds = self.activation_fn(preds, **self.activation_fn_args)
 
         if self.binary_loss:
             if self.calc_threshold:

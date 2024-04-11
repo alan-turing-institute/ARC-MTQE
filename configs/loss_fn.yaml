@@ -71,27 +71,6 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
-  en-cs_bce_pretrained_head:
-    name: en-cs_bce_pretrained_head
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy
-      final_activation: sigmoid
-    slurm:
-      memory: 40G
-      time: 08:00:00
   en-cs_bce_logits_pretrained_head:
     name: en-cs_bce_logits_pretrained_head
     train_data:
@@ -130,28 +109,6 @@ experiments:
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
       out_dim: 2
-      random_weights: true
-    slurm:
-      memory: 40G
-      time: 08:00:00
-  en-cs_bce_random_init:
-    name: en-cs_bce_pretrained_head
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-cs
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy
-      final_activation: sigmoid
       random_weights: true
     slurm:
       memory: 40G
@@ -198,27 +155,6 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
-  en-ja_bce_pretrained_head:
-    name: en-ja_bce_pretrained_head
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy
-      final_activation: sigmoid
-    slurm:
-      memory: 40G
-      time: 08:00:00
   en-ja_bce_logits_pretrained_head:
     name: en-ja_bce_logits_pretrained_head
     train_data:
@@ -257,28 +193,6 @@ experiments:
       encoder_learning_rate: 1.0e-07
       loss: cross_entropy
       out_dim: 2
-      random_weights: true
-    slurm:
-      memory: 40G
-      time: 08:00:00
-  en-ja_bce_random_init:
-    name: en-ja_bce_pretrained_head
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy
-      final_activation: sigmoid
       random_weights: true
     slurm:
       memory: 40G
@@ -322,6 +236,8 @@ experiments:
       encoder_learning_rate: 1.0e-07
       loss: binary_cross_entropy_with_logits
       calc_threshold: true
+      train_subset_size: 5000
+      train_subset_replace: False
     slurm:
       memory: 40G
       time: 08:00:00

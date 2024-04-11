@@ -399,18 +399,32 @@ class CEDModel(UnifiedMetric):
         """
         # Set params used for calculating metrics
         if self.hparams.loss == "binary_cross_entropy_with_logits":
-            binary = True
-            num_classes = 2
+            binary_loss = True
+            binary_loss = 2
+            activation_fn = torch.sigmoid
+            activation_fn_args = {}
         else:
-            binary = False
-            num_classes = self.hparams.out_dim
-        #
+            binary_loss = False
+            activation_fn = torch.softmax
+            activation_fn_args = {"dim": 1}
+
         self.train_corr = ClassificationMetrics(
-            prefix="train", binary=binary, num_classes=num_classes, calc_threshold=self.hparams.calc_threshold
+            prefix="train",
+            binary_loss=binary_loss,
+            calc_threshold=self.hparams.calc_threshold,
+            activation_fn=activation_fn,
+            activation_fn_args=activation_fn_args,
         )
+        # Validation datasets will never be used to calculate a binarisation threshold, so this is set to `False`
         self.val_corr = nn.ModuleList(
             [
-                ClassificationMetrics(prefix=d, binary=binary, num_classes=num_classes)
+                ClassificationMetrics(
+                    prefix=d,
+                    binary_loss=binary_loss,
+                    calc_threshold=False,
+                    activation_fn=activation_fn,
+                    activation_fn_args=activation_fn_args,
+                )
                 for d in self.hparams.validation_data
             ]
         )
