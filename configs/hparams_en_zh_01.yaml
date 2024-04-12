@@ -70,7 +70,7 @@ experiments:
       keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   bce_pretrained_64_unfzn:
     name: bce_pretrained_64_unfzn
     train_data:
@@ -92,7 +92,7 @@ experiments:
       keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   ce_random_64_unfzn:
     name: ce_random_64_unfzn
     train_data:
@@ -116,7 +116,7 @@ experiments:
       keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   bce_random_64_unfzn:
     name: bce_random_64_unfzn
     train_data:
@@ -139,7 +139,7 @@ experiments:
       keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   bce_calc_pretrained_64_unfzn:
     name: bce_calc_pretrained_64_unfzn
     train_data:
@@ -164,7 +164,7 @@ experiments:
       train_subset_replace: False
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   ce_pretrained_64_fzn:
     name: ce_pretrained_64_fzn
     train_data:
@@ -187,7 +187,7 @@ experiments:
       keep_embeddings_frozen: true
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
   bce_pretrained_64_fzn:
     name: bce_pretrained_64_fzn
     train_data:
@@ -209,4 +209,4 @@ experiments:
       keep_embeddings_frozen: true
     slurm:
       memory: 40G
-      time: 12:00:00
+      time: '12:00:00'
