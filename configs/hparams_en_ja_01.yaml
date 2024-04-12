@@ -210,3 +210,165 @@ experiments:
     slurm:
       memory: 40G
       time: '12:00:00'
+  ce_pretrained_32_unfzn:
+    name: ce_pretrained_32_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      batch_size: 32
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_pretrained_32_unfzn:
+    name: bce_pretrained_32_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  ce_random_32_unfzn:
+    name: ce_random_32_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      random_weights: true
+      batch_size: 32
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_random_32_unfzn:
+    name: bce_random_32_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      random_weights: true
+      batch_size: 32
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_calc_pretrained_32_unfzn:
+    name: bce_calc_pretrained_32_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      calc_threshold: true
+      train_subset_size: 5000
+      train_subset_replace: False
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  ce_pretrained_32_fzn:
+    name: ce_pretrained_32_fzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      batch_size: 32
+      keep_embeddings_frozen: true
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_pretrained_32_fzn:
+    name: bce_pretrained_32_fzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: true
+    slurm:
+      memory: 40G
+      time: '12:00:00'
