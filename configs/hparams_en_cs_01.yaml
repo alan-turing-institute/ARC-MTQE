@@ -20,6 +20,7 @@ hparams:
   activations: Tanh
   class_identifier: ced_model
   encoder_model: XLM-RoBERTa
+  exclude_outliers: 250
   hidden_sizes:
   - 3072
   - 1024
