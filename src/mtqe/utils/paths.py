@@ -66,6 +66,16 @@ def get_ced_data_path(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -
         return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
 
 
+# CONFIG
+CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
+
+# CHECKPOINTS
+CHECKPOINT_DIR = os.path.join(ROOT_DIR, "checkpoints")
+
+# SLURM SCRIPTS FOR TRAINING
+SLURM_DIR = os.path.join(ROOT_DIR, "scripts", "slurm_scripts")
+TEMPLATES_DIR = os.path.join(ROOT_DIR, "scripts", "templates")
+
 # MODELS (LOCAL)
 COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints", "model.ckpt")
 

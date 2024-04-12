@@ -7,8 +7,12 @@ import pandas as pd
 from sklearn.metrics import (
     PrecisionRecallDisplay,
     RocCurveDisplay,
+    accuracy_score,
+    f1_score,
     matthews_corrcoef,
     precision_recall_curve,
+    precision_score,
+    recall_score,
     roc_curve,
 )
 
@@ -57,9 +61,10 @@ def main():
         df_results = load_data(args.path, lp, model)
 
         # higher COMET score --> higher confidence it is NOT an error
-        # labels:  ERROR = 0, NOT = 1
-        y_true = np.where(df_results["label"] == "NOT", 1, 0)
-        y_pred = df_results["comet_score"]
+        # However, we want the positive class to represent ERRORS
+        # Therefore the labels are:  ERROR = 1, NOT = 0
+        y_true = np.where(df_results["label"] == "NOT", 0, 1)
+        y_pred = 1 - df_results["comet_score"]
 
         # RESULTS
         # 1. Precision, Recall, FPR, TPR
@@ -69,14 +74,19 @@ def main():
         pr_display = PrecisionRecallDisplay(precision=prec, recall=rec).plot()
         roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr).plot()
 
+        min_threshold = round(y_pred.min(), 2)
+        max_threshold = round(y_pred.max(), 2)
         # 2. MCC
         # tresholds for binarizing COMET output
-        thresholds = np.arange(0.05, 0.9, 0.05)
+        thresholds = np.arange(min_threshold, max_threshold, 0.01)
+        # thresholds = np.arange(0.01, 0.99, 0.01)
+        # thresholds = np.arange(0.05, 0.9, 0.05)
         mccs = []
         for t in thresholds:
-            # the model is treated as "NOT an error" detector
-            # i.e., scores above threshold are "NOT an error" predictions
-            y_hat = (df_results["comet_score"] >= t).astype(int)
+            # the model is treated as an error detector
+            # i.e., scores above threshold are "ERROR" predictions
+            # y_hat = (df_results["comet_score"] >= t).astype(int)
+            y_hat = (y_pred >= t).astype(int)
             mcc = matthews_corrcoef(y_true, y_hat)
             mccs.append(mcc)
 
@@ -87,15 +97,37 @@ def main():
         ax1.plot([0, 1], [0, 1], transform=ax1.transAxes, color="black", ls="--")
         pr_display.plot(ax=ax2)
         ax2.axhline(y=sum(y_true) / len(y_true), color="black", linestyle="--")
+        ax3.legend(loc="lower right")
 
         idx_max = np.argmax(mccs)
-        label = f"{thresholds[idx_max]:.2f}"
+        best_threshold = thresholds[idx_max]
+        label = f"{best_threshold:.2f}"
         ax3.scatter(thresholds, mccs, s=10, label=label)
         ax3.set_ylabel("MCC")
         ax3.set_xlabel("Threshold")
         ax3.legend(markerscale=0, loc="upper left", title="Best threshold")
 
-        fig.suptitle(lp, fontsize=16)
+        y_pred_binary = y_pred > best_threshold
+        score_precision = precision_score(y_true, y_pred_binary)
+        score_recall = recall_score(y_true, y_pred_binary)
+        score_f1 = f1_score(y_true, y_pred_binary)
+        score_acc = accuracy_score(y_true, y_pred_binary)
+
+        title = (
+            lp
+            + " | Best threshold: "
+            + f"{best_threshold:.2f}"
+            + " | Precision: "
+            + f"{score_precision:.2f}"
+            + " | Recall: "
+            + f"{score_recall:.2f}"
+            + " | F1: "
+            + f"{score_f1:.2f}"
+            + " | Acc: "
+            + f"{score_acc:.2f}"
+        )
+
+        fig.suptitle(title, fontsize=16)
         fig.tight_layout()
         fig.savefig(os.path.join(args.path, f"{lp}_curves.png"), bbox_inches="tight")
 
