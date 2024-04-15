@@ -1,6 +1,6 @@
 # COMET notes
 
-This document contains notes on the [COMET](https://github.com/Unbabel/COMET/tree/master) codebase that the `CEDModel` is built on.
+This document contains notes on the [COMET](https://github.com/Unbabel/COMET/tree/master) codebase that the `CEDModel` inherits from.
 
 ## Model
 
@@ -8,11 +8,11 @@ This document contains notes on the [COMET](https://github.com/Unbabel/COMET/tre
 
 There are parameters in the `UnifiedMetrics` class which are leftovers from the base class and not actually used. A number of parameters are also passed when the class is instantiated but then hardcoded to some value within the class itself with the input ignored.
 
- The below are notes on the hyperparameters listed in the `hparams.yaml` file that is downloaded from [HuggingFace with the COMETKiwi DA 2022 model](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) that are not otherwise described in the [`CEDModel`](../src/mtqe/models/comet.py) docstring.
+ The below are notes on the hyperparameters listed in the `hparams.yaml` file that is downloaded from [HuggingFace with the COMETKiwi DA 2022 model](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) that are not otherwise described in the [`CEDModel`](../src/mtqe/models/comet.py) docstring:
 
 |Parameter|Default|Notes|
 |class_identifier|unified_metric|We override this when creating our model.|
-|layer|mix|Encoder layer to be used for regression ('mix' for pooling info from all layers). Although this appears in the hparams file for the Huggingface model, I don't think this is actually being used. In the code it looks like `sent_layer` is being used to set the `layer` argument.|
+|layer|mix| This is a parameter in the base class that is not actually used. `UnifiedMetrics` has the `sent_layer` parameter instead.|
 |pool|avg|When a `UnifiedMetric` object is created this isn't a parameter that can be set on initialisation. There is a default value in the base `CometMetric` class, which is `avg`, but this is only used in methods that the `UnifiedMetric` ignores. Instead, they [hardcode the sentence embedding to be the `CLS` token](https://github.com/Unbabel/COMET/blob/74ef71547f3f411e1403368101a035a22502f72a/comet/models/multitask/unified_metric.py#L473).]
 |word_weights|0.15, 0.85|Can't actually find where this is used, doesn't seem to be an argument that the `UnifiedMetric` class is expecting.|
 
