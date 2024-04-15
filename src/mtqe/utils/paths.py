@@ -71,9 +71,7 @@ def get_mlqepe_catastrophic_errors_data_paths(
         return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
 
 
-def get_processed_ced_data_paths(
-    data_split: str, lps: typing.List[str], mlqepe_dir: str = MLQE_PE_DIR
-) -> typing.List[str]:
+def get_ced_data_paths(data_split: str, lps: typing.List[str], mlqepe_dir: str = MLQE_PE_DIR) -> typing.List[str]:
     """
     Get paths to processed data files
     WMT 2021 Critical Error Detection train or dev data CSV files for given language pairs.
