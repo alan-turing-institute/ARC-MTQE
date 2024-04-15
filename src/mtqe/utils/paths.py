@@ -37,8 +37,8 @@ def get_mlqepe_catastrophic_errors_data_paths(
 ) -> typing.Union[str, typing.List[str]]:
     """
     Get path(s) to the original CED data file(s) for the given data split and language pair.
-    This is either a single file or two files (the first containing the sentences and the second
-    containg the gold labels).a
+    This is either a single file or two files. In the latter case, the first contains the sentences
+    and the second contains the gold labels.
 
     Parameters
     ----------
@@ -71,10 +71,9 @@ def get_mlqepe_catastrophic_errors_data_paths(
         return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
 
 
-def get_ced_data_paths(data_split: str, lps: typing.List[str], mlqepe_dir: str = MLQE_PE_DIR) -> typing.List[str]:
+def get_ced_data_paths(data_split: str, lps: typing.List[str], multilingual: bool = False) -> typing.List[str]:
     """
-    Get paths to processed data files
-    WMT 2021 Critical Error Detection train or dev data CSV files for given language pairs.
+    Get paths to processed  WMT 2021 Critical Error Detection train or dev data data CSV files.
     These are then passed to the CEDModel.
 
     Parameters
@@ -83,8 +82,9 @@ def get_ced_data_paths(data_split: str, lps: typing.List[str], mlqepe_dir: str =
         One of "train" or "dev".
     lps: list[str]
         List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
-    mlqepe_dir: str
-        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
+        Acceptable input is also "all", which can be used for multilingual data.
+    multilingual: bool
+        Whether to return path to multilingual CSV file. Defaults to `False`.
 
     Returns
     ----------
@@ -95,10 +95,22 @@ def get_ced_data_paths(data_split: str, lps: typing.List[str], mlqepe_dir: str =
     assert data_split in ["train", "dev"], f"Invalid data_split {data_split}, valid input is either 'train' or 'dev'..."
 
     file_paths = []
-    for lp in lps:
-        fp = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
-        fp_csv = fp.replace("tsv", "csv")
-        file_paths.append(fp_csv)
+
+    if multilingual:
+        assert (
+            data_split == "train"
+        ), f"Can only use `multilingual=True` with `data_split='train'` but data_split {data_split} was used..."
+        if "all" in lps:
+            fp = os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv")
+            file_paths.append(fp)
+        else:
+            for lp in lps:
+                fp = os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv")
+                file_paths.append(fp)
+    else:
+        for lp in lps:
+            fp = os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_{data_split}.csv")
+            file_paths.append(fp)
 
     return file_paths
 

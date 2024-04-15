@@ -54,7 +54,11 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     dev_data = exp_setup["dev_data"]
     for dataset in train_data:
         lps = train_data[dataset]["language_pairs"]
-        train_paths.extend(get_ced_data_paths("train", lps))
+        if train_data[dataset]["dataset_name"] == "ced":
+            train_paths.extend(get_ced_data_paths("train", lps))
+        elif train_data[dataset]["dataset_name"] == "multilingual_ced":
+            # in this case, lps can be "all"
+            train_paths.extend(get_ced_data_paths("train", lps, multilingual=True))
     for dataset in dev_data:
         lps = dev_data[dataset]["language_pairs"]
         dev_paths.extend(get_ced_data_paths("dev", lps))
