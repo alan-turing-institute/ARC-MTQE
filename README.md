@@ -72,6 +72,7 @@ wandb.login()
 ## Links
 
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
+- [Baskerville instructions](notes/BASKERVILLE.md)
 
 ## Make predictions
 
