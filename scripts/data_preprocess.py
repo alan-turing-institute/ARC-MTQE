@@ -32,7 +32,7 @@ def main():
     for lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
         for data_split in ["train", "dev"]:
             df_data = load_ced_data(data_split, lp)
-            df_data[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "{lp}_majority_{data_split}.csv"))
+            df_data[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_{data_split}.csv"))
 
             if data_split == "dev":
                 all_src_to_exclude[lp].extend(df_data["src"])
@@ -75,7 +75,7 @@ def main():
                 df_train_other_reduced = df_train_other[~df_train_other["src"].isin(all_src_to_exclude[lp])]
                 lp_dfs.append(df_train_other_reduced[["src", "mt", "score"]])
         df_train_lp_multilingual = pd.concat(lp_dfs)
-        df_train_lp_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, "{lp}_multilingual_train.csv"))
+        df_train_lp_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
 
 
 if __name__ == "__main__":
