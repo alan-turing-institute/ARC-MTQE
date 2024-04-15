@@ -41,9 +41,11 @@ class CEDModel(UnifiedMetric):
         Number of epochs OR % of epoch that the encoder is frozen before unfreezing it. If
         the value is greater than one, then the encoder is frozen for that number of epochs.
         If the value is between 0 and 1, then the encoder is frozen for that percentage of
-        the first epoch. Defaults to 0.9.
+        the first epoch. If the value is 0 then it is always froezen. Defaults to 0.9.
     keep_embeddings_frozen: bool
-        Keeps the encoder frozen during training. Defaults to `True`.
+        Keeps the embedding layer of the encoder frozen during training. If `nf_frozen_epochs`
+        is greater than 0 then the encoder will be unfrozen during training while this allows 
+        for the embedding layer to always remain frozen. Defaults to `True`.
     optimizer: str
         Optimizer used during training. Defaults to 'AdamW'.
     warmup_steps: int
