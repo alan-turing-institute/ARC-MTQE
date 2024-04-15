@@ -177,36 +177,12 @@ def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd
     return df_data[["idx", "src", "mt", "score"]]
 
 
-def save_ced_data_to_csv(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR):
-    """
-    Save WMT 2021 Critical Error Detection 'train' or 'dev' data for given language pair to CSV file.
-
-    Parameters
-    ----------
-    data_split: str
-        One of "train" or "dev".
-    lp: str
-        The langauge pair, passed as IOS codes (e.g., "en-cs").
-    mlqepe_dir: str
-        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
-    """
-
-    path_data = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
-    df_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
-
-    # NOT en error = 1, CRITICAL ERROR = 0
-    df_data["score"] = score_ced(df_data["error"])
-
-    # save as csv file
-    df_data[["src", "mt", "score"]].to_csv(path_data.replace("tsv", "csv"))
-
-
 def get_ced_data_paths(
     data_split: str, lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED, mlqepe_dir: str = MLQE_PE_DIR
 ) -> typing.List[str]:
     """
     Get paths to WMT 2021 Critical Error Detection train or dev data CSV files for given language pairs.
-    NOTE: creates the CSV file if it does not already exist.
+    These are then passed to the CEDModel.
 
     Parameters
     ----------
@@ -230,9 +206,5 @@ def get_ced_data_paths(
         fp = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
         fp_csv = fp.replace("tsv", "csv")
         file_paths.append(fp_csv)
-
-        # the CSV files get created when `make data` is called so this should not be necessary
-        if not os.path.exists(fp):
-            save_ced_data_to_csv(data_split, lp, mlqepe_dir)
 
     return file_paths
