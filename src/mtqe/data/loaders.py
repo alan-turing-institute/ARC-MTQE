@@ -5,17 +5,22 @@ import numpy as np
 import pandas as pd
 
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import MLQE_PE_DIR, WMT_QE_22_DIR, WMT_QE_23_DIR
+from mtqe.utils.paths import (
+    MLQE_PE_DIR,
+    WMT_QE_22_DIR,
+    WMT_QE_23_DIR,
+    get_mlqepe_catastrophic_errors_data_paths,
+)
 
 
 def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
     """
-    Rescore ERR/NOT CED labels into binary indicators: ERR = 0, NOT = 1.
+    Rescore "ERR"/"NOT" CED labels into binary indicators: ERR = 0, NOT = 1.
 
     Parameters
     ----------
-    ced_data: Union[pd.Series, np.ndarray]
-        Array of ERR/NOT labels.
+    ced_data: Union[pd.Series[str], np.ndarray[str]]
+        Array of "ERR"/"NOT" labels.
 
     Returns
     ----------
@@ -28,7 +33,7 @@ def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
 def comet_format(data: pd.DataFrame) -> typing.List[typing.Dict[str, str]]:
     """
     Format source and machine translated sentence pairs into COMET format:
-        - [{"src": "<sentence>", "mt": "<translation>"}, {...}].
+        - [{"src": "<original sentence>", "mt": "<translation>"}, {...}].
 
     Parameters
     ----------
@@ -52,13 +57,13 @@ def load_da_test_data(
     Parameters
     ----------
     lp: str
-        The langauge pair, passed as IOS code (e.g., "en-cs").
+        The langauge pair, passed as IOS codes (e.g., "en-cs").
     year: str
         The WMT year ("2022" or "2023").
     wmt22_dir: str
-        Path to clone of the WMT-QE-TASK/wmt-qe-2022-data GitHub repistory.
+        Path to clone of the `WMT-QE-TASK/wmt-qe-2022-data` GitHub repistory.
     wmt23_dir: str
-        Path to clone of the WMT-QE-TASK/wmt-qe-2023-data GitHub repistory.
+        Path to clone of the `WMT-QE-TASK/wmt-qe-2023-data` GitHub repistory.
 
     Returns
     ----------
@@ -110,9 +115,9 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     Parameters
     ----------
     lp: str
-        The langauge pair, passed as IOS code (e.g., "en-cs").
+        The langauge pair, passed as IOS codes (e.g., "en-cs").
     mlqepe_dir: str
-        Path to the `data/` directory in clone of the sheffieldnlp/mlqe-pe GitHub repository.
+        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe/` GitHub repository.
 
     Returns
     ----------
@@ -124,14 +129,8 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
             - "score": whether the translation contains a critical error (0) or not (1)
     """
 
-    WMT_QE_21_CED_DIR = os.path.join(mlqepe_dir, "catastrophic_errors")
-    data_path = os.path.join(WMT_QE_21_CED_DIR, f"{lp.replace('-', '')}_majority_test_blind.tsv")
+    data_path, labels_path = get_mlqepe_catastrophic_errors_data_paths("test", lp, mlqepe_dir)
     df_data = pd.read_csv(data_path, sep="\t", header=None, names=["idx", "src", "mt"])
-
-    WMT_QE_21_CED_LABELS_DIR = os.path.join(mlqepe_dir, "catastrophic_errors_goldlabels")
-    labels_path = os.path.join(
-        WMT_QE_21_CED_LABELS_DIR, f"{lp.replace('-', '')}_majority_test_goldlabels", "goldlabels.txt"
-    )
     df_labels = pd.read_csv(labels_path, sep="\t", header=None, names=["lang_pair", "ref", "idx", "error"])
 
     # NOT en error = 1, CRITICAL ERROR = 0
@@ -142,19 +141,57 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     return df_full[["idx", "src", "mt", "score"]]
 
 
+def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
+    """
+    Load WMT 2021 Critical Error Detection 'train', 'dev' or 'test' data for given language pair.
+
+    Parameters
+    ----------
+    data_split: str
+        One of "train", "dev" or "test".
+    lp: str
+        The langauge pair, passed as IOS code (e.g., "en-cs").
+    mlqepe_dir: str
+        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
+
+    Returns
+    ----------
+    pd.DataFrame
+        DataFrame composed of the following columns:
+            - "idx": unique identifier
+            - "src": source text
+            - "mt": machine translated text
+            - "score": whether the translation contains a critical error (0) or not (1)
+    """
+
+    if data_split == "test":
+        df_data = load_ced_test_data(lp, mlqepe_dir)
+
+    else:
+        path_data = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
+        df_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
+
+        # NOT en error = 1, CRITICAL ERROR = 0
+        df_data["score"] = score_ced(df_data["error"])
+
+    return df_data[["idx", "src", "mt", "score"]]
+
+
 def save_ced_data_to_csv(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR):
     """
-    Save WMT 2021 Critical Error Detection train or dev data for given language pair to CSV file.
+    Save WMT 2021 Critical Error Detection 'train' or 'dev' data for given language pair to CSV file.
 
     Parameters
     ----------
     data_split: str
         One of "train" or "dev".
     lp: str
-        The langauge pair, passed as IOS code (e.g., "en-cs").
+        The langauge pair, passed as IOS codes (e.g., "en-cs").
+    mlqepe_dir: str
+        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
     """
 
-    path_data = os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
+    path_data = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
     df_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
 
     # NOT en error = 1, CRITICAL ERROR = 0
@@ -178,7 +215,7 @@ def get_ced_data_paths(
     lps: list[str]
         List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
     mlqepe_dir: str
-        Path to the `data/` directory in clone of the sheffieldnlp/mlqe-pe GitHub repository.
+        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
 
     Returns
     ----------
@@ -190,8 +227,9 @@ def get_ced_data_paths(
 
     file_paths = []
     for lp in lps:
-        fp = os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.csv")
-        file_paths.append(fp)
+        fp = get_mlqepe_catastrophic_errors_data_paths(data_split, lp, mlqepe_dir)
+        fp_csv = fp.replace("tsv", "csv")
+        file_paths.append(fp_csv)
 
         # the CSV files get created when `make data` is called so this should not be necessary
         if not os.path.exists(fp):

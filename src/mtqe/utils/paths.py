@@ -1,4 +1,5 @@
 import os
+import typing
 
 # This file contains paths relative to the project root that can be imported.
 # If this file moves relative to the project root, find_repo_root() must be changed.
@@ -28,6 +29,46 @@ WMT_QE_21_CED_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors")
 WMT_QE_21_CED_GOLDLABELS_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors_goldlabels")
 WMT_QE_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data")
 WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
+
+
+def get_mlqepe_catastrophic_errors_data_paths(
+    data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR
+) -> typing.Union[str, typing.List[str]]:
+    """
+    Get path(s) to the original CED data file(s) for the given data split and language pair.
+    This is either a single file or two files (the first containing the sentences and the second
+    containg the gold labels).a
+
+    Parameters
+    ----------
+    data_split: str
+        One of "train", "dev" or "test".
+    lps: list[str]
+        List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
+    mlqepe_dir: str
+        Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe/` GitHub repository.
+
+    Returns
+    ----------
+    Union[str, list]
+        For "train" and "dev", a single path is returned. For "test" data, a path to the src/mt
+        text is returned first followed by path to the gold labels.
+    """
+
+    if data_split == "test":
+        text_data_path = os.path.join(
+            mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_test_blind.tsv"
+        )
+        labels_path = os.path.join(
+            mlqepe_dir,
+            "catastrophic_errors_goldlabels",
+            f"{lp.replace('-', '')}_majority_test_goldlabels",
+            "goldlabels.txt",
+        )
+        return [text_data_path, labels_path]
+    else:
+        return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
+
 
 # CONFIG
 CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
