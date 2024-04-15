@@ -11,9 +11,10 @@ There are parameters in the `UnifiedMetrics` class which are leftovers from the 
  The below are notes on the hyperparameters listed in the `hparams.yaml` file that is downloaded from [HuggingFace with the COMETKiwi DA 2022 model](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) that are not otherwise described in the [`CEDModel`](../src/mtqe/models/comet.py) docstring:
 
 |Parameter|Default|Notes|
+|---------|-------|-----|
 |class_identifier|unified_metric|We override this when creating our model.|
 |layer|mix| This is a parameter in the base class that is not actually used. `UnifiedMetrics` has the `sent_layer` parameter instead.|
-|pool|avg|When a `UnifiedMetric` object is created this isn't a parameter that can be set on initialisation. There is a default value in the base `CometMetric` class, which is `avg`, but this is only used in methods that the `UnifiedMetric` ignores. Instead, they [hardcode the sentence embedding to be the `CLS` token](https://github.com/Unbabel/COMET/blob/74ef71547f3f411e1403368101a035a22502f72a/comet/models/multitask/unified_metric.py#L473).]
+|pool|avg|When a `UnifiedMetric` object is created this isn't a parameter that can be set on initialisation. There is a default value in the base `CometMetric` class, which is `avg`, but this is only used in methods that the `UnifiedMetric` ignores. Instead, they [hardcode the sentence embedding to be the `CLS` token](https://github.com/Unbabel/COMET/blob/74ef71547f3f411e1403368101a035a22502f72a/comet/models/multitask/unified_metric.py#L473).]|
 |word_weights|0.15, 0.85|Can't actually find where this is used, doesn't seem to be an argument that the `UnifiedMetric` class is expecting.|
 
 ## Training
