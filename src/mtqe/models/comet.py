@@ -119,12 +119,12 @@ class CEDModel(UnifiedMetric):
         are randomly initialised (`True`) or whether the default weights from the checkpoint
         are used (`False`). Defaults to `False`.
     calc_threshold: bool
-        Indicates whether the threshold for determining the class is calculated using the
-        training data (`True`) or whether it is fixed at 0.5 (`False`) - will only take effect
-        if the loss function is binary cross entropy. Defaults to `False`.
+        Indicates whether the threshold for binarising predictions is fixed at 0.5 (`False`)
+        or whether it is determined using prediction performance on the training data (`True`).
+        Will only take effect if the loss function is binary cross entropy. Defaults to `False`.
     train_subset_size: int
-        The size of the training subset used for validation (and by extension also used
-        to determine the threshold if `calc_threshol` is set to `True`). Defaults to 1000.
+        The size of the training subset used for validation (and by extension used to determine
+        the binarisation threshold if `calc_threshol` is set to `True`). Defaults to 1000.
     train_subset_replace: bool
         Determines whether the training subset is sampled with replacement or not.
         Defaults to `False`.
