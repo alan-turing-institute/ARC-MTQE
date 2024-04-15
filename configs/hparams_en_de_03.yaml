@@ -44,140 +44,74 @@ hparams:
 trainer_config:
   deterministic: True
   devices: 1
-  max_epochs: 200
+  max_epochs: 100
   accumulate_grad_batches: 4
 
 # These are the data for each experiment
 experiments:
-  unfzn_lr_1e06:
-    name: unfzn_lr_1e06
+  unfzn_lr_1e05_drp0-2:
+    name: unfzn_lr_1e05_drp0-2
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy_with_logits
-      batch_size: 32
-      keep_embeddings_frozen: false
-    slurm:
-      memory: 40G
-      time: 08:00:00
-  unfzn_lr_1e05:
-    name: unfzn_lr_1e05
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    hparams:
-      dropout: 0.1
+      dropout: 0.2
       learning_rate: 1.0e-05
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
-      batch_size: 32
+      batch_size: 64
       keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 08:00:00
-  unfzn_lr_1e07:
-    name: unfzn_lr_1e07
+      time: 04:00:00
+  unfzn_lr_1-5e05:
+    name: unfzn_lr_1-5e05
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     hparams:
       dropout: 0.1
-      learning_rate: 1.0e-07
-      encoder_learning_rate: 1.0e-08
-      loss: binary_cross_entropy_with_logits
-      batch_size: 32
-      keep_embeddings_frozen: false
-    slurm:
-      memory: 40G
-      time: 08:00:00
-  fzn_lr_1e06:
-    name: fzn_lr_1e06
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-06
-      encoder_learning_rate: 1.0e-07
-      loss: binary_cross_entropy_with_logits
-      batch_size: 32
-      keep_embeddings_frozen: true
-    slurm:
-      memory: 40G
-      time: 08:00:00
-  fzn_lr_1e05:
-    name: fzn_lr_1e05
-    train_data:
-      train_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    dev_data:
-      dev_1:
-        dataset_name: ced
-        language_pairs:
-          - en-ja
-    hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
+      learning_rate: 1.5e-05
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
-      batch_size: 32
-      keep_embeddings_frozen: true
+      batch_size: 64
+      keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 08:00:00
-  fzn_lr_1e07:
-    name: fzn_lr_1e07
+      time: 04:00:00
+  unfzn_lr_1-5e04:
+    name: unfzn_lr_1-5e04
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-ja
+          - en-de
     hparams:
       dropout: 0.1
-      learning_rate: 1.0e-07
-      encoder_learning_rate: 1.0e-08
+      learning_rate: 1.5e-04
+      encoder_learning_rate: 1.0e-05
       loss: binary_cross_entropy_with_logits
-      batch_size: 32
-      keep_embeddings_frozen: true
+      batch_size: 64
+      keep_embeddings_frozen: false
     slurm:
       memory: 40G
-      time: 08:00:00
+      time: 04:00:00
