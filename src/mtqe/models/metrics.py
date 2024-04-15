@@ -67,7 +67,8 @@ class ClassificationMetrics(RegressionMetrics):
         Parameters
         ----------
         threshold: float
-            The threshold value used to make predictions (for binary cross entropy loss func. only).
+            The threshold value used to determine whether a prediction is a positive class (for binary
+            cross entropy loss func. only).
 
         Returns
         -------
@@ -78,7 +79,7 @@ class ClassificationMetrics(RegressionMetrics):
         vals_at_max_mcc: dict
             Dictionary containing the values of the metrics at the point the maximum MCC was achieved.
         threshold: float
-            The threshold value used to calculate the metrics.
+            The threshold value used to make predictions.
         """
         try:
             preds = torch.cat(self.preds, dim=0)
@@ -96,7 +97,7 @@ class ClassificationMetrics(RegressionMetrics):
                 threshold = calculate_threshold(preds, targets)
             else:
                 threshold = threshold
-            # make the predictions
+            # binarise the predictions
             preds = preds > threshold
             preds = preds.long()
         else:
