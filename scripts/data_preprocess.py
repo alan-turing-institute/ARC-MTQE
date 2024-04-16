@@ -1,17 +1,18 @@
 import os
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 
 from mtqe.data.loaders import load_ced_data
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import PROCESSED_DATA_DIR
+from mtqe.utils.paths import DEMETR_DIR, PROCESSED_DATA_DIR
 
 
 def main():
     """
     The COMET code expects train and dev data to be in CSV files. This script creates
-    the necessary files to train:
+    the necessary files for WMT21 CED data to train:
         - one model per language pair using just that pair's training data
         - one model per language pair using all the authentic training data
         - a single multilingual model that has seen data from all language pairs
@@ -19,6 +20,8 @@ def main():
     For the latter two data sets we make sure that the training data does not
     contain any source sentences that are in the dev and test sets (for the given
     language pair or for all the language pairs).
+
+    This script also creates a single file for DEMETR data.
     """
 
     # keep track of source sentences in dev and test sets for each language pair
@@ -60,7 +63,7 @@ def main():
     df_train_all_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
 
     # ==================================================================
-    # 2. create multilingual training dataset tailored for each lp
+    # 3. create multilingual training dataset tailored for each lp
     #   - for each lp, loop through all the OTHER lps and get train data
     #   - for the other lps train data, remove any dev/test sentences for
     #     the given lp
@@ -76,6 +79,29 @@ def main():
                 lp_dfs.append(df_train_other_reduced[["src", "mt", "score"]])
         df_train_lp_multilingual = pd.concat(lp_dfs)
         df_train_lp_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
+
+        # ==================================================================
+        # 4. DEMETR data
+        # ==================================================================
+
+        dfs = []
+        for f in os.listdir(DEMETR_DIR):
+            df = pd.read_json(os.path.join(DEMETR_DIR, f))
+            dfs.append(df)
+        df_all_demetr = pd.concat(dfs)
+
+        # the perturbations are scored as base, minor, major or critical
+        df_all_demetr["score"] = np.where(df_all_demetr["severity"] == "critical", 0, 1)
+        # two of the base categories are critical errors and the third is a
+        # perfect translation so rescore accrodingly
+        df_all_demetr.loc[
+            (df_all_demetr["severity"] == "base")
+            & (df_all_demetr["pert_desc"] != "reference as translation - baseline"),
+            "score",
+        ] = 0
+
+        df_all_demetr = df_all_demetr.rename(columns={"src_sent": "src", "pert_sent": "mt"})
+        df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
 
 if __name__ == "__main__":

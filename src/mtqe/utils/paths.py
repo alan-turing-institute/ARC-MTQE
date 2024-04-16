@@ -30,6 +30,7 @@ WMT_QE_21_CED_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors")
 WMT_QE_21_CED_GOLDLABELS_DIR = os.path.join(MLQE_PE_DIR, "catastrophic_errors_goldlabels")
 WMT_QE_22_DIR = os.path.join(DATA_DIR, "wmt-qe-2022-data")
 WMT_QE_23_DIR = os.path.join(DATA_DIR, "wmt-qe-2023-data")
+DEMETR_DIR = os.path.join(DATA_DIR, "demetr", "dataset")
 
 
 def get_mlqepe_catastrophic_errors_data_paths(
