@@ -22,17 +22,17 @@ def gpt_predict(
     Parameters
     ----------
     data_split: str
-        Whether to use dev or test data.
+        Whether to make predictions for dev or test data. Defaults to dev".
     lps: list[str]
-        List of language-pairs to make predictions for.
+        List of WMT21 language-pairs to make predictions for. Defaults to all.
     n: int
         The number of translations for each language pair to make critical error
-        predictions for. Will always pick the first n sentences.
+        predictions for. Will always pick the first n sentences. Defaults to 2.
 
     Returns
     -------
     dict[str, list[int]]
-        Dictionary of predictions of predictions for each language pair of the form:
+        Dictionary of predictions for each language pair of the form:
         {<lp1>: [<score 1>, ...], ...}
     """
 
@@ -51,9 +51,11 @@ def gpt_predict(
             df_test_data = load_ced_test_data(lp)
             li_di_data = df_test_data.to_dict("records")
 
+        # get source and target language names
         src, target = lp.split("-")
         src_name = DI_IOS_TO_LANGUAGE_NAME[src]
         target_name = DI_IOS_TO_LANGUAGE_NAME[target]
+
         # use COMET style scoring: 1=meaning preserved, 0=critical error
         system_message = (
             f"You will be given some text in {src_name} and some text in {target_name}. "
