@@ -72,50 +72,6 @@ def get_mlqepe_catastrophic_errors_data_paths(
         return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
 
 
-def get_ced_data_paths(data_split: str, lps: typing.List[str], multilingual: bool = False) -> typing.List[str]:
-    """
-    Get paths to processed  WMT 2021 Critical Error Detection train or dev data data CSV files.
-    These are then passed to the CEDModel.
-
-    Parameters
-    ----------
-    data_split: str
-        One of "train" or "dev".
-    lps: list[str]
-        List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
-        Acceptable input is also "all", which can be used for multilingual data.
-    multilingual: bool
-        Whether to return path to multilingual CSV file. Defaults to `False`.
-
-    Returns
-    ----------
-    list[str]
-        List of CSV file paths.
-    """
-
-    assert data_split in ["train", "dev"], f"Invalid data_split {data_split}, valid input is either 'train' or 'dev'..."
-
-    file_paths = []
-
-    if multilingual:
-        assert (
-            data_split == "train"
-        ), f"Can only use `multilingual=True` with `data_split='train'` but data_split {data_split} was used..."
-        if "all" in lps:
-            fp = os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv")
-            file_paths.append(fp)
-        else:
-            for lp in lps:
-                fp = os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv")
-                file_paths.append(fp)
-    else:
-        for lp in lps:
-            fp = os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_{data_split}.csv")
-            file_paths.append(fp)
-
-    return file_paths
-
-
 # CONFIG
 CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
 
