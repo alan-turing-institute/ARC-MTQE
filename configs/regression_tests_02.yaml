@@ -57,12 +57,6 @@ early_stopping:
   mode: max
   min_delta: 0.
 
-# Config for model checkpoint callback, fixed for each experiment
-model_checkpoint:
-  monitor: val_MCC
-  save_weights_only: true
-  mode: max
-
 # These are the data for each experiment
 experiments:
   en-cs_regression_1:
