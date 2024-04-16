@@ -50,7 +50,7 @@ def main():
     df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
     # ==================================================================
-    # 2: save each WMT21 train and dev file as is
+    # 2. save each WMT21 train and dev file as is
     # ==================================================================
 
     # keep track of source sentences in dev and test sets for each language pair
