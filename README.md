@@ -40,7 +40,7 @@ To use the COMET models, you must also acknowledge the license for their latest 
 - [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
 - [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
 
-To make predictions using GPT, you will need to have access to the OpenAI API. The API key will need to be saved as environment variables named OPENAI_API_KEY. To do this in a Mac terminal:
+To make predictions using GPT, you will need to have access to the OpenAI API. The API key will need to be saved as an environment variable named OPENAI_API_KEY. To do this in a Mac terminal:
 
 ```
 export OPENAI_API_KEY="your_api_key"
