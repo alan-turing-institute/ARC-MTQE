@@ -18,7 +18,10 @@ slurm:
 # These are model parameters that are fixed for each experiment
 hparams:
   activations: Tanh
+  batch_size: 32
   class_identifier: ced_model
+  dropout: 0.1
+  encoder_learning_rate: 1.0e-06
   encoder_model: XLM-RoBERTa
   exclude_outliers: 250
   hidden_sizes:
@@ -27,11 +30,15 @@ hparams:
   input_segments:
   - mt
   - src
+  keep_embeddings_frozen: false
   layer: mix
   layer_norm: false
   layer_transformation: sparsemax
   layerwise_decay: 0.95
+  learning_rate: 1.5e-05
+  loss: binary_cross_entropy_with_logits
   loss_lambda: 0.65
+  nr_frozen_epochs: 0
   optimizer: AdamW
   pool: avg
   pretrained_model: microsoft/infoxlm-large
@@ -61,14 +68,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 2
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -85,14 +85,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 3
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -109,14 +102,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 4
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -133,14 +119,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 5
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -157,14 +136,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 6
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -181,14 +153,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 7
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -205,14 +170,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 8
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -229,14 +187,7 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 9
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
     slurm:
       memory: 40G
       time: 08:00:00
@@ -253,14 +204,92 @@ experiments:
         language_pairs:
           - en-cs
     hparams:
-      dropout: 0.1
-      learning_rate: 1.0e-05
-      encoder_learning_rate: 1.0e-06
       error_weight: 10
-      loss: binary_cross_entropy_with_logits
-      batch_size: 64
-      keep_embeddings_frozen: false
-      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight11:
+    name: unfzn_lr_1e05_weight11
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      error_weight: 11
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight12:
+    name: unfzn_lr_1e05_weight12
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      error_weight: 12
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight13:
+    name: unfzn_lr_1e05_weight13
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      error_weight: 13
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight14:
+    name: unfzn_lr_1e05_weight14
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      error_weight: 14
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight15:
+    name: unfzn_lr_1e05_weight15
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-cs
+    hparams:
+      error_weight: 15
     slurm:
       memory: 40G
       time: 08:00:00
