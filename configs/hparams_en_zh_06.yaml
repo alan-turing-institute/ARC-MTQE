@@ -216,3 +216,171 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
+  unfzn_lr_1-5e05_weight2:
+    name: unfzn_lr_1-5e05_weight2
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 2
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight3:
+    name: unfzn_lr_1-5e05_weight3
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 3
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight4:
+    name: unfzn_lr_1-5e05_weight4
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 4
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight5:
+    name: unfzn_lr_1-5e05_weight5
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 5
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight6:
+    name: unfzn_lr_1-5e05_weight6
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 6
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight7:
+    name: unfzn_lr_1-5e05_weight7
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 7
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight8:
+    name: unfzn_lr_1-5e05_weight8
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.5e-05
+      encoder_learning_rate: 1.0e-06
+      error_weight: 8
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
