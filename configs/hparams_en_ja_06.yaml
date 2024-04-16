@@ -51,243 +51,260 @@ trainer_config:
   deterministic: True
   devices: 1
   max_epochs: 100
-  accumulate_grad_batches: 4
+  accumulate_grad_batches: 8
 
 # These are the data for each experiment
 experiments:
-  unfzn_lr_1e05_weight2:
-    name: unfzn_lr_1e05_weight2
+  unfzn_lr_1-5e05_grad8:
+    name: unfzn_lr_1-5e05_grad8
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 2
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight3:
-    name: unfzn_lr_1e05_weight3
+  unfzn_lr_1-5e05_weight2:
+    name: unfzn_lr_1-5e05_weight2
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
+    hparams:
+      error_weight: 2
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1-5e05_weight3:
+    name: unfzn_lr_1-5e05_weight3
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
     hparams:
       error_weight: 3
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight4:
-    name: unfzn_lr_1e05_weight4
+  unfzn_lr_1-5e05_weight4:
+    name: unfzn_lr_1-5e05_weight4
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 4
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight5:
-    name: unfzn_lr_1e05_weight5
+  unfzn_lr_1-5e05_weight5:
+    name: unfzn_lr_1-5e05_weight5
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 5
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight6:
-    name: unfzn_lr_1e05_weight6
+  unfzn_lr_1-5e05_weight6:
+    name: unfzn_lr_1-5e05_weight6
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 6
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight7:
-    name: unfzn_lr_1e05_weight7
+  unfzn_lr_1-5e05_weight7:
+    name: unfzn_lr_1-5e05_weight7
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 7
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight8:
-    name: unfzn_lr_1e05_weight8
+  unfzn_lr_1-5e05_weight8:
+    name: unfzn_lr_1-5e05_weight8
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 8
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight9:
-    name: unfzn_lr_1e05_weight9
+  unfzn_lr_1-5e05_weight9:
+    name: unfzn_lr_1-5e05_weight9
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 9
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight10:
-    name: unfzn_lr_1e05_weight10
+  unfzn_lr_1-5e05_weight10:
+    name: unfzn_lr_1-5e05_weight10
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 10
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight11:
-    name: unfzn_lr_1e05_weight11
+  unfzn_lr_1-5e05_weight11:
+    name: unfzn_lr_1-5e05_weight11
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 11
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight12:
-    name: unfzn_lr_1e05_weight12
+  unfzn_lr_1-5e05_weight12:
+    name: unfzn_lr_1-5e05_weight12
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 12
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight13:
-    name: unfzn_lr_1e05_weight13
+  unfzn_lr_1-5e05_weight13:
+    name: unfzn_lr_1-5e05_weight13
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 13
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight14:
-    name: unfzn_lr_1e05_weight14
+  unfzn_lr_1-5e05_weight14:
+    name: unfzn_lr_1-5e05_weight14
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 14
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight15:
-    name: unfzn_lr_1e05_weight15
+  unfzn_lr_1-5e05_weight15:
+    name: unfzn_lr_1-5e05_weight15
     train_data:
       train_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
+          - en-ja
     hparams:
       error_weight: 15
     slurm:
