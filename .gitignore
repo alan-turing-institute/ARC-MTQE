@@ -133,6 +133,11 @@ data/
 results/
 predictions/
 lightning_logs/
+checkpoints/
+wandb/
+scripts/slurm_train_logs/
+scripts/slurm_scripts
+.vscode/
 
 # Poetry
 poetry.lock
