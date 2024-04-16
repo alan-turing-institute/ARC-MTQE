@@ -47,8 +47,8 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  unfzn_lr_1e05_weight3_layernorm:
-    name: unfzn_lr_1e05_weight3_layernorm
+  unfzn_lr_1e05_weight5_layernorm:
+    name: unfzn_lr_1e05_weight5_layernorm
     train_data:
       train_1:
         dataset_name: ced
@@ -72,8 +72,8 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
-  unfzn_lr_1e05_weight3_calc:
-    name: unfzn_lr_1e05_weight3_calc
+  unfzn_lr_1e05_weight5_calc:
+    name: unfzn_lr_1e05_weight5_calc
     train_data:
       train_1:
         dataset_name: ced
