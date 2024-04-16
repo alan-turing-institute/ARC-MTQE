@@ -123,7 +123,7 @@ def get_callbacks(
     list[ModelCheckpoint]
         A list of callbacks that will be used.
     """
-
+    checkpoint_path = checkpoint_dir + "/" + model_name + "/"
     if "early_stopping" in config:
         early_stopping_params = config["early_stopping"]
         # callback for early stopping
@@ -131,10 +131,17 @@ def get_callbacks(
         # callback to log model checkpoints locally
         # also needs to monitor the same metric as the early stopping callback so that we can work out
         # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
-        checkpoint_callback = ModelCheckpoint(
-            checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"], mode="max"
-        )
+        if "model_checkpoint" in config:
+            model_checkpoint_params = config["model_checkpoint"]
+            checkpoint_callback = ModelCheckpoint(checkpoint_path, **model_checkpoint_params)
+        else:
+            checkpoint_callback = ModelCheckpoint(
+                checkpoint_path, monitor=early_stopping_params["monitor"], mode=early_stopping_params["mode"]
+            )
         callbacks = [checkpoint_callback, early_stopping_callback]
+    elif "model_checkpoint" in config:
+        model_checkpoint_params = config["model_checkpoint"]
+        checkpoint_callback = ModelCheckpoint(checkpoint_path, **model_checkpoint_params)
     else:
         checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + model_name + "/")
         callbacks = [checkpoint_callback]

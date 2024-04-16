@@ -32,6 +32,7 @@ hparams:
   layer_transformation: sparsemax
   layerwise_decay: 0.95
   learning_rate: 1.5e-05
+  loss: binary_cross_entropy_with_logits
   loss_lambda: 0.65
   nr_frozen_epochs: 0.3
   optimizer: AdamW
@@ -49,12 +50,18 @@ trainer_config:
 
 # Config for early stopping callback, fixed for each experiment
 early_stopping:
-  monitor: val_recall
+  monitor: val_MCC
   patience: 3
   strict: True
   verbose: False
   mode: max
   min_delta: 0.
+
+# Config for model checkpoint callback, fixed for each experiment
+model_checkpoint:
+  monitor: val_MCC
+  save_weights_only: true
+  mode: max
 
 # These are the data for each experiment
 experiments:
@@ -72,11 +79,9 @@ experiments:
           - en-cs
     hparams:
       keep_embeddings_frozen: true
-      loss: cross_entropy
-      out_dim: 2
     slurm:
-      memory: 6G
-      time: 00:20:00
+      memory: 40G
+      time: 00:30:00
   en-cs_regression_2:
     name: en-cs_regression_2
     train_data:
@@ -91,7 +96,6 @@ experiments:
           - en-cs
     hparams:
       keep_embeddings_frozen: false
-      loss: cross_entropy
     slurm:
       memory: 32G
       time: 01:00:00
@@ -110,7 +114,6 @@ experiments:
     hparams:
       keep_embeddings_frozen: false
       oversample_minority: true
-      loss: cross_entropy
     slurm:
       memory: 32G
       time: 01:00:00
@@ -129,7 +132,6 @@ experiments:
     hparams:
       keep_embeddings_frozen: false
       error_weight: 4
-      loss: cross_entropy
     slurm:
       memory: 32G
       time: 01:00:00
