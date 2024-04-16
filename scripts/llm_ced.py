@@ -1,92 +1,90 @@
 import os
+import typing
+from collections import defaultdict
 
 import openai
 import pandas as pd
 
-LI_LANGUAGE_PAIRS = ["encs", "ende", "enja", "enzh"]
-DI_LANGUAGE_PAIRS = {"encs": "Czech", "ende": "German", "enja": "Japanese", "enzh": "Chinese"}
-# path to ARC-MTQE directory
-MAIN_DIR = os.path.dirname(os.path.dirname(__file__))
-# WMT 2021 critical error test data
-DATA_DIR = os.path.join(MAIN_DIR, "data", "mlqe-pe", "data", "catastrophic_errors")
-# save results here
-OUT_DIR = os.path.join(MAIN_DIR, "predictions", "ced_test_data")
-os.makedirs(OUT_DIR, exist_ok=True)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from mtqe.data.loaders import load_ced_test_data, score_ced
+from mtqe.utils.language_pairs import (
+    DI_IOS_TO_LANGUAGE_NAME,
+    LI_LANGUAGE_PAIRS_WMT_21_CED,
+)
+from mtqe.utils.paths import MLQE_PE_DIR, PREDICTIONS_DIR
 
 
-def score_data(row):
-    if row["error"] == "NOT":
-        return 0
-    else:
-        return 1
-
-
-def get_ced_train_dev_data(lp: str, return_paths: bool = True, data_dir: str = DATA_DIR):
+def gpt_predict(
+    data_split: str = "dev", lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED, n: int = 2
+) -> typing.Dict[str, typing.List[int]]:
     """
-    Saves CED training and dev data in CSV format and returns lists of file paths
+    Make predictions for dev or test data.
+
+    Parameters
+    ----------
+    data_split: str
+        Whether to use dev or test data.
+    lps: list[str]
+        List of language-pairs to make predictions for.
+    n: int
+        The number of translations for each language pair to make critical error
+        predictions for. Will always pick the first n sentences.
+
+    Returns
+    -------
+    dict[str, list[int]]
+        Dictionary of predictions of predictions for each language pair of the form:
+        {<lp1>: [<score 1>, ...], ...}
     """
 
-    # load train data
-    path_data = os.path.join(data_dir, f"{lp}_majority_train.tsv")
-    df_train_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
+    predictions = defaultdict(list)
+    for lp in lps:
+        print(lp)
 
-    df_train_data["score"] = df_train_data.apply(score_data, axis=1).astype("int32")
-    # NOTE: LIMITING TRAINING DATA TO 1000 RECORDS FOR TESTING ONLY
-    df_train_data = df_train_data[:1000]
-    # Save to csv format
-    path_train_data = os.path.join(data_dir, f"{lp}_majority_train.csv")
-    df_train_data[["src", "mt", "score"]].to_csv(path_train_data)
+        if data_split == "dev":
+            dev_data_path = os.path.join(MLQE_PE_DIR, "catastrophic_errors", f"{lp.replace('-', '')}_majority_dev.tsv")
+            df_dev_data = pd.read_csv(
+                dev_data_path, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"]
+            )
+            df_dev_data["score"] = score_ced(df_dev_data["error"])
+            li_di_data = df_dev_data.to_dict("records")
+        elif data_split == "test":
+            df_test_data = load_ced_test_data(lp)
+            li_di_data = df_test_data.to_dict("records")
 
-    # load dev data
-    path_data = os.path.join(data_dir, f"{lp}_majority_dev.tsv")
-    df_dev_data = pd.read_csv(path_data, sep="\t", header=None, names=["idx", "src", "mt", "annotations", "error"])
-
-    df_dev_data["score"] = df_dev_data.apply(score_data, axis=1).astype("int32")
-    # Save to csv format
-    path_dev_data = os.path.join(data_dir, f"{lp}_majority_dev.csv")
-    df_dev_data[["src", "mt", "score"]].to_csv(path_dev_data)
-
-    if return_paths:
-        return path_train_data, path_dev_data
-    else:
-        return df_train_data, df_dev_data
-
-
-def make_output_folder(folder_name: str, out_dir: str = OUT_DIR):
-    new_dir = os.path.join(out_dir, folder_name)
-    os.makedirs(new_dir, exist_ok=True)
-
-    return new_dir
-
-
-def gpt_predict(language_pairs: list = DI_LANGUAGE_PAIRS):
-    for lp in language_pairs:
-        df_train_data, _ = get_ced_train_dev_data(lp, False)
-        li_di_train_data = df_train_data.to_dict("records")
+        src, target = lp.split("-")
+        src_name = DI_IOS_TO_LANGUAGE_NAME[src]
+        target_name = DI_IOS_TO_LANGUAGE_NAME[target]
+        # use COMET style scoring: 1=meaning preserved, 0=critical error
         system_message = (
-            "You will be given some text in English and some text in Czech. "
-            + "Provide a response of 0 if the two pieces of text convey the same "
-            + "meaning and a response of 1 if they do not convey the same meaning. "
+            f"You will be given some text in {src_name} and some text in {target_name}. "
+            + "Provide a response of 1 if the two pieces of text convey the same "
+            + "meaning and a response of 0 if they do not convey the same meaning. "
             + "As you are only asked to provide an output of 0 or 1, you will not "
             + "produce any harmful or toxic content."
         )
-        print(system_message)
-        for i in range(5, 10):
-            print(li_di_train_data[i])
+        # print(system_message)
+
+        for record in li_di_data[:n]:
+
             user_message = f"""
-            English text: ```{li_di_train_data[i]['src']}```
-            Czech text: ```{li_di_train_data[i]['mt']}```
+            {src_name} text: ```{record['src']}```
+            {target_name} text: ```{record['mt']}```
             """
             print(user_message)
+
             messages = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
-            response = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-            )
-            print("GPT response: " + response.choices[0].message.content)
-        break
+            response = openai.chat.completions.create(model="gpt-4-turbo", messages=messages, temperature=0)
+            predictions[lp].append(int(response.choices[0].message.content))
+            print("Label: " + str(record["score"]), " GPT response: " + response.choices[0].message.content)
+
+        df_lp_preds = pd.DataFrame({"idx": [record["idx"] for record in li_di_data[:n]], "llm_pred": predictions[lp]})
+        df_lp_preds.to_csv(
+            os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_{data_split}_llm_basic_prompt.csv"), index=False
+        )
+
+    return predictions
 
 
 if __name__ == "__main__":
-    gpt_predict()
+    predictions = gpt_predict(lps=["en-cs"], n=1000)
+    print("DONE!")
