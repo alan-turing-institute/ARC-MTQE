@@ -108,6 +108,8 @@ def get_callbacks(
     Creates the callbacks to be used by the trainer
     The trainer will always have a ModelCheckpoint callback, which will be stored in the first index of the list
     The trainer may or may not have an EarlyStopping callback
+    Config for both callbacks can be provided in the config files, but if not provided default values will be
+    used for the model checkpoint callback.
 
     Parameters
     ----------
@@ -129,12 +131,12 @@ def get_callbacks(
         # callback for early stopping
         early_stopping_callback = EarlyStopping(**early_stopping_params)
         # callback to log model checkpoints locally
-        # also needs to monitor the same metric as the early stopping callback so that we can work out
-        # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
         if "model_checkpoint" in config:
             model_checkpoint_params = config["model_checkpoint"]
             checkpoint_callback = ModelCheckpoint(checkpoint_path, **model_checkpoint_params)
         else:
+            # If checkpoint config is not provided then set this with the same metric and mode as the early stopping
+            # callback so that it can save the best checkpoint for the monitored metric
             checkpoint_callback = ModelCheckpoint(
                 checkpoint_path, monitor=early_stopping_params["monitor"], mode=early_stopping_params["mode"]
             )
