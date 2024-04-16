@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from mtqe.data.loaders import load_ced_data
+from mtqe.data.loaders import load_ced_data, score_ced
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
 from mtqe.utils.paths import DEMETR_DIR, PROCESSED_DATA_DIR
 
@@ -91,15 +91,18 @@ def main():
         df_all_demetr = pd.concat(dfs)
 
         # the perturbations are scored as base, minor, major or critical
-        df_all_demetr["score"] = np.where(df_all_demetr["severity"] == "critical", 0, 1)
-        # two of the base categories are critical errors and the third is a
-        # perfect translation so rescore accrodingly
+        df_all_demetr["label"] = np.where(df_all_demetr["severity"] == "critical", "ERR", "NOT")
+        # two of the base categories are critical errors:
+        #   - 'unrelated translation - baseline' and 'empty string (full stop only)'
+        # and the third is a perfect translation -> rescore the critical errors
         df_all_demetr.loc[
             (df_all_demetr["severity"] == "base")
             & (df_all_demetr["pert_desc"] != "reference as translation - baseline"),
-            "score",
-        ] = 0
+            "label",
+        ] = "ERR"
 
+        # use labels followed by score_ced function to ensure consistency with WMT data
+        df_all_demetr["score"] = score_ced(df_all_demetr["label"])
         df_all_demetr = df_all_demetr.rename(columns={"src_sent": "src", "pert_sent": "mt"})
         df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
