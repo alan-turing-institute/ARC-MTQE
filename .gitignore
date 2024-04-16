@@ -128,8 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Data and output files
-data/
+# Data, models and output files
+/data/
+/models/
 results/
 predictions/
 lightning_logs/
