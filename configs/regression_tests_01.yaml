@@ -51,7 +51,7 @@ trainer_config:
 
 # Config for early stopping callback, fixed for each experiment
 early_stopping:
-  monitor: val_recall
+  monitor: val_MCC
   patience: 3
   strict: True
   verbose: False
@@ -61,7 +61,7 @@ early_stopping:
 # Config for model checkpoint callback, fixed for each experiment
 model_checkpoint:
   monitor: val_MCC
-  save_weights_only: false
+  save_weights_only: true
   mode: max
 
 # These are the data for each experiment
