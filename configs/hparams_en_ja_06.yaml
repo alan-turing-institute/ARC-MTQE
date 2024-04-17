@@ -408,7 +408,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -431,7 +431,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -454,7 +454,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -477,7 +477,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -500,7 +500,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -523,7 +523,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -546,7 +546,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -569,7 +569,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -592,7 +592,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -615,7 +615,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -638,7 +638,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -661,7 +661,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -684,7 +684,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -707,7 +707,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
@@ -730,7 +730,7 @@ experiments:
           - en-ja
     hparams:
       dropout: 0.1
-      learning_rate: 1e-05
+      learning_rate: 1.0e-5
       encoder_learning_rate: 1.0e-06
       loss: binary_cross_entropy_with_logits
       batch_size: 32
