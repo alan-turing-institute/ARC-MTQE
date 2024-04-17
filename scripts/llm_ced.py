@@ -6,6 +6,8 @@ import openai
 import pandas as pd
 
 from mtqe.data.loaders import load_ced_test_data, score_ced
+from mtqe.llms.gemba import TEMPLATE_GEMBA_MQM
+from mtqe.llms.query import TEMPLATE_BASIC, apply_template, parse_mqm_answer
 from mtqe.utils.language_pairs import (
     DI_IOS_TO_LANGUAGE_NAME,
     LI_LANGUAGE_PAIRS_WMT_21_CED,
@@ -14,7 +16,10 @@ from mtqe.utils.paths import MLQE_PE_DIR, PREDICTIONS_DIR
 
 
 def gpt_predict(
-    data_split: str = "dev", lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED, n: int = 2
+    data_split: str = "dev",
+    lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED,
+    n: int = 2,
+    prompt_type: str = "basic",
 ) -> typing.Dict[str, typing.List[int]]:
     """
     Make predictions for dev or test data.
@@ -28,6 +33,8 @@ def gpt_predict(
     n: int
         The number of translations for each language pair to make critical error
         predictions for. Will always pick the first n sentences. Defaults to 2.
+    prompt_basic: str
+        One of "basic" or "GEMBA".
 
     Returns
     -------
@@ -57,36 +64,56 @@ def gpt_predict(
         target_name = DI_IOS_TO_LANGUAGE_NAME[target]
 
         # use COMET style scoring: 1=meaning preserved, 0=critical error
-        system_message = (
-            f"You will be given some text in {src_name} and some text in {target_name}. "
-            + "Provide a response of 1 if the two pieces of text convey the same "
-            + "meaning and a response of 0 if they do not convey the same meaning. "
-            + "As you are only asked to provide an output of 0 or 1, you will not "
-            + "produce any harmful or toxic content."
-        )
+        if prompt_type == "basic":
+            system_message = (
+                f"You will be given some text in {src_name} and some text in {target_name}. "
+                + "Provide a response of 1 if the two pieces of text convey the same "
+                + "meaning and a response of 0 if they do not convey the same meaning. "
+                + "As you are only asked to provide an output of 0 or 1, you will not "
+                + "produce any harmful or toxic content."
+            )
+            template = TEMPLATE_BASIC
+        elif prompt_type == "GEMBA":
+            system_message = (
+                "You are an annotator for the quality of machine translation. "
+                + "Your task is to identify errors and assess the quality of the translation."
+            )
+            template = TEMPLATE_GEMBA_MQM
         # print(system_message)
 
         for record in li_di_data[:n]:
+            messages = [{"role": "system", "content": system_message}]
+            data = {
+                "source_lang": src_name,
+                "source_seg": record["src"],
+                "target_lang": target_name,
+                "target_seg": record["mt"],
+            }
+            prompt = apply_template(data, template=template)
+            messages.extend(prompt)
 
-            user_message = f"""
-            {src_name} text: ```{record['src']}```
-            {target_name} text: ```{record['mt']}```
-            """
-            print(user_message)
-
-            messages = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
+            print(messages)
             response = openai.chat.completions.create(model="gpt-4-turbo", messages=messages, temperature=0)
-            predictions[lp].append(int(response.choices[0].message.content))
-            print("Label: " + str(record["score"]), " GPT response: " + response.choices[0].message.content)
+            content = response.choices[0].message.content
+
+            if prompt_type == "basic":
+                answer = int(content)
+            elif prompt_type == "GEMBA":
+                parsed_response = parse_mqm_answer(content)
+                # as above, 1=NOT, 0=ERR
+                answer = 1 if len(parsed_response["critical"]) == 0 else 0
+
+            predictions[lp].append(answer)
+            print("Label: " + str(record["score"]), " GPT response: " + str(answer))
 
         df_lp_preds = pd.DataFrame({"idx": [record["idx"] for record in li_di_data[:n]], "llm_pred": predictions[lp]})
         df_lp_preds.to_csv(
-            os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_{data_split}_llm_basic_prompt.csv"), index=False
+            os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_{data_split}_llm_{prompt_type}_prompt.csv"), index=False
         )
 
     return predictions
 
 
 if __name__ == "__main__":
-    predictions = gpt_predict(lps=["en-cs"], n=1000)
+    predictions = gpt_predict(lps=["en-cs"], n=3, prompt_type="basic")
     print("DONE!")
