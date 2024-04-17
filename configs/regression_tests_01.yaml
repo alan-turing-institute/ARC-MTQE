@@ -33,6 +33,7 @@ hparams:
   layer_transformation: sparsemax
   layerwise_decay: 0.95
   learning_rate: 1.5e-05
+  loss: binary_cross_entropy_with_logits
   loss_lambda: 0.65
   nr_frozen_epochs: 0.3
   optimizer: AdamW
@@ -79,8 +80,6 @@ experiments:
           - en-cs
     hparams:
       keep_embeddings_frozen: true
-      loss: cross_entropy
-      out_dim: 2
     slurm:
       memory: 40G
       time: 01:00:00
@@ -98,7 +97,6 @@ experiments:
           - en-cs
     hparams:
       keep_embeddings_frozen: false
-      loss: cross_entropy
     slurm:
       memory: 40G
       time: 01:00:00
@@ -117,7 +115,6 @@ experiments:
     hparams:
       keep_embeddings_frozen: false
       oversample_minority: true
-      loss: cross_entropy
     slurm:
       memory: 40G
       time: 01:00:00
@@ -136,7 +133,6 @@ experiments:
     hparams:
       keep_embeddings_frozen: false
       error_weight: 4
-      loss: cross_entropy
     slurm:
       memory: 40G
       time: 01:00:00
