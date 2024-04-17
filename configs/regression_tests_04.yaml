@@ -1,4 +1,5 @@
 # This is a config file containing experiment runs to be used for regression testing
+# These tests include neither early_stopping nor model_checkpoint config settings
 
 # WandB names
 wandb:
