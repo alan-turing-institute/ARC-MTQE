@@ -50,8 +50,8 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  unfzn_lr_1e05_weight2:
-    name: unfzn_lr_1e05_weight2
+  unfzn_lr_1e05_oversample:
+    name: unfzn_lr_1e05_oversample
     train_data:
       train_1:
         dataset_name: ced
@@ -70,6 +70,57 @@ experiments:
       batch_size: 64
       keep_embeddings_frozen: false
       nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_oversample_layernorm:
+    name: unfzn_lr_1e05_weight2
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-de
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-de
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      layer_norm: true
+      nr_frozen_epochs: 0
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_oversample_layernorm_calc:
+    name: unfzn_lr_1e05_weight2
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-de
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-de
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      layer_norm: true
+      nr_frozen_epochs: 0
+      calc_threshold: true
+      train_subset_size: 7000
+      train_subset_replace: false
     slurm:
       memory: 40G
       time: 08:00:00
