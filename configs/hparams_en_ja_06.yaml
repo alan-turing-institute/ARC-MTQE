@@ -394,3 +394,348 @@ experiments:
     slurm:
       memory: 40G
       time: 08:00:00
+  unfzn_lr_1e05_grad8:
+    name: unfzn_lr_1e05_grad8
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 1
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight2:
+    name: unfzn_lr_1e05_weight2
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 2
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight3:
+    name: unfzn_lr_1e05_weight3
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 3
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight4:
+    name: unfzn_lr_1e05_weight4
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 4
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight5:
+    name: unfzn_lr_1e05_weight5
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 5
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight6:
+    name: unfzn_lr_1e05_weight6
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 6
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight7:
+    name: unfzn_lr_1e05_weight7
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 7
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight8:
+    name: unfzn_lr_1e05_weight8
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 8
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight9:
+    name: unfzn_lr_1e05_weight9
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 9
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight10:
+    name: unfzn_lr_1e05_weight10
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 10
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight11:
+    name: unfzn_lr_1e05_weight11
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 11
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight12:
+    name: unfzn_lr_1e05_weight12
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 12
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight13:
+    name: unfzn_lr_1e05_weight13
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 13
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight14:
+    name: unfzn_lr_1e05_weight14
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 14
+    slurm:
+      memory: 40G
+      time: 08:00:00
+  unfzn_lr_1e05_weight15:
+    name: unfzn_lr_1e05_weight15
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    hparams:
+      dropout: 0.1
+      learning_rate: 1e-05
+      encoder_learning_rate: 1.0e-06
+      loss: binary_cross_entropy_with_logits
+      batch_size: 32
+      keep_embeddings_frozen: false
+      error_weight: 15
+    slurm:
+      memory: 40G
+      time: 08:00:00
