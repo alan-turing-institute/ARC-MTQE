@@ -80,7 +80,7 @@ FEW_SHOTS = {
 }
 
 
-def mqm_fewshot(few_shots: typing.List[typing.Dict[str, str]]) -> str:
+def mqm_fewshot(few_shots: typing.List[typing.Dict[str, str]]) -> typing.List[typing.Dict[str, str]]:
     """
     Create GEMBA fewshot prompt template.
 
@@ -96,8 +96,8 @@ def mqm_fewshot(few_shots: typing.List[typing.Dict[str, str]]) -> str:
 
     Returns
     -------
-    str
-        The GEMBA MQM prompt template with the few shot examples.
+    list[dict[str, str]]
+        A list of GEMBA MQM template prompts including few shot examples.
     """
 
     prompts = [
