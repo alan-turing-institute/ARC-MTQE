@@ -11,9 +11,8 @@ from pytorch_lightning.trainer.trainer import Trainer
 from torch import cuda
 
 import wandb
-from mtqe.data.loaders import get_ced_data_paths
 from mtqe.models.comet import load_qe_model_from_checkpoint
-from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
+from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR, PROCESSED_DATA_DIR
 
 
 def parse_args():
@@ -54,11 +53,19 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
     train_data = exp_setup["train_data"]
     dev_data = exp_setup["dev_data"]
     for dataset in train_data:
-        lps = train_data[dataset]["language_pairs"]
-        train_paths.extend(get_ced_data_paths("train", lps))
+        if "all" in train_data[dataset]["language_pairs"] and train_data[dataset]["dataset_name"] == "multilingual_ced":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
+        else:
+            for lp in train_data[dataset]["language_pairs"]:
+                if train_data[dataset]["dataset_name"] == "ced":
+                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_train.csv"))
+                elif train_data[dataset]["dataset_name"] == "demetr_ced":
+                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_train_with_demetr.csv"))
+                elif train_data[dataset]["dataset_name"] == "multilingual_ced":
+                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
     for dataset in dev_data:
-        lps = dev_data[dataset]["language_pairs"]
-        dev_paths.extend(get_ced_data_paths("dev", lps))
+        for lp in dev_data[dataset]["language_pairs"]:
+            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv"))
 
     model_params = config["hparams"]  # these don't change between experiments
     if "hparams" in exp_setup:
