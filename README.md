@@ -100,7 +100,7 @@ To make COMETKiwi-22 predictions for the  CED test data:
 make analyse_ced
 ```
 
-To use the OpenAI GPT API run the following script indicating how many translations to make predictions for (`n`), which prompt to use (`basic` or `GEMBA`), which language pair (or `all`) and which data split (`train`, `dev` or `test`) to use. For example:
+To use the OpenAI API to make critical error predictions run the following script indicating how many translations to make predictions for (`n`), which prompt to use (`basic` or `GEMBA`), which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to use. For example:
 
 ```bash
 poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test
