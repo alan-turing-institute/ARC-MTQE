@@ -7,7 +7,7 @@ import pandas as pd
 
 from mtqe.data.loaders import load_ced_test_data, score_ced
 from mtqe.llms.gemba import TEMPLATE_GEMBA_MQM
-from mtqe.llms.query import TEMPLATE_BASIC, apply_template, parse_mqm_answer
+from mtqe.llms.query import apply_template, parse_mqm_answer
 from mtqe.utils.language_pairs import (
     DI_IOS_TO_LANGUAGE_NAME,
     LI_LANGUAGE_PAIRS_WMT_21_CED,
@@ -72,13 +72,11 @@ def gpt_predict(
                 + "As you are only asked to provide an output of 0 or 1, you will not "
                 + "produce any harmful or toxic content."
             )
-            template = TEMPLATE_BASIC
         elif prompt_type == "GEMBA":
             system_message = (
                 "You are an annotator for the quality of machine translation. "
                 + "Your task is to identify errors and assess the quality of the translation."
             )
-            template = TEMPLATE_GEMBA_MQM
         # print(system_message)
 
         for record in li_di_data[:n]:
@@ -89,7 +87,11 @@ def gpt_predict(
                 "target_lang": target_name,
                 "target_seg": record["mt"],
             }
-            prompt = apply_template(data, template=template)
+            if prompt_type == "basic":
+                # basic template is the default
+                prompt = apply_template(data)
+            elif prompt_type == "GEMBA":
+                prompt = apply_template(data, template=TEMPLATE_GEMBA_MQM)
             messages.extend(prompt)
 
             print(messages)
