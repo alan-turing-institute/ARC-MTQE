@@ -84,7 +84,7 @@ def gpt_predict(
 
         # save full GPT answer as well as ERROR (0)/NOT ERROR (1) predictions made by the model in a CSV file
         predictions = []
-        responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp, now_str)
+        responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
 
         df_data = load_ced_data(data_split, lp)
@@ -103,7 +103,7 @@ def gpt_predict(
             # print(messages)
 
             response = openai.chat.completions.create(model="gpt-4-turbo", messages=messages, temperature=0, seed=1234)
-            with open(os.path.join(responses_dir, f'{row["idx"]}.obj'), "wb") as fp:
+            with open(os.path.join(responses_dir, f'{now_str}_{row["idx"]}.obj'), "wb") as fp:
                 pickle.dump(response, fp)
 
             content = response.choices[0].message.content
