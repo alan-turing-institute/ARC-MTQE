@@ -102,6 +102,7 @@ def gpt_predict(
                 answer = int(content)
             elif prompt_type == "GEMBA":
                 parsed_response = parse_mqm_answer(content)
+
                 # as above, 1=NOT, 0=ERR
                 answer = 1 if len(parsed_response["critical"]) == 0 else 0
 
@@ -117,5 +118,7 @@ def gpt_predict(
 
 
 if __name__ == "__main__":
+    os.makedirs(os.path.join(PREDICTIONS_DIR, "gpt_answers"), exist_ok=True)
+
     predictions = gpt_predict(lps=["en-cs"], n=3, prompt_type="basic")
     print("DONE!")

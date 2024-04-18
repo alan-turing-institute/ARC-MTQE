@@ -21,7 +21,7 @@ def apply_template(data: typing.Dict[str, str], template: typing.List[typing.Dic
             - target_lang
             - target_seg
     template: list[dict[str, str]]
-        A list of prompts. Defaults to TEMPLATE_BASIC.
+        A list of prompts. Defaults to TEMPLATE_BASIC which returns a single prompt.
 
     Returns
     -------
@@ -39,7 +39,7 @@ def apply_template(data: typing.Dict[str, str], template: typing.List[typing.Dic
 
 def parse_mqm_answer(gpt_answer: str) -> typing.Dict[str, typing.List[str]]:
     """
-    Parse MQM style answer (following GEMBA MQM prompt).
+    Parse GPT answer to GEMAB MQM few shot prompt.
 
     NOTE: This function is adapted from the GEMBA package:
     - https://github.com/MicrosoftTranslator/GEMBA/blob/main/gemba/gemba_mqm_utils.py
@@ -56,7 +56,6 @@ def parse_mqm_answer(gpt_answer: str) -> typing.Dict[str, typing.List[str]]:
             `{"critical": [], "major": [], "minor": []}`
         The list will be empty of `no error` was identified for that
         severity category.
-
     """
 
     if gpt_answer is None:
