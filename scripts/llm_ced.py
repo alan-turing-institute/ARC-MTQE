@@ -65,7 +65,7 @@ def gpt_predict(
     assert prompt_type in [
         "basic",
         "GEMBA",
-    ], f"Invalid prompt_type {prompt_type} provided, must be one off 'basic' or 'GEMBA'..."
+    ], f"Invalid prompt_type {prompt_type} provided, must be one of 'basic' or 'GEMBA'..."
     assert data_split in [
         "train",
         "dev",
