@@ -72,9 +72,10 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
         # add any experiment-specific params
         model_params = {**model_params, **exp_setup["hparams"]}
 
-    # checkpoint path is currently hard-coded below - I think this should also
-    # be in the config so we can load any checkpoint
-    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+    if "model_path" in config:
+        model_path = config["model_path"]["path"]
+    else:
+        model_path = download_model("Unbabel/wmt22-cometkiwi-da")
     # reload_hparams hard-coded to False, but might want to modify this in future - this would force params
     # to be loaded from a file, but we want to pass them through as arguments here.
     model = load_qe_model_from_checkpoint(model_path, train_paths, dev_paths, reload_hparams=False, **model_params)
