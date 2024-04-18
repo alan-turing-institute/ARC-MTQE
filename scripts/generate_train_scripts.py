@@ -84,6 +84,7 @@ def generate_scripts(
     # make the directory, if it doesn't already exist
     if not os.path.isdir(scripts_path):
         os.mkdir(scripts_path)
+    if not os.path.isdir(log_path):
         os.mkdir(log_path)
     # Account name for our HPC (Baskerville)
     account_name = config["slurm"]["account"]
