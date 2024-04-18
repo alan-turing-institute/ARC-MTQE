@@ -17,7 +17,7 @@ Install dependencies and pre-commit hooks with Poetry:
 make setup
 ```
 
-Download datasets:
+Download and preprocess datasets:
 
 ```bash
 make data
@@ -62,6 +62,7 @@ export OPENAI_API_KEY="your_api_key"
 │   ├── unbabel/
 │   ├── wmt-qe-2022-data/
 │   ├── wmt-qe-2023-data/
+│   ├── preprocessed/
 ├── models/
 │   ├── ...
 ├── notebooks/
