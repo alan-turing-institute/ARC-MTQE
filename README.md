@@ -17,7 +17,7 @@ Install dependencies and pre-commit hooks with Poetry:
 make setup
 ```
 
-Download datasets:
+Download and preprocess datasets:
 
 ```bash
 make data
@@ -56,6 +56,7 @@ wandb.login()
 │   ├── unbabel/
 │   ├── wmt-qe-2022-data/
 │   ├── wmt-qe-2023-data/
+│   ├── preprocessed/
 ├── models/
 │   ├── ...
 ├── notebooks/
