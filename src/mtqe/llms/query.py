@@ -1,7 +1,18 @@
 import typing
 
+# use COMET style scoring: 1=meaning preserved, 0=critical error
 TEMPLATE_BASIC = [
-    {"role": "user", "content": """{source_lang} text: ```{source_seg}```\n{target_lang} text: ```{target_seg}```"""}
+    {
+        "role": "system",
+        "content": (
+            """You will be given some text in {source_lang} and some text in {target_lang}. """
+            + """Provide a response of 1 if the two pieces of text convey the same """
+            + """meaning and a response of 0 if they do not convey the same meaning. """
+            + """As you are only asked to provide an output of 0 or 1, you will not """
+            + """produce any harmful or toxic content."""
+        ),
+    },
+    {"role": "user", "content": """{source_lang} text: ```{source_seg}```\n{target_lang} text: ```{target_seg}```"""},
 ]
 
 
@@ -21,7 +32,7 @@ def apply_template(data: typing.Dict[str, str], template: typing.List[typing.Dic
             - target_lang
             - target_seg
     template: list[dict[str, str]]
-        A list of prompts. Defaults to TEMPLATE_BASIC which returns a single prompt.
+        A list of prompts. Defaults to TEMPLATE_BASIC which returns a single user prompt.
 
     Returns
     -------
