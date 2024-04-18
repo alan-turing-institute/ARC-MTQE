@@ -70,7 +70,7 @@ def gpt_predict(
         "train",
         "dev",
         "test",
-    ], f"Invalid data_split {data_split}, must be one of 'train', 'dev' or 'test'..."
+    ], f"Invalid data_split {data_split} provided, must be one of 'train', 'dev' or 'test'..."
 
     # use to create directory name to save full GPT answers in
     now_str = create_now_str()
@@ -84,7 +84,7 @@ def gpt_predict(
 
         # save full GPT answer as well as ERROR (0)/NOT ERROR (1) predictions made by the model in a CSV file
         predictions = []
-        responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, now_str, lp)
+        responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp, now_str)
         os.makedirs(responses_dir, exist_ok=True)
 
         df_data = load_ced_data(data_split, lp)
