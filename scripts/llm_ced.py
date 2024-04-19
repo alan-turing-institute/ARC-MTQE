@@ -30,6 +30,9 @@ def parse_args():
     parser.add_argument(
         "-n", "--number", required=True, help="Number of translations in the dataset to make predictions for."
     )
+    parser.add_argument(
+        "-m", "--model", required=True, help="The name of the OpenAI model to be used, e.g., 'gpt-3.5-turbo'"
+    )
 
     return parser.parse_args()
 
@@ -39,6 +42,7 @@ def gpt_predict(
     lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED,
     n: int = 2,
     prompt_type: str = "basic",
+    openai_model: str = "gpt-3.5-turbo",
 ) -> typing.Dict[str, typing.List[int]]:
     """
     Make predictions for dev or test data.
@@ -54,6 +58,8 @@ def gpt_predict(
         predictions for. Will always pick the first n sentences. Defaults to 2.
     prompt_basic: str
         One of "basic" or "GEMBA".
+    openai_model: str
+        The name of the OpenAI model to be used. Defaults to 'gpt-3.5-turbo'.
 
     Returns
     -------
@@ -71,6 +77,9 @@ def gpt_predict(
         "dev",
         "test",
     ], f"Invalid data_split {data_split} provided, must be one of 'train', 'dev' or 'test'..."
+    assert "OPENAI_API_KEY" in os.environ, "Environment variable `OPENAI_API_KEY` has not been set."
+
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
     # use to create directory name to save full GPT answers in
     now_str = create_now_str()
@@ -102,7 +111,7 @@ def gpt_predict(
                 messages = apply_template(data, template=TEMPLATE_GEMBA_MQM)
             # print(messages)
 
-            response = openai.chat.completions.create(model="gpt-4-turbo", messages=messages, temperature=0, seed=1234)
+            response = openai.chat.completions.create(model=openai_model, messages=messages, temperature=0, seed=1234)
             with open(os.path.join(responses_dir, f'{now_str}_{row["idx"]}.obj'), "wb") as fp:
                 pickle.dump(response, fp)
 
@@ -132,7 +141,7 @@ def main():
     else:
         lps = [args.lp]
 
-    gpt_predict(data_split=args.data, lps=lps, n=int(args.number), prompt_type=args.prompt)
+    gpt_predict(data_split=args.data, lps=lps, n=int(args.number), prompt_type=args.prompt, openai_model=args.model)
 
     print("DONE!")
 
