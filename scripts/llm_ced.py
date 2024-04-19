@@ -26,7 +26,9 @@ def parse_args():
 
     parser.add_argument("-p", "--prompt", required=True, help="Prompt type ('basic' or 'GEMBA').")
     parser.add_argument("-d", "--data", required=True, help="Data split to make predictions for ('dev' or 'test').")
-    parser.add_argument("-l", "--lp", required=True, help="Language pair to make predictions for, can also be 'all'.")
+    parser.add_argument(
+        "-l", "--lp", required=True, help="Language pair to make predictions for (e.g., 'en-cs'), can also be 'all'."
+    )
     parser.add_argument(
         "-n", "--number", required=True, help="Number of translations in the dataset to make predictions for."
     )
