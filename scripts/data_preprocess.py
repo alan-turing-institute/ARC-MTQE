@@ -56,8 +56,21 @@ def main():
     df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
     # ==================================================================
-    # 2. save each WMT21 train and dev file as is
-    #    - also save combined with DEMETR data
+    # 2. WMT 2022 En-De synthetic data
+    # ==================================================================
+
+    data = {"mt": [], "src": [], "label": []}
+    for name in data:
+        with open(os.path.join(WMT_QE_22_CED_ENDE_TRAIN_DIR, f"train.{name}")) as fp:
+            data[name] = fp.read().splitlines()
+    df_wmt22 = pd.DataFrame(data)
+    df_wmt22["score"] = score_ced(df_wmt22["label"], good_label="OK")
+    df_wmt22[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "wmt22_ende_train.csv"))
+
+    # ==================================================================
+    # 3. Save each WMT21 train and dev file as is.
+    #    Also save each train file combined with the DEMETR data.
+    #    For English-German, also combine with WMT 2022 for balanced data.
     # ==================================================================
 
     # keep track of source sentences in dev and test sets for each language pair
@@ -74,6 +87,19 @@ def main():
                 combined_df = pd.concat([df_data[["src", "mt", "score"]], df_all_demetr[["src", "mt", "score"]]])
                 combined_df.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_train_with_demetr.csv"))
 
+                # add subset of WMT 2022 synthetic errors
+                # - just pick the first N to make it a balanced dataset
+                if lp == "en-de":
+                    df_wmt22_errors = df_wmt22[df_wmt22["label"]] == "BAD"
+                    n_bad = df_data[df_data["score"] == 0].shape[0]
+                    n_good = df_data[df_data["score"] == 1].shape[0]
+                    n_bad_missing = n_good - n_bad
+                    df_wmt22_errors_subset = df_wmt22_errors.iloc[:n_bad_missing]
+                    balanced_df = pd.concat(
+                        [df_data[["src", "mt", "score"]], df_wmt22_errors_subset[["src", "mt", "score"]]]
+                    )
+                    balanced_df.to_csv(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
+
             # keep track of dev sentences to exclude from the multilingual datasets
             if data_split == "dev":
                 all_src_to_exclude[lp].extend(df_data["src"])
@@ -83,7 +109,7 @@ def main():
         all_src_to_exclude[lp].extend(df_test["src"])
 
     # ==================================================================
-    # 3. create multilingual training dataset combining all lps
+    # 4. create multilingual training dataset combining all lps
     #   - exclude ALL dev/test source sentences from each training set
     #   - combine filtered training data for all lps in a single CSV file
     #   - add DEMETR data and save that as well
@@ -107,7 +133,7 @@ def main():
     )
 
     # ==================================================================
-    # 4. create multilingual training dataset tailored for each lp
+    # 5. create multilingual training dataset tailored for each lp
     #   - for each lp, loop through all the OTHER lps and get train data
     #   - for the other lps train data, remove any dev/test sentences for
     #     the given lp
@@ -127,17 +153,6 @@ def main():
         lp_dfs.append(df_train)
         df_train_lp_multilingual = pd.concat(lp_dfs)
         df_train_lp_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
-
-    # ==================================================================
-    # 5. WMT 2022 En-De synthetic data
-    # ==================================================================
-    data = {"mt": [], "src": [], "label": []}
-    for name in data:
-        with open(os.path.join(WMT_QE_22_CED_ENDE_TRAIN_DIR, f"train.{name}")) as fp:
-            data[name] = fp.read().splitlines()
-    df_wmt22 = pd.DataFrame(data)
-    df_wmt22["score"] = score_ced(df_wmt22["label"], good_label="OK")
-    df_wmt22[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "wmt22_ende_train.csv"))
 
 
 if __name__ == "__main__":
