@@ -90,7 +90,7 @@ def main():
                 # add subset of WMT 2022 synthetic errors
                 # - just pick the first N to make it a balanced dataset
                 if lp == "en-de":
-                    df_wmt22_errors = df_wmt22[df_wmt22["label"]] == "BAD"
+                    df_wmt22_errors = df_wmt22[df_wmt22["label"] == "BAD"]
                     n_bad = df_data[df_data["score"] == 0].shape[0]
                     n_good = df_data[df_data["score"] == 1].shape[0]
                     n_bad_missing = n_good - n_bad
@@ -127,7 +127,9 @@ def main():
     df_train_all_multilingual = pd.concat(all_dfs)
     df_train_all_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
 
-    df_train_all_multilingual_with_demetr = pd.concat(df_train_all_multilingual, df_all_demetr[["src", "mt", "score"]])
+    df_train_all_multilingual_with_demetr = pd.concat(
+        [df_train_all_multilingual, df_all_demetr[["src", "mt", "score"]]]
+    )
     df_train_all_multilingual_with_demetr.to_csv(
         os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv")
     )
