@@ -79,7 +79,7 @@ experiments:
           - en-cs
     slurm:
       memory: 40G
-      time: '12:00:00'
+      time: '24:00:00'
   en-de:
     name: en-de
     train_data:
@@ -94,7 +94,7 @@ experiments:
           - en-de
     slurm:
       memory: 40G
-      time: '12:00:00'
+      time: '24:00:00'
   en-zh:
     name: en-zh
     train_data:
@@ -109,4 +109,19 @@ experiments:
           - en-zh
     slurm:
       memory: 40G
-      time: '12:00:00'
+      time: '24:00:00'
+  en-ja:
+    name: en-ja
+    train_data:
+      train_1:
+        dataset_name: multilingual_ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    slurm:
+      memory: 40G
+      time: '24:00:00'
