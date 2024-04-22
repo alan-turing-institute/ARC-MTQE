@@ -12,21 +12,25 @@ from mtqe.utils.paths import (
 )
 
 
-def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
+def score_ced(ced_data: typing.Union[pd.Series, np.ndarray], good_label: str = "NOT") -> np.ndarray:
     """
-    Rescore "ERR"/"NOT" CED labels into binary indicators: ERR = 0, NOT = 1.
+    Rescore critical error labels into binary indicators:
+    - critical error translation = 0
+    - good translation = 1
 
     Parameters
     ----------
     ced_data: Union[pd.Series[str], np.ndarray[str]]
-        Array of "ERR"/"NOT" labels.
+        Array of critical error labels (e.g., "ERR"/"NOT" or "BAD"/"OK").
+    good_label: str
+        How translations without a critical error are labeled. Defaults to 'NOT'.
 
     Returns
     ----------
     np.ndarray
     """
 
-    return np.where(ced_data == "NOT", 1, 0)
+    return np.where(ced_data == good_label, 1, 0)
 
 
 def comet_format(data: pd.DataFrame) -> typing.List[typing.Dict[str, str]]:
