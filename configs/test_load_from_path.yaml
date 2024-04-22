@@ -58,7 +58,7 @@ early_stopping:
   mode: max
   min_delta: 0.
 
-weights_path:
+model_path:
   path: /Users/jknight/github_repos/arc-mtqe/checkpoints/regression_tests__en-cs_regression_1__42__20240416_160015/epoch=0-step=468.ckpt
 
 # These are the data for each experiment
