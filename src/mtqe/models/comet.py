@@ -574,6 +574,7 @@ def load_qe_model_from_checkpoint(
     paths_dev_data: list,
     strict: bool = False,
     reload_hparams=False,
+    weights_path=None,
     **kwargs
 ) -> UnifiedMetric:
     """
@@ -601,6 +602,8 @@ def load_qe_model_from_checkpoint(
     checkpoint_path = Path(checkpoint_path)
     parent_folder = checkpoint_path.parents[1]
     hparams_file = parent_folder / "hparams.yaml"
+    if weights_path is not None:
+        checkpoint_path = Path(weights_path)
     # would be better if this was set once (in train_ced.py) and passed
     # to functions when needed - currently also set in metrics.py
     device = "cuda" if torch.cuda.is_available() else "cpu"

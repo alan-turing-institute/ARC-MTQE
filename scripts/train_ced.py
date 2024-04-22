@@ -72,13 +72,17 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
         # add any experiment-specific params
         model_params = {**model_params, **exp_setup["hparams"]}
 
-    if "model_path" in config:
-        model_path = config["model_path"]["path"]
+    if "weights_path" in config:
+        weights_path = config["weights_path"]["path"]
     else:
-        model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+        weights_path = None
+
+    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
     # reload_hparams hard-coded to False, but might want to modify this in future - this would force params
     # to be loaded from a file, but we want to pass them through as arguments here.
-    model = load_qe_model_from_checkpoint(model_path, train_paths, dev_paths, reload_hparams=False, **model_params)
+    model = load_qe_model_from_checkpoint(
+        model_path, train_paths, dev_paths, reload_hparams=False, weights_path=weights_path, **model_params
+    )
 
     return model
 
