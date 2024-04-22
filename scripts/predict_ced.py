@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
+from torch import cuda
 
 from mtqe.data.loaders import comet_format, load_ced_data
 from mtqe.models.loaders import load_model_from_file
@@ -57,85 +58,64 @@ def supervised_predict(
     lps: list[str]
         List of WMT21 language-pairs to make predictions for. Defaults to all.
     """
-
+    # Get the model name given the experiment group name, experiment name, and seed
     model_name = get_model_name(experiment_group_name, experiment_name, seed)
-
+    # Set the path to the checkpoint
     checkpoint_path = Path(checkpoint_path)
-
+    # Make sure that the model name matches the checkpoint model name
     assert model_name[:-15] == os.path.split(os.path.dirname(checkpoint_path))[-1][:-15], (
-        "Error" + model_name + os.path.dirname(checkpoint_path)
+        "Error, model name "
+        + model_name
+        + " does not match the checkpoint model name"
+        + os.path.dirname(checkpoint_path)
     )
-
+    # Load the config file - want to load the model with the same hparams as used for training
+    # NOTE: There is no guarantee the config file has not been changed since training... this
+    # could be made more robust by saving the hparams or config with the checkpoint?
     with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
         config = yaml.safe_load(stream)
-
+    # Set or overwrite the model path in the config file
     config["model_path"] = {"path": checkpoint_path}
 
-    # Check that the experiment name is in the yaml file - the load won't work otherwise.
-    assert experiment_name in config["experiments"], (
-        experiment_name + " does not exist in " + experiment_group_name + ".yaml"
-    )
-    assert int(seed) in config["seeds"], "seed " + str(seed) + " does not exist in " + experiment_group_name + ".yaml"
-
+    # Load the model from the config file, setting the `train_model` param to False
     model = load_model_from_file(config, experiment_name, train_model=False)
 
     # save results here
-    out_dir = os.path.join(PREDICTIONS_DIR, "ced_test_data")
+    out_dir = os.path.join(PREDICTIONS_DIR, "ced_data", experiment_group_name)
     os.makedirs(out_dir, exist_ok=True)
 
-    for lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
+    for lp in lps:
         out_file_name = os.path.join(
-            out_dir, f"{lp}_" + data_split + "_" + os.path.split(os.path.dirname(checkpoint_path))[-1] + ".csv"
+            out_dir,
+            f"{lp}_"
+            + data_split
+            + "_"
+            + os.path.split(os.path.dirname(checkpoint_path))[-1]
+            + os.path.basename(checkpoint_path)
+            + ".csv",
         )
 
         # load data
         df_data = load_ced_data(data_split, lp)
         comet_data = comet_format(df_data)
 
+        # set number of gpus - is there a better way of doing this?
+        if cuda.is_available():
+            gpus = 1
+        else:
+            gpus = 0
         # predict
-        model_output = model.predict(comet_data, batch_size=8, gpus=0)
+        model_output = model.predict(comet_data, batch_size=8, gpus=gpus)
 
-        # save output
-        df_results = pd.DataFrame({"idx": df_data["idx"], "comet_score": model_output.scores})
+        # save logits output
+        # NOTE: the sigmoid function has not been applied to this output.
+        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores})
         df_results.to_csv(out_file_name, index=False)
 
     return model
 
 
-# def main():
-#     """
-#     Make predictions for WMT 2021 CED test data using COMETKiwi 2022.
-#     """
-
-#     # COMETKiwi 2022
-#     model = load_comet_model()
-
-#     # save results here
-#     out_dir = os.path.join(PREDICTIONS_DIR, "ced_test_data")
-#     os.makedirs(out_dir, exist_ok=True)
-
-#     # make predictions for all language pairs listed here
-#     for lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
-#         out_file_name = os.path.join(out_dir, f"{lp}_cometkiwi.csv")
-#         if os.path.exists(out_file_name):
-#             print(f"{out_file_name} already exists, skipping...")
-#             continue
-
-#         # load data
-#         df_data = load_ced_test_data(lp)
-#         comet_data = comet_format(df_data)
-
-#         # predict
-#         model_output = model.predict(comet_data, batch_size=8, gpus=0)
-
-#         # save output
-#         df_results = pd.DataFrame({"idx": df_data["idx"], "comet_score": model_output.scores})
-#         df_results.to_csv(out_file_name, index=False)
-
-
 def main():
-
-    os.makedirs(os.path.join(PREDICTIONS_DIR, "ced_data"), exist_ok=True)
 
     args = parse_args()
     experiment_group_name = args.group
