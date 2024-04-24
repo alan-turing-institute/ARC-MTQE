@@ -18,7 +18,7 @@ hparams:
   activations: Tanh
   class_identifier: ced_model
   encoder_model: XLM-RoBERTa
-  exclude_outliers: 250
+  exclude_outliers: 300
   hidden_sizes:
   - 3072
   - 1024
@@ -112,7 +112,7 @@ experiments:
           - en-zh
     slurm:
       memory: 40G
-      time: '24:00:00'
+      time: '48:00:00'
   base_wmt22_en_de:
     name: base_wmt22_en_de
     train_data:
