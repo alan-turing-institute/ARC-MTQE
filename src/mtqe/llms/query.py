@@ -25,7 +25,7 @@ def apply_template(data: typing.Dict[str, str], template: typing.List[typing.Dic
 
     Parameters
     ----------
-    data: union[str, list[dict
+    data: dict[str, str]
         A dictionary with the following keys:
             - source_lang
             - source_seg
