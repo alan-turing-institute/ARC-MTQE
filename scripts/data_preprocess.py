@@ -4,13 +4,9 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from mtqe.data.loaders import load_ced_data, score_ced
+from mtqe.data.loaders import load_ced_data, load_wmt22_ced_data, score_ced
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.paths import (
-    DEMETR_DIR,
-    PROCESSED_DATA_DIR,
-    WMT_QE_22_CED_ENDE_TRAIN_DIR,
-)
+from mtqe.utils.paths import DEMETR_DIR, PROCESSED_DATA_DIR
 
 
 def main():
@@ -56,16 +52,13 @@ def main():
     df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
     # ==================================================================
-    # 2. WMT 2022 En-De synthetic data
+    # 2. WMT 2022 En-De synthetic data (train and dev)
     # ==================================================================
 
-    data = {"mt": [], "src": [], "label": []}
-    for name in data:
-        with open(os.path.join(WMT_QE_22_CED_ENDE_TRAIN_DIR, f"train.{name}")) as fp:
-            data[name] = fp.read().splitlines()
-    df_wmt22 = pd.DataFrame(data)
-    df_wmt22["score"] = score_ced(df_wmt22["label"], good_label="OK")
-    df_wmt22[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "wmt22_ende_train.csv"))
+    lp = "en-de"
+    for data_split in ["train", "dev"]:
+        df_wmt22 = load_wmt22_ced_data(data_split, lp)
+        df_wmt22[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_{data_split}.csv"))
 
     # ==================================================================
     # 3. Save each WMT21 train and dev file as is.
@@ -90,7 +83,7 @@ def main():
                 # add subset of WMT 2022 synthetic errors
                 # - just pick the first N to make it a balanced dataset
                 if lp == "en-de":
-                    df_wmt22_errors = df_wmt22[df_wmt22["label"] == "BAD"]
+                    df_wmt22_errors = df_wmt22[df_wmt22["score"] == 0]
                     n_bad = df_data[df_data["score"] == 0].shape[0]
                     n_good = df_data[df_data["score"] == 1].shape[0]
                     n_bad_missing = n_good - n_bad
