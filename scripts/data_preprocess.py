@@ -111,7 +111,7 @@ def main():
     # 4. create multilingual training dataset combining all lps
     #   - exclude ALL dev/test source sentences from each training set
     #   - combine filtered training data for all lps in a single CSV file
-    #   - add DEMETR data and save that as well
+    #   - add DEMETR train data and save that as well
     # ==================================================================
 
     # training data dfs cleared of dev/test sentences across ALL lps
@@ -127,7 +127,7 @@ def main():
     df_train_all_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
 
     df_train_all_multilingual_with_demetr = pd.concat(
-        [df_train_all_multilingual, df_all_demetr[["src", "mt", "score"]]]
+        [df_train_all_multilingual, df_demetr_train[["src", "mt", "score"]]]
     )
     df_train_all_multilingual_with_demetr.to_csv(
         os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv")
