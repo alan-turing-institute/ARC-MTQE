@@ -42,8 +42,10 @@ def evaluate(experiment_group_name: str, pred_dir: str = PREDICTIONS_DIR):
 
         split_name = "dev" if split == "d" else "test"
         # NOTE: As we've only used models with binary cross-entropy loss, the sigmoid function is hard-coded here,
-        # but the models could use cross-entropy loss func and therefore would need
-        ClassificationMetrics(prefix=lp + "_" + split_name, activation_fn=torch.sigmoid)
+        # but the models could use cross-entropy loss func and therefore would need softmax
+        metrics = ClassificationMetrics(prefix=lp + "_" + split_name, activation_fn=torch.sigmoid)
+        results = metrics.compute()
+        print(results)
 
     # # predictions
     # pred_path = os.path.join(pred_dir, f"{lp}_{model}.csv")
