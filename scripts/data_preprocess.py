@@ -102,12 +102,16 @@ def main():
 
     for lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
         df_train = load_ced_data("train", lp)
-        lp_dfs = [df_train]
+        lp_dfs = []
         for other_lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
             if other_lp != lp:
                 df_train_other = load_ced_data("train", other_lp)
                 df_train_other_reduced = df_train_other[~df_train_other["src"].isin(all_src_to_exclude[lp])]
                 lp_dfs.append(df_train_other_reduced[["src", "mt", "score"]])
+        df_train_two_stage = pd.concat(lp_dfs)
+        df_train_two_stage.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_twostage_multilingual_train.csv"))
+
+        lp_dfs.append(df_train)
         df_train_lp_multilingual = pd.concat(lp_dfs)
         df_train_lp_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
 
