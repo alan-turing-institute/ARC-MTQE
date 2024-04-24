@@ -3,8 +3,9 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-from mtqe.data.loaders import load_ced_data, score_ced
+from mtqe.data.loaders import load_ced_data, load_wmt22_ced_data, score_ced
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
 from mtqe.utils.paths import DEMETR_DIR, PROCESSED_DATA_DIR
 
@@ -21,7 +22,11 @@ def main():
     contain any source sentences that are in the dev and test sets (for the given
     language pair or for all the language pairs).
 
-    This script also creates a single file for DEMETR data.
+    This script also creates a single file for DEMETR data as well as a train/dev split.
+    The DEMETR data is also combined with the various authentic monolingual and multilingual
+    datasets.
+
+    Lastly, we save WMT 2021 English-German synthetic train and dev data to a CSV.
     """
 
     # ==================================================================
@@ -49,8 +54,35 @@ def main():
     df_all_demetr = df_all_demetr.rename(columns={"src_sent": "src", "pert_sent": "mt"})
     df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
 
+    # split into train and dev data
+    df_demetr_train, df_demetr_dev = train_test_split(df_all_demetr, test_size=0.1, random_state=10)
+    df_demetr_train[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr_train.csv"))
+    df_demetr_dev[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
+
     # ==================================================================
-    # 2. save each WMT21 train and dev file as is
+    # 2. WMT 2022 En-De synthetic data (train and dev)
+    # ==================================================================
+
+    lp = "en-de"
+
+    df_wmt22_dev = load_wmt22_ced_data("dev", lp)
+    df_wmt22_dev[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_dev.csv"))
+
+    df_wmt22_train = load_wmt22_ced_data("train", lp)
+    df_wmt22_train[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train.csv"))
+
+    # create a smaller dataset of 40k records from the train data
+    df_wmt22_errors = df_wmt22_train[df_wmt22_train["score"] == 0]
+    df_wmt22_good = df_wmt22_train[df_wmt22_train["score"] == 1]
+    n_to_add = 40000 - df_wmt22_errors.shape[0]
+    df_wmt22_reduced = pd.concat([df_wmt22_errors, df_wmt22_good.iloc[:n_to_add]])
+    assert df_wmt22_reduced.shape[0] == 40000
+    df_wmt22_reduced[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train_reduced.csv"))
+
+    # ==================================================================
+    # 3. Save each WMT21 train and dev file as is.
+    #    Also save each train file combined with the DEMETR data.
+    #    For English-German, also combine with WMT 2022 for balanced data.
     # ==================================================================
 
     # keep track of source sentences in dev and test sets for each language pair
@@ -67,6 +99,19 @@ def main():
                 combined_df = pd.concat([df_data[["src", "mt", "score"]], df_all_demetr[["src", "mt", "score"]]])
                 combined_df.to_csv(os.path.join(PROCESSED_DATA_DIR, f"{lp}_train_with_demetr.csv"))
 
+                # add subset of WMT 2022 synthetic errors
+                # - just pick the first N to make it a balanced dataset
+                if lp == "en-de":
+                    n_bad = df_data[df_data["score"] == 0].shape[0]
+                    n_good = df_data[df_data["score"] == 1].shape[0]
+                    n_bad_missing = n_good - n_bad
+                    df_wmt22_errors_subset = df_wmt22_errors.iloc[:n_bad_missing]
+                    balanced_df = pd.concat(
+                        [df_data[["src", "mt", "score"]], df_wmt22_errors_subset[["src", "mt", "score"]]]
+                    )
+                    assert balanced_df.shape[0] == 5674 * 2
+                    balanced_df.to_csv(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
+
             # keep track of dev sentences to exclude from the multilingual datasets
             if data_split == "dev":
                 all_src_to_exclude[lp].extend(df_data["src"])
@@ -76,9 +121,10 @@ def main():
         all_src_to_exclude[lp].extend(df_test["src"])
 
     # ==================================================================
-    # 3. create multilingual training dataset combining all lps
+    # 4. create multilingual training dataset combining all lps
     #   - exclude ALL dev/test source sentences from each training set
     #   - combine filtered training data for all lps in a single CSV file
+    #   - add DEMETR train data and save that as well
     # ==================================================================
 
     # training data dfs cleared of dev/test sentences across ALL lps
@@ -93,8 +139,15 @@ def main():
     df_train_all_multilingual = pd.concat(all_dfs)
     df_train_all_multilingual.to_csv(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
 
+    df_train_all_multilingual_with_demetr = pd.concat(
+        [df_train_all_multilingual, df_demetr_train[["src", "mt", "score"]]]
+    )
+    df_train_all_multilingual_with_demetr.to_csv(
+        os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv")
+    )
+
     # ==================================================================
-    # 4. create multilingual training dataset tailored for each lp
+    # 5. create multilingual training dataset tailored for each lp
     #   - for each lp, loop through all the OTHER lps and get train data
     #   - for the other lps train data, remove any dev/test sentences for
     #     the given lp
