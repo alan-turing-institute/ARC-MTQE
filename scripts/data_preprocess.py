@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from mtqe.data.loaders import load_ced_data, load_wmt22_ced_data, score_ced
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
@@ -50,6 +51,11 @@ def main():
     df_all_demetr["score"] = score_ced(df_all_demetr["label"])
     df_all_demetr = df_all_demetr.rename(columns={"src_sent": "src", "pert_sent": "mt"})
     df_all_demetr[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr.csv"))
+
+    # split into train and dev data
+    df_demetr_train, df_demetr_dev = train_test_split(df_all_demetr, test_size=0.1, random_state=10)
+    df_demetr_train[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr_train.csv"))
+    df_demetr_dev[["src", "mt", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
 
     # ==================================================================
     # 2. WMT 2022 En-De synthetic data (train and dev)
