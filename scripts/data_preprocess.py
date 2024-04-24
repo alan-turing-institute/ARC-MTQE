@@ -22,9 +22,11 @@ def main():
     contain any source sentences that are in the dev and test sets (for the given
     language pair or for all the language pairs).
 
-    This script also creates a single file for DEMETR data and combines it with the
-    various authentic monolingual and multilingual datasets. Lastly, it saves the
-    WMT 2021 English-German synthetic train data to a CSV.
+    This script also creates a single file for DEMETR data as well as a train/dev split.
+    The DEMETR data is also combined with the various authentic monolingual and multilingual
+    datasets.
+
+    Lastly, we save WMT 2021 English-German synthetic train and dev data to a CSV.
     """
 
     # ==================================================================
