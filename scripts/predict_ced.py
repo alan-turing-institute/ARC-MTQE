@@ -91,7 +91,8 @@ def supervised_predict(
             + data_split
             + "_"
             + os.path.split(os.path.dirname(checkpoint_path))[-1]
-            + os.path.basename(checkpoint_path)
+            + "_"
+            + os.path.basename(checkpoint_path)[:-5]
             + ".csv",
         )
 
