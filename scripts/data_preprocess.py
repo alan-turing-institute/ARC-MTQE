@@ -64,9 +64,20 @@ def main():
     # ==================================================================
 
     lp = "en-de"
-    for data_split in ["train", "dev"]:
-        df_wmt22 = load_wmt22_ced_data(data_split, lp)
-        df_wmt22[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_{data_split}.csv"))
+
+    df_wmt22_dev = load_wmt22_ced_data("dev", lp)
+    df_wmt22_dev[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_dev.csv"))
+
+    df_wmt22_train = load_wmt22_ced_data("train", lp)
+    df_wmt22_train[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train.csv"))
+
+    # create a smaller dataset of 40k records from the train data
+    df_wmt22_errors = df_wmt22_train[df_wmt22_train["score"] == 0]
+    df_wmt22_good = df_wmt22_train[df_wmt22_train["score"] == 1]
+    n_to_add = 40000 - df_wmt22_errors.shape[0]
+    df_wmt22_reduced = pd.concat([df_wmt22_errors, df_wmt22_good.iloc[:n_to_add]])
+    assert df_wmt22_reduced.shape[0] == 40000
+    df_wmt22_reduced[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train_reduced.csv"))
 
     # ==================================================================
     # 3. Save each WMT21 train and dev file as is.
@@ -91,7 +102,6 @@ def main():
                 # add subset of WMT 2022 synthetic errors
                 # - just pick the first N to make it a balanced dataset
                 if lp == "en-de":
-                    df_wmt22_errors = df_wmt22[df_wmt22["score"] == 0]
                     n_bad = df_data[df_data["score"] == 0].shape[0]
                     n_good = df_data[df_data["score"] == 1].shape[0]
                     n_bad_missing = n_good - n_bad
@@ -99,6 +109,7 @@ def main():
                     balanced_df = pd.concat(
                         [df_data[["src", "mt", "score"]], df_wmt22_errors_subset[["src", "mt", "score"]]]
                     )
+                    assert balanced_df.shape[0] == 5674 * 2
                     balanced_df.to_csv(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
 
             # keep track of dev sentences to exclude from the multilingual datasets
