@@ -1,4 +1,6 @@
-# This is a config file containing experiment runs to be used for hyperparameter searching
+# This is a config file containing experiment runs to be used for experiments using the DEMTR dataset
+# where the DEMTR data is mixed in with the authentic training data for each language pair
+# NOTE: exlcude outliers is set to 500 here as there are some synthetic sentences that are longer
 
 # WandB names
 wandb:
@@ -7,7 +9,11 @@ wandb:
 
 # The experiments defined in this file will be run once for each of the following seeds
 seeds:
-  - 385
+  - 42
+  - 89
+  - 107
+  - 928
+  - 2710
 
 # Any params for the slurm file that will be the same across all experiments
 slurm:
@@ -18,7 +24,7 @@ hparams:
   activations: Tanh
   class_identifier: ced_model
   encoder_model: XLM-RoBERTa
-  exclude_outliers: 300
+  exclude_outliers: 500
   hidden_sizes:
   - 3072
   - 1024
@@ -50,7 +56,6 @@ model_checkpoint:
   save_weights_only: true
   save_top_k: 1
   mode: max
-  save_last: true
 
 # This is trainer config that is fixed for all experiments
 trainer_config:
@@ -62,69 +67,18 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  base_auth:
-    name: base_auth
+  en-de:
+    name: en-de
     train_data:
       train_1:
-        dataset_name: multilingual_ced
+        dataset_name: balanced_ende
         language_pairs:
-          - all
+          - en-de
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
           - en-de
-          - en-zh
-          - en-ja
-    slurm:
-      memory: 40G
-      time: '12:00:00'
-  base_demetr:
-    name: base_demetr
-    train_data:
-      train_1:
-        dataset_name: demetr
-        language_pairs:
-          - all
-    dev_data:
-      dev_1:
-        dataset_name: demetr
-        language_pairs:
-          - all
-    slurm:
-      memory: 40G
-      time: '24:00:00'
-  base_demetr_auth:
-    name: base_demetr_auth
-    train_data:
-      train_1:
-        dataset_name: all_multilingual_demetr
-        language_pairs:
-          - all
-    dev_data:
-      dev_1:
-        dataset_name: all_multilingual_demetr
-        language_pairs:
-          - en-cs
-          - en-de
-          - en-ja
-          - en-zh
-    slurm:
-      memory: 40G
-      time: '48:00:00'
-  base_wmt22_en_de:
-    name: base_wmt22_en_de
-    train_data:
-      train_1:
-        dataset_name: wmt22_ende_ced_reduced
-        language_pairs:
-          - en_de
-    dev_data:
-      dev_1:
-        dataset_name: wmt22_ende_ced
-        language_pairs:
-          - en_de
     slurm:
       memory: 40G
       time: '24:00:00'
