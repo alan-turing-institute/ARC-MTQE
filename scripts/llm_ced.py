@@ -7,6 +7,7 @@ import openai
 import pandas as pd
 
 from mtqe.data.loaders import load_ced_data
+from mtqe.llms.annotator_guidelines import create_wmt21_template
 from mtqe.llms.gemba import TEMPLATE_GEMBA_MQM
 from mtqe.llms.query import apply_template, parse_mqm_answer
 from mtqe.utils.format import create_now_str
@@ -39,6 +40,54 @@ def parse_args():
     return parser.parse_args()
 
 
+def wmt21_prompt(data: typing.Dict[str, str], idx: str, responses_dir: str, now_str: str, openai_model: str) -> str:
+    """
+    Use WMT 2021 CED subtask annotator guidelines as prompts. Iteratively ask to identify
+    each of the 5 critical error categories (stop if a critical error has been found).
+
+    Parameters
+    ----------
+    data: dict[str, str]
+        A dictionary with the following keys:
+                - source_lang
+                - source_seg
+                - target_lang
+                - target_seg
+    idx: str
+        A unique identifier.
+    responses_dir: str
+        Path to directory where to store GPT responses.
+    now_str: str
+        A datetime string.
+    openai_model: str
+        The name of the OpenAI model to be used (e.g., 'gpt-3.5-turbo').
+
+    Returns
+    -------
+    str
+        Content of the GPT response.
+    """
+
+    for err_cat in ["tox", "saf", "nam", "sen", "num"]:
+        template = create_wmt21_template(err_cat)
+        messages = apply_template(data, template)
+        response = openai.chat.completions.create(model=openai_model, messages=messages, temperature=0, seed=1234)
+
+        with open(os.path.join(responses_dir, f"{now_str}_{idx}_{err_cat}.obj"), "wb") as fp:
+            pickle.dump(response, fp)
+
+        content = response.choices[0].message.content
+        print(err_cat, content)
+        # stop if have found a critical error
+        if content == "0":
+            return content
+        # check that nothing unexpected is happening
+        if content != "1":
+            print(f"Invalid response for {idx}: ", content)
+
+    return content
+
+
 def gpt_predict(
     data_split: str = "dev",
     lps: typing.List[str] = LI_LANGUAGE_PAIRS_WMT_21_CED,
@@ -59,7 +108,7 @@ def gpt_predict(
         The number of translations for each language pair to make critical error
         predictions for. Will always pick the first n sentences. Defaults to 2.
     prompt_basic: str
-        One of "basic" or "GEMBA".
+        One of "basic", "GEMBA" or "wmt21_annotator".
     openai_model: str
         The name of the OpenAI model to be used. Defaults to 'gpt-3.5-turbo'.
 
@@ -73,6 +122,7 @@ def gpt_predict(
     assert prompt_type in [
         "basic",
         "GEMBA",
+        "wmt21_annotator",
     ], f"Invalid prompt_type {prompt_type} provided, must be one of 'basic' or 'GEMBA'..."
     assert data_split in [
         "train",
@@ -106,24 +156,30 @@ def gpt_predict(
                 "target_lang": target_name,
                 "target_seg": row["mt"],
             }
-            if prompt_type == "basic":
-                # basic template is the default
-                messages = apply_template(data)
-            elif prompt_type == "GEMBA":
-                messages = apply_template(data, template=TEMPLATE_GEMBA_MQM)
-            # print(messages)
+            if prompt_type == "wmt21_annotator":
+                content = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
+            else:
+                if prompt_type == "basic":
+                    # basic template is the default
+                    messages = apply_template(data)
+                elif prompt_type == "GEMBA":
+                    messages = apply_template(data, template=TEMPLATE_GEMBA_MQM)
 
-            response = openai.chat.completions.create(model=openai_model, messages=messages, temperature=0, seed=1234)
-            with open(os.path.join(responses_dir, f'{now_str}_{row["idx"]}.obj'), "wb") as fp:
-                pickle.dump(response, fp)
+                response = openai.chat.completions.create(
+                    model=openai_model, messages=messages, temperature=0, seed=1234
+                )
+                with open(os.path.join(responses_dir, f'{now_str}_{row["idx"]}.obj'), "wb") as fp:
+                    pickle.dump(response, fp)
+                content = response.choices[0].message.content
 
-            content = response.choices[0].message.content
-            if prompt_type == "basic":
-                answer = int(content)
-            elif prompt_type == "GEMBA":
+            if prompt_type == "GEMBA":
                 parsed_response = parse_mqm_answer(content)
                 # use COMET style scoring: 1=meaning preserved, 0=critical error
                 answer = 1 if len(parsed_response["critical"]) == 0 else 0
+            else:
+                # both basic and wmt21_annotator prompts return 0/1 respoonses
+                answer = int(content)
+
             predictions.append(answer)
             print("Label: " + str(row["score"]), " GPT response: " + str(answer))
 
