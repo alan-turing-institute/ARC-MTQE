@@ -1,18 +1,17 @@
 import argparse
 import os
-from datetime import datetime
 
 import yaml
-from comet import download_model
-from pytorch_lightning import LightningModule, seed_everything
+from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 from torch import cuda
 
 import wandb
-from mtqe.models.comet import load_qe_model_from_checkpoint
-from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR, PROCESSED_DATA_DIR
+from mtqe.models.loaders import load_model_from_file
+from mtqe.utils.models import get_model_name
+from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
 
 
 def parse_args():
@@ -26,105 +25,6 @@ def parse_args():
     parser.add_argument("-s", "--seed", required=True, help="Seed")
 
     return parser.parse_args()
-
-
-def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
-    """
-    Gets paths to train and dev data from specification in config file
-    Loads model using hparams from config file
-    NOTE: the checkpoint to load the model is currently hard-coded
-
-    Parameters
-    ----------
-    config: dict
-        Dictionary containing the config needed to load the model
-    experiment_name: str
-        The name of the experiment
-
-    Returns
-    -------
-    LightningModule
-        A QE model inherited from CometKiwi, repurposed for clasification
-    """
-    # set data paths
-    train_paths = []
-    dev_paths = []
-    exp_setup = config["experiments"][experiment_name]
-    train_data = exp_setup["train_data"]
-    dev_data = exp_setup["dev_data"]
-    for dataset in train_data:
-        if "all" in train_data[dataset]["language_pairs"] and train_data[dataset]["dataset_name"] == "multilingual_ced":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
-        elif train_data[dataset]["dataset_name"] == "demetr":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_train.csv"))
-        elif train_data[dataset]["dataset_name"] == "all_multilingual_demetr":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv"))
-        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv"))
-        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced_reduced":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train_reduced.csv"))
-        elif train_data[dataset]["dataset_name"] == "balanced_ende":
-            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
-        else:
-            for lp in train_data[dataset]["language_pairs"]:
-                if train_data[dataset]["dataset_name"] == "ced":
-                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_train.csv"))
-                elif train_data[dataset]["dataset_name"] == "demetr_ced":
-                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_train_with_demetr.csv"))
-                elif train_data[dataset]["dataset_name"] == "multilingual_ced":
-                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
-    for dataset in dev_data:
-        if (
-            dev_data[dataset]["dataset_name"] == "wmt22_ende_ced"
-            or dev_data[dataset]["dataset_name"] == "wmt22_ende_ced_reduced"
-        ):
-            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_dev.csv"))
-        elif dev_data[dataset]["dataset_name"] == "demetr":
-            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
-        else:
-            # in most scenarios, want to use the authentic validation data from WMT21
-            for lp in dev_data[dataset]["language_pairs"]:
-                dev_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv"))
-            if dev_data[dataset]["dataset_name"] == "all_multilingual_demetr":
-                dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
-
-    model_params = config["hparams"]  # these don't change between experiments
-    if "hparams" in exp_setup:
-        # add any experiment-specific params
-        model_params = {**model_params, **exp_setup["hparams"]}
-
-    # checkpoint path is currently hard-coded below - I think this should also
-    # be in the config so we can load any checkpoint
-    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-    # reload_hparams hard-coded to False, but might want to modify this in future - this would force params
-    # to be loaded from a file, but we want to pass them through as arguments here.
-    model = load_qe_model_from_checkpoint(model_path, train_paths, dev_paths, reload_hparams=False, **model_params)
-
-    return model
-
-
-def create_model_name(experiment_group_name: str, experiment_name: str, seed: int) -> str:
-    """
-    Creates (as good as unique) model name using the current datetime stamp
-
-    Parameters
-    ----------
-    experiment_group_name: str
-        The name of the group of experiments
-    experiment_name: str
-        The name of the experiment
-    seed: int
-        The initial random seed value
-
-    Returns
-    ----------
-    str
-        A model name
-    """
-    now = datetime.now()
-    now_str = now.strftime("%Y%m%d_%H%M%S")
-    model_name = experiment_group_name + "__" + experiment_name + "__" + str(seed) + "__" + now_str
-    return model_name
 
 
 def get_callbacks(
@@ -220,9 +120,9 @@ def train_model(
     seed_everything(seed, workers=True)
 
     # Create model
-    model = load_model_from_file(config, experiment_name)
+    model = load_model_from_file(config, experiment_name, train_model=True)
     # Name for this model / experiment
-    model_name = create_model_name(experiment_group_name, experiment_name, seed)
+    model_name = get_model_name(experiment_group_name, experiment_name, seed)
 
     # Create wandb logger
     wandb_params = config["wandb"]
