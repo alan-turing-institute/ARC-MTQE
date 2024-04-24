@@ -67,6 +67,8 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
                     train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv"))
                 elif train_data[dataset]["dataset_name"] == "demetr":
                     train_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_train.csv"))
+                elif train_data[dataset]["dataset_name"] == "all_multilingual_demetr":
+                    train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv"))
     for dataset in dev_data:
         if dev_data[dataset]["dataset_name"] == "wmt22_ende_ced":
             dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_dev.csv"))
