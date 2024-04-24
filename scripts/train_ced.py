@@ -75,8 +75,11 @@ def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
         elif dev_data[dataset]["dataset_name"] == "demetr":
             dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
         else:
+            # in most scenarios, want to use the uthentic validation data from WMT21
             for lp in dev_data[dataset]["language_pairs"]:
                 dev_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv"))
+            if dev_data[dataset]["dataset_name"] == "all_multilingual_demetr":
+                dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
 
     model_params = config["hparams"]  # these don't change between experiments
     if "hparams" in exp_setup:
