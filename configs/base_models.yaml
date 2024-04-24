@@ -91,10 +91,37 @@ experiments:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-cs
-          - en-de
-          - en-zh
-          - en-ja
+          - TO DO
+    slurm:
+      memory: 40G
+      time: '24:00:00'
+  base_demetr_auth:
+    name: base_demetr_auth
+    train_data:
+      train_1:
+        dataset_name: TO DO
+        language_pairs:
+          - all
+    dev_data:
+      dev_1:
+        dataset_name: TO DO
+        language_pairs:
+          - TO DO
+    slurm:
+      memory: 40G
+      time: '24:00:00'
+  base_wmt22_en_de:
+    name: base_wmt22_en_de
+    train_data:
+      train_1:
+        dataset_name: TO DO
+        language_pairs:
+          - en_de
+    dev_data:
+      dev_1:
+        dataset_name: TO DO
+        language_pairs:
+          - en_de
     slurm:
       memory: 40G
       time: '24:00:00'
