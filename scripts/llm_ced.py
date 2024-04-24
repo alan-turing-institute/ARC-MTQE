@@ -77,7 +77,6 @@ def wmt21_prompt(data: typing.Dict[str, str], idx: str, responses_dir: str, now_
             pickle.dump(response, fp)
 
         content = response.choices[0].message.content
-        print(err_cat, content)
         # stop if have found a critical error
         if content == "0":
             return content
