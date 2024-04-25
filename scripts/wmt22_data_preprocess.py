@@ -22,15 +22,15 @@ def main():
     df_wmt22_dev[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_dev.csv"))
 
     df_wmt22_train = load_wmt22_ced_data("train", lp)
-    train_path = os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train.csv")
-    df_wmt22_train[["mt", "src", "score"]].to_csv(train_path)
+    df_wmt22_train[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train.csv"))
 
     print("Computing token lengths...")
+
     # this takes a bit of time
     df_wmt22_train_expanded = get_token_length_columns(df_wmt22_train)
-
-    # overwrite above created CSV file to include token_lengths column
-    df_wmt22_train_expanded[["mt", "src", "score", "src_token_len", "mt_token_len", "token_lengths"]].to_csv(train_path)
+    df_wmt22_train_expanded[["mt", "src", "score", "src_token_len", "mt_token_len", "token_lengths"]].to_csv(
+        os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train_expanded.csv")
+    )
 
     # create a smaller dataset of 40k records from the train data after filtering for short
     # sequence lengths (longest authentic En-De token length in WMT 2021 data is 124)
