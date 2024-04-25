@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -624,58 +623,3 @@ class CEDModel(UnifiedMetric):
             prog_bar=True,
             sync_dist=True,
         )
-
-
-def load_qe_model_from_checkpoint(
-    checkpoint_path: str,
-    paths_train_data: list,
-    paths_dev_data: list,
-    strict: bool = False,
-    reload_hparams=False,
-    **kwargs
-) -> UnifiedMetric:
-    """
-    This code is copied from the load_from_checkpoint function imported
-    from the COMET repo - the difference is that the class is hard-coded
-    to be CEDModel and the device is set to cuda, if available.
-
-    Parameters
-    ----------
-    checkpoint_path: str
-        Path to a model checkpoint.
-    paths_train_data: list
-        List of paths to training datasets.
-    paths_val_data: list
-        List of paths to validation datasets.
-    strict: bool
-        Strictly enforce that the keys in checkpoint_path match the
-        keys returned by this module's state dict. Defaults to `False`.
-    reload_hparams: bool
-        The `hparams.yaml` file located in the parent folder is only used for
-        deciding the `class_identifier`. By setting this flag to `True` all
-        hparams will be reloaded.
-
-    Returns
-    -------
-    UnifiedMetric
-    """
-    checkpoint_path = Path(checkpoint_path)
-    parent_folder = checkpoint_path.parents[1]
-    hparams_file = parent_folder / "hparams.yaml"
-    # would be better if this was set once (in train_ced.py) and passed
-    # to functions when needed - currently also set in metrics.py
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    if hparams_file.is_file():
-        model = CEDModel.load_from_checkpoint(
-            checkpoint_path,
-            load_pretrained_weights=False,
-            hparams_file=hparams_file if reload_hparams else None,
-            map_location=torch.device(device),
-            strict=strict,
-            train_data=paths_train_data,
-            validation_data=paths_dev_data,
-            **kwargs
-        )
-        model.update_estimator()
-        return model

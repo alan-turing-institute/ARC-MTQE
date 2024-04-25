@@ -1,18 +1,16 @@
 import argparse
 import os
-from datetime import datetime
 
 import yaml
-from comet import download_model
-from pytorch_lightning import LightningModule, seed_everything
+from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer.trainer import Trainer
 from torch import cuda
 
 import wandb
-from mtqe.data.loaders import get_ced_data_paths
-from mtqe.models.comet import load_qe_model_from_checkpoint
+from mtqe.models.loaders import load_model_from_file
+from mtqe.utils.models import get_model_name
 from mtqe.utils.paths import CHECKPOINT_DIR, CONFIG_DIR
 
 
@@ -29,76 +27,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_model_from_file(config: dict, experiment_name: str) -> LightningModule:
-    """
-    Gets paths to train and dev data from specification in config file
-    Loads model using hparams from config file
-    NOTE: the checkpoint to load the model is currently hard-coded
-
-    Parameters
-    ----------
-    config: dict
-        Dictionary containing the config needed to load the model
-    experiment_name: str
-        The name of the experiment
-
-    Returns
-    -------
-    LightningModule
-        A QE model inherited from CometKiwi, repurposed for clasification
-    """
-    # set data paths
-    train_paths = []
-    dev_paths = []
-    exp_setup = config["experiments"][experiment_name]
-    train_data = exp_setup["train_data"]
-    dev_data = exp_setup["dev_data"]
-    for dataset in train_data:
-        lps = train_data[dataset]["language_pairs"]
-        train_paths.extend(get_ced_data_paths("train", lps))
-    for dataset in dev_data:
-        lps = dev_data[dataset]["language_pairs"]
-        dev_paths.extend(get_ced_data_paths("dev", lps))
-
-    model_params = config["hparams"]  # these don't change between experiments
-    if "hparams" in exp_setup:
-        # add any experiment-specific params
-        model_params = {**model_params, **exp_setup["hparams"]}
-
-    # checkpoint path is currently hard-coded below - I think this should also
-    # be in the config so we can load any checkpoint
-    model_path = download_model("Unbabel/wmt22-cometkiwi-da")
-    # reload_hparams hard-coded to False, but might want to modify this in future - this would force params
-    # to be loaded from a file, but we want to pass them through as arguments here.
-    model = load_qe_model_from_checkpoint(model_path, train_paths, dev_paths, reload_hparams=False, **model_params)
-
-    return model
-
-
-def create_model_name(experiment_group_name: str, experiment_name: str, seed: int) -> str:
-    """
-    Creates (as good as unique) model name using the current datetime stamp
-
-    Parameters
-    ----------
-    experiment_group_name: str
-        The name of the group of experiments
-    experiment_name: str
-        The name of the experiment
-    seed: int
-        The initial random seed value
-
-    Returns
-    ----------
-    str
-        A model name
-    """
-    now = datetime.now()
-    now_str = now.strftime("%Y%m%d_%H%M%S")
-    model_name = experiment_group_name + "__" + experiment_name + "__" + str(seed) + "__" + now_str
-    return model_name
-
-
 def get_callbacks(
     config: dict,
     model_name: str,
@@ -108,6 +36,8 @@ def get_callbacks(
     Creates the callbacks to be used by the trainer
     The trainer will always have a ModelCheckpoint callback, which will be stored in the first index of the list
     The trainer may or may not have an EarlyStopping callback
+    Config for both callbacks can be provided in the config files, but if not provided default values will be
+    used for the model checkpoint callback.
 
     Parameters
     ----------
@@ -123,20 +53,28 @@ def get_callbacks(
     list[ModelCheckpoint]
         A list of callbacks that will be used.
     """
-
+    checkpoint_path = checkpoint_dir + "/" + model_name + "/"
     if "early_stopping" in config:
         early_stopping_params = config["early_stopping"]
         # callback for early stopping
         early_stopping_callback = EarlyStopping(**early_stopping_params)
         # callback to log model checkpoints locally
-        # also needs to monitor the same metric as the early stopping callback so that we can work out
-        # which is the best checkpoint for that metric, mode currently hard-coded to 'max'
-        checkpoint_callback = ModelCheckpoint(
-            checkpoint_dir + "/" + model_name + "/", monitor=early_stopping_params["monitor"], mode="max"
-        )
+        if "model_checkpoint" in config:
+            model_checkpoint_params = config["model_checkpoint"]
+            checkpoint_callback = ModelCheckpoint(checkpoint_path, **model_checkpoint_params)
+        else:
+            # If checkpoint config is not provided then set this with the same metric and mode as the early stopping
+            # callback so that it can save the best checkpoint for the monitored metric
+            checkpoint_callback = ModelCheckpoint(
+                checkpoint_path, monitor=early_stopping_params["monitor"], mode=early_stopping_params["mode"]
+            )
         callbacks = [checkpoint_callback, early_stopping_callback]
+    elif "model_checkpoint" in config:
+        model_checkpoint_params = config["model_checkpoint"]
+        checkpoint_callback = ModelCheckpoint(checkpoint_path, **model_checkpoint_params)
+        callbacks = [checkpoint_callback]
     else:
-        checkpoint_callback = ModelCheckpoint(checkpoint_dir + "/" + model_name + "/")
+        checkpoint_callback = ModelCheckpoint(checkpoint_path)
         callbacks = [checkpoint_callback]
 
     return callbacks
@@ -182,9 +120,9 @@ def train_model(
     seed_everything(seed, workers=True)
 
     # Create model
-    model = load_model_from_file(config, experiment_name)
+    model = load_model_from_file(config, experiment_name, train_model=True)
     # Name for this model / experiment
-    model_name = create_model_name(experiment_group_name, experiment_name, seed)
+    model_name = get_model_name(experiment_group_name, experiment_name, seed)
 
     # Create wandb logger
     wandb_params = config["wandb"]
