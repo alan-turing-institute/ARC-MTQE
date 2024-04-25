@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import torch
 from comet.models.metrics import RegressionMetrics
@@ -38,14 +38,18 @@ class ClassificationMetrics(RegressionMetrics):
     def __init__(
         self,
         prefix: str = "",
+        dist_sync_on_step: bool = False,
+        process_group: Optional[Any] = None,
+        dist_sync_fn: Optional[Callable] = None,
         binary_loss: bool = True,
         num_classes: int = 2,
         calc_threshold: bool = False,
         activation_fn: Optional[Callable] = None,
         activation_fn_args: dict = {},
     ) -> None:
-        # RegressionMetrics has some additional torch parameters - use defaults.
-        super().__init__(prefix=prefix)
+        super().__init__(
+            prefix=prefix, dist_sync_on_step=dist_sync_on_step, process_group=process_group, dist_sync_fn=dist_sync_fn
+        )
         self.binary_loss = binary_loss
         self.num_classes = num_classes
         self.calc_threshold = calc_threshold
