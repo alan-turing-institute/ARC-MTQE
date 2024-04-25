@@ -1,16 +1,16 @@
 import os
 
 import pandas as pd
-from comet.encoders import XLMREncoder
+from transformers import XLMRobertaTokenizerFast
 
 from mtqe.data.loaders import load_ced_data, load_wmt22_ced_data
 from mtqe.utils.paths import PROCESSED_DATA_DIR
 
 train_paths = [os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv")]
-XLMRL = XLMREncoder(pretrained_model="microsoft/infoxlm-large")
+XLMRL_TOKENIZER = XLMRobertaTokenizerFast.from_pretrained("microsoft/infoxlm-large")
 
 
-def compute_token_length(text: str, encoder: XLMREncoder = XLMRL) -> int:
+def compute_token_length(text: str, tokenizer: XLMRobertaTokenizerFast = XLMRL_TOKENIZER) -> int:
     """
     Utility function to compute length of embedding tokens.
 
@@ -18,8 +18,8 @@ def compute_token_length(text: str, encoder: XLMREncoder = XLMRL) -> int:
     ----------
     text: str
         Text to encode.
-    encoder: XLMREncoder
-        A pretrained encoder with loaded weights.
+    tokenizer: XLMRobertaTokenizerFast
+        Tokenizer.
 
     Returns
     -------
@@ -27,7 +27,7 @@ def compute_token_length(text: str, encoder: XLMREncoder = XLMRL) -> int:
         The number of tokens.
     """
 
-    return encoder.prepare_sample(text)["input_ids"].shape[1]
+    return len(tokenizer(text)["input_ids"])
 
 
 def main():
