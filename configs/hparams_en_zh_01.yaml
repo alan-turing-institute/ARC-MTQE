@@ -1,0 +1,212 @@
+# This is a config file containing experiment runs to be used for hyperparameter searching
+
+# WandB names
+wandb:
+  project: MTQE
+  entity: turing-arc
+
+# The experiments defined in this file will be run once for each of the following seeds
+seeds:
+  - 42
+  - 89
+  - 107
+
+# Any params for the slurm file that will be the same across all experiments
+slurm:
+  account: vjgo8416-mt-qual-est
+
+# These are model parameters that are fixed for each experiment
+hparams:
+  activations: Tanh
+  class_identifier: ced_model
+  encoder_model: XLM-RoBERTa
+  hidden_sizes:
+  - 3072
+  - 1024
+  input_segments:
+  - mt
+  - src
+  layer: mix
+  layer_norm: false
+  layer_transformation: sparsemax
+  layerwise_decay: 0.95
+  loss_lambda: 0.65
+  nr_frozen_epochs: 0
+  optimizer: AdamW
+  pool: avg
+  pretrained_model: microsoft/infoxlm-large
+  sent_layer: mix
+  word_layer: 24
+  word_level_training: false
+
+# This is trainer config that is fixed for all experiments
+trainer_config:
+  deterministic: True
+  devices: 1
+  max_epochs: 200
+  accumulate_grad_batches: 4
+
+# These are the data for each experiment
+experiments:
+  ce_pretrained_64_unfzn:
+    name: ce_pretrained_64_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      batch_size: 64
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_pretrained_64_unfzn:
+    name: bce_pretrained_64_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  ce_random_64_unfzn:
+    name: ce_random_64_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      random_weights: true
+      batch_size: 64
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_random_64_unfzn:
+    name: bce_random_64_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      random_weights: true
+      batch_size: 64
+      keep_embeddings_frozen: false
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_calc_pretrained_64_unfzn:
+    name: bce_calc_pretrained_64_unfzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: false
+      calc_threshold: true
+      train_subset_size: 5000
+      train_subset_replace: False
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  ce_pretrained_64_fzn:
+    name: ce_pretrained_64_fzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: cross_entropy
+      out_dim: 2
+      batch_size: 64
+      keep_embeddings_frozen: true
+    slurm:
+      memory: 40G
+      time: '12:00:00'
+  bce_pretrained_64_fzn:
+    name: bce_pretrained_64_fzn
+    train_data:
+      train_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-zh
+    hparams:
+      dropout: 0.1
+      learning_rate: 1.0e-06
+      encoder_learning_rate: 1.0e-07
+      loss: binary_cross_entropy_with_logits
+      batch_size: 64
+      keep_embeddings_frozen: true
+    slurm:
+      memory: 40G
+      time: '12:00:00'

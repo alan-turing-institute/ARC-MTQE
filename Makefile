@@ -77,6 +77,7 @@ download_data:
 	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
 
 preprocess_data:
+	cd data/ && mkdir -p processed
 	poetry run python scripts/data_preprocess.py
 
 analyse_da:
