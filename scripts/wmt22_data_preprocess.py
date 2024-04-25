@@ -1,33 +1,10 @@
 import os
 
 import pandas as pd
-from transformers import XLMRobertaTokenizerFast
 
 from mtqe.data.loaders import load_ced_data, load_wmt22_ced_data
+from mtqe.utils.data import get_token_length_columns
 from mtqe.utils.paths import PROCESSED_DATA_DIR
-
-train_paths = [os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv")]
-XLMRL_TOKENIZER = XLMRobertaTokenizerFast.from_pretrained("microsoft/infoxlm-large")
-
-
-def compute_token_length(text: str, tokenizer: XLMRobertaTokenizerFast = XLMRL_TOKENIZER) -> int:
-    """
-    Utility function to compute length of embedding tokens.
-
-    Parameters
-    ----------
-    text: str
-        Text to encode.
-    tokenizer: XLMRobertaTokenizerFast
-        Tokenizer.
-
-    Returns
-    -------
-    int
-        The number of tokens.
-    """
-
-    return len(tokenizer(text)["input_ids"])
 
 
 def main():
@@ -48,21 +25,16 @@ def main():
     train_path = os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train.csv")
     df_wmt22_train[["mt", "src", "score"]].to_csv(train_path)
 
-    print("Computing src token lengths...")
-
-    df_wmt22_train["src_token_len"] = df_wmt22_train["src"].apply(compute_token_length)
-
-    print("Computing mt token lengths...")
-
-    df_wmt22_train["mt_token_len"] = df_wmt22_train["mt"].apply(compute_token_length)
+    print("Computing token lengths...")
+    # this takes a bit of time
+    df_wmt22_train_expanded = get_token_length_columns(df_wmt22_train)
 
     # overwrite above created CSV file to include token_lengths column
-    df_wmt22_train["token_lengths"] = df_wmt22_train["src_token_len"] + df_wmt22_train["mt_token_len"]
-    df_wmt22_train[["mt", "src", "score", "src_token_len", "mt_token_len", "token_lengths"]].to_csv(train_path)
+    df_wmt22_train_expanded[["mt", "src", "score", "src_token_len", "mt_token_len", "token_lengths"]].to_csv(train_path)
 
     # create a smaller dataset of 40k records from the train data after filtering for short
     # sequence lengths (longest authentic En-De token length in WMT 2021 data is 124)
-    df_wmt22_train_short = df_wmt22_train[df_wmt22_train["token_lengths"] < 125]
+    df_wmt22_train_short = df_wmt22_train_expanded[df_wmt22_train_expanded["token_lengths"] < 125]
     df_wmt22_errors = df_wmt22_train_short[df_wmt22_train_short["score"] == 0]
     df_wmt22_good = df_wmt22_train_short[df_wmt22_train_short["score"] == 1]
     n_to_add = 40000 - df_wmt22_errors.shape[0]
