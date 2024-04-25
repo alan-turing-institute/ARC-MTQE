@@ -1,13 +1,15 @@
-from mtqe.data.loaders import get_ced_data_paths
+import os
+
 from mtqe.models.comet import CEDModel
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
+from mtqe.utils.paths import PROCESSED_DATA_DIR
 
 
 def main():
 
     for lp in LI_LANGUAGE_PAIRS_WMT_21_CED:
-        train_paths = get_ced_data_paths("train", [lp])
-        dev_paths = get_ced_data_paths("dev", [lp])
+        train_paths = [os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_train.csv")]
+        dev_paths = [os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv")]
 
         model = CEDModel(
             batch_size=1,
