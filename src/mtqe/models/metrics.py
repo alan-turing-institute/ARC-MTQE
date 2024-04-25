@@ -19,6 +19,12 @@ class ClassificationMetrics(RegressionMetrics):
 
     Parameters
     ----------
+    dist_sync_on_step: bool
+        A torch parameter that we set to default value (`False`) and otherwise ignore.
+    process_group: Optional[Any]
+        A torch parameter that we set to default value (`None`) and otherwise ignore.
+    dist_sync_fn: Optional[Callable]
+        A torch parameter that we set to default value (`None`) and otherwise ignore.
     binary_loss: bool
         Indicates whether the loss function is binary cross entropy (`True`) or cross entropy
         (`False`). Defaults to `True`.
