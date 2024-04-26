@@ -12,21 +12,25 @@ from mtqe.utils.paths import (
 )
 
 
-def score_ced(ced_data: typing.Union[pd.Series, np.ndarray]) -> np.ndarray:
+def score_ced(ced_data: typing.Union[pd.Series, np.ndarray], good_label: str = "NOT") -> np.ndarray:
     """
-    Rescore "ERR"/"NOT" CED labels into binary indicators: ERR = 0, NOT = 1.
+    Rescore critical error labels into binary indicators:
+    - critical error translation = 0
+    - good translation = 1
 
     Parameters
     ----------
     ced_data: Union[pd.Series[str], np.ndarray[str]]
-        Array of "ERR"/"NOT" labels.
+        Array of critical error labels (e.g., "ERR"/"NOT" or "BAD"/"OK").
+    good_label: str
+        How translations without a critical error are labeled. Defaults to 'NOT'.
 
     Returns
     ----------
     np.ndarray
     """
 
-    return np.where(ced_data == "NOT", 1, 0)
+    return np.where(ced_data == good_label, 1, 0)
 
 
 def comet_format(data: pd.DataFrame) -> typing.List[typing.Dict[str, str]]:
@@ -173,3 +177,39 @@ def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd
         df_data["score"] = score_ced(df_data["error"])
 
     return df_data[["idx", "src", "mt", "score"]]
+
+
+def load_wmt22_ced_data(data_split: str, lp: str = "en-de", wmt22_data_dir: str = WMT_QE_22_DIR):
+    """
+    Load WMT 2022 Critical Error Detection 'train' or 'dev' data for given language pair.
+
+    Parameters
+    ----------
+    data_split: str
+        One of "train" or "dev".
+    lp: str
+        The language pair, either "en-de" or "pt-en".
+    wmt22_data_dir: str
+        Path to clone of the `WMT-QE-Task/wmt-qe-2022-data` GitHub repository.
+
+    Returns
+    ----------
+    pd.DataFrame
+        DataFrame composed of the following columns:
+            - "src": source text
+            - "mt": machine translated text
+            - "score": whether the translation contains a critical error (0) or not (1)
+    """
+
+    WMT22_CED_DATA_DIR = os.path.join(
+        wmt22_data_dir, "train-dev_data", "task3_ced", data_split, lp, f"{lp}-{data_split}"
+    )
+
+    data = {"mt": [], "src": [], "label": []}
+    for name in data:
+        with open(os.path.join(WMT22_CED_DATA_DIR, f"{data_split}.{name}")) as fp:
+            data[name] = fp.read().splitlines()
+    df_wmt22 = pd.DataFrame(data)
+    df_wmt22["score"] = score_ced(df_wmt22["label"], good_label="OK")
+
+    return df_wmt22[["src", "mt", "score"]]

@@ -47,6 +47,12 @@ import wandb
 wandb.login()
 ```
 
+To make predictions using GPT, you will need to have access to the OpenAI API. The API key will need to be saved as an environment variable named OPENAI_API_KEY. To do this in a Mac terminal:
+
+```
+export OPENAI_API_KEY="your_api_key"
+```
+
 ## Structure of this repository
 
 ```
@@ -92,6 +98,12 @@ To make COMETKiwi-22 predictions for the  CED test and validation data:
 
 ```bash
 make analyse_ced
+```
+
+To use the OpenAI API to make critical error predictions run the following script. The parameters passed to the script indicate, which prompt (`basic` or `GEMBA`) and GPT model (`gpt-3.5-turbo`) to use and how many translations, which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to make predictions for. For example:
+
+```bash
+poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test -m gpt-4-turbo
 ```
 
 ## Evaluation
