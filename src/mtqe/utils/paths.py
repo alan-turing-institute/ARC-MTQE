@@ -72,42 +72,6 @@ def get_mlqepe_catastrophic_errors_data_paths(
         return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
 
 
-
-def get_ced_data_path(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> typing.Union[str, typing.List[str]]:
-    """
-    Get path(s) to CED data file(s) for the given data split and language pair.
-
-    Parameters
-    ----------
-    data_split: str
-        One of "train", "dev" or "test".
-    lps: list[str]
-        List of language pairs to return CED data for (passed as IOS codes, such as ["en-cs"]).
-    mlqepe_dir: str
-        Path to the `data/` directory in clone of the sheffieldnlp/mlqe-pe GitHub repository.
-
-    Returns
-    ----------
-    Union[str, list]
-        For "train" and "dev", a single path is returned. For "test" data, a path to the src/mt
-        text is returned first followed by path to the gold labels.
-    """
-
-    if data_split == "test":
-        text_data_path = os.path.join(
-            mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_test_blind.tsv"
-        )
-        labels_path = os.path.join(
-            mlqepe_dir,
-            "catastrophic_errors_goldlabels",
-            f"{lp.replace('-', '')}_majority_test_goldlabels",
-            "goldlabels.txt",
-        )
-        return [text_data_path, labels_path]
-    else:
-        return os.path.join(mlqepe_dir, "catastrophic_errors", f"{lp.replace('-', '')}_majority_{data_split}.tsv")
-
-
 # CONFIG
 CONFIG_DIR = os.path.join(ROOT_DIR, "configs")
 
