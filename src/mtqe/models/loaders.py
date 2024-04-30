@@ -124,6 +124,8 @@ def load_model_from_file(config: dict, experiment_name: str, train_model: bool) 
             train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv"))
         elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced_reduced":
             train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train_reduced.csv"))
+        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced_small":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train_small.csv"))
         elif train_data[dataset]["dataset_name"] == "balanced_ende":
             train_paths.append(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
         else:

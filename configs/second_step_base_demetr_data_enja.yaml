@@ -1,6 +1,4 @@
-# This is a config file containing experiment runs to be used for experiments using the DEMTR dataset
-# where the DEMTR data is mixed in with the authentic training data for each language pair
-# NOTE: exlcude outliers is set to 500 here as there are some synthetic sentences that are longer
+# This is a config file containing experiment runs to be used for hyperparameter searching
 
 # WandB names
 wandb:
@@ -24,7 +22,7 @@ hparams:
   activations: Tanh
   class_identifier: ced_model
   encoder_model: XLM-RoBERTa
-  exclude_outliers: 500
+  exclude_outliers: 250
   hidden_sizes:
   - 3072
   - 1024
@@ -57,6 +55,9 @@ model_checkpoint:
   save_top_k: 1
   mode: max
 
+model_path:
+  path: /bask/homes/q/qcax1583/vjgo8416-mt-qual-est/ARC-MTQE/checkpoints/base_models__base_demetr__385__20240424_163604/epoch=93-step=11656.ckpt
+
 # This is trainer config that is fixed for all experiments
 trainer_config:
   deterministic: True
@@ -68,18 +69,18 @@ trainer_config:
 
 # These are the data for each experiment
 experiments:
-  en-de:
-    name: en-de
+  en_ja:
+    name: en_ja
     train_data:
       train_1:
-        dataset_name: balanced_ende
+        dataset_name: ced
         language_pairs:
-          - en-de
+          - en-ja
     dev_data:
       dev_1:
         dataset_name: ced
         language_pairs:
-          - en-de
+          - en-ja
     slurm:
       memory: 40G
-      time: '24:00:00'
+      time: 08:00:00
