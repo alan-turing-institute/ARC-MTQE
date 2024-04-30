@@ -79,6 +79,8 @@ export OPENAI_API_KEY="your_api_key"
 ## Links
 
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
+- [Baskerville instructions](notes/BASKERVILLE.md)
+- [Notes on COMET codebase](notes/COMET.md)
 
 ## Make predictions
 

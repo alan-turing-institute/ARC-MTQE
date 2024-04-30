@@ -79,6 +79,7 @@ download_data:
 preprocess_data:
 	cd data/ && mkdir -p processed
 	poetry run python scripts/data_preprocess.py
+	poetry run python scripts/wmt22_data_preprocess.py
 
 analyse_da:
 	poetry run python scripts/predict_da.py -m comet_qe_20 -y 2023

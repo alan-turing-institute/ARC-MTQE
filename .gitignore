@@ -132,7 +132,6 @@ dmypy.json
 /data/
 /models/
 results/
-predictions/
 lightning_logs/
 checkpoints/
 wandb/

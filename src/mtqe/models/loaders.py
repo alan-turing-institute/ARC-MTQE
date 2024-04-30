@@ -116,6 +116,18 @@ def load_model_from_file(config: dict, experiment_name: str, train_model: bool) 
     for dataset in train_data:
         if "all" in train_data[dataset]["language_pairs"] and train_data[dataset]["dataset_name"] == "multilingual_ced":
             train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_train.csv"))
+        elif train_data[dataset]["dataset_name"] == "demetr":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_train.csv"))
+        elif train_data[dataset]["dataset_name"] == "all_multilingual_demetr":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "all_multilingual_with_demetr_train.csv"))
+        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train.csv"))
+        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced_reduced":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train_reduced.csv"))
+        elif train_data[dataset]["dataset_name"] == "wmt22_ende_ced_small":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_train_small.csv"))
+        elif train_data[dataset]["dataset_name"] == "balanced_ende":
+            train_paths.append(os.path.join(PROCESSED_DATA_DIR, "balanced_ende.csv"))
         else:
             for lp in train_data[dataset]["language_pairs"]:
                 if train_data[dataset]["dataset_name"] == "ced":
@@ -125,8 +137,19 @@ def load_model_from_file(config: dict, experiment_name: str, train_model: bool) 
                 elif train_data[dataset]["dataset_name"] == "multilingual_ced":
                     train_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_multilingual_train.csv"))
     for dataset in dev_data:
-        for lp in dev_data[dataset]["language_pairs"]:
-            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv"))
+        if (
+            dev_data[dataset]["dataset_name"] == "wmt22_ende_ced"
+            or dev_data[dataset]["dataset_name"] == "wmt22_ende_ced_reduced"
+        ):
+            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "wmt22_en-de_dev.csv"))
+        elif dev_data[dataset]["dataset_name"] == "demetr":
+            dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
+        else:
+            # in most scenarios, want to use the authentic validation data from WMT21
+            for lp in dev_data[dataset]["language_pairs"]:
+                dev_paths.append(os.path.join(PROCESSED_DATA_DIR, f"{lp}_majority_dev.csv"))
+            if dev_data[dataset]["dataset_name"] == "all_multilingual_demetr":
+                dev_paths.append(os.path.join(PROCESSED_DATA_DIR, "demetr_dev.csv"))
 
     model_params = config["hparams"]  # these don't change between experiments
     if "hparams" in exp_setup:
