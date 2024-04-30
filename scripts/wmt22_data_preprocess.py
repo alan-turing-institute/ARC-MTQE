@@ -37,10 +37,18 @@ def main():
     df_wmt22_train_short = df_wmt22_train_expanded[df_wmt22_train_expanded["token_lengths"] < 125]
     df_wmt22_errors = df_wmt22_train_short[df_wmt22_train_short["score"] == 0]
     df_wmt22_good = df_wmt22_train_short[df_wmt22_train_short["score"] == 1]
-    n_to_add = 40000 - df_wmt22_errors.shape[0]
+    n_errors = df_wmt22_errors.shape[0]
+    n_to_add = 40000 - n_errors
     df_wmt22_reduced = pd.concat([df_wmt22_errors, df_wmt22_good.iloc[:n_to_add]])
     assert df_wmt22_reduced.shape[0] == 40000
     df_wmt22_reduced[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train_reduced.csv"))
+
+    # save half of the reduced dataset with same ERR/NOT split
+    n_errors = int(n_errors / 2)
+    n_to_add = 20000 - n_errors
+    df_wmt22_small = pd.concat([df_wmt22_errors.iloc[:n_errors], df_wmt22_good.iloc[:n_to_add]])
+    assert df_wmt22_small.shape[0] == 20000
+    df_wmt22_small[["mt", "src", "score"]].to_csv(os.path.join(PROCESSED_DATA_DIR, f"wmt22_{lp}_train_small.csv"))
 
     # combine with the authentic En-De data from WMT 2021 to create a balanced dataset
     df_wmt21_data = load_ced_data("train", "en-de")
