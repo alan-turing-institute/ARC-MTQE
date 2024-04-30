@@ -43,7 +43,7 @@ class CEDModel(UnifiedMetric):
         the first epoch. If the value is 0 then it is always froezen. Defaults to 0.9.
     keep_embeddings_frozen: bool
         Keeps the embedding layer of the encoder frozen during training. If `nf_frozen_epochs`
-        is greater than 0 then the encoder will be unfrozen during training while this allows 
+        is greater than 0 then the encoder will be unfrozen during training while this allows
         for the embedding layer to always remain frozen. Defaults to `True`.
     optimizer: str
         Optimizer used during training. Defaults to 'AdamW'.

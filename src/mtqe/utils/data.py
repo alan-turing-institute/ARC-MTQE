@@ -26,7 +26,7 @@ def compute_token_length(text: str, tokenizer: XLMRobertaTokenizerFast = XLMRL_T
 
 def get_token_length_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Tokenize source and MT text and compute number of tokens. 
+    Tokenize source and MT text and compute number of tokens.
     Add token counts as columns to dataframe.
 
     Parameters

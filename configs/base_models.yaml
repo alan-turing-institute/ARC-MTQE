@@ -59,6 +59,7 @@ trainer_config:
   max_epochs: 100
   accumulate_grad_batches: 8
   reload_dataloaders_every_n_epochs: 1
+  num_sanity_val_steps: 0
 
 # These are the data for each experiment
 experiments:
@@ -118,6 +119,21 @@ experiments:
     train_data:
       train_1:
         dataset_name: wmt22_ende_ced_reduced
+        language_pairs:
+          - en_de
+    dev_data:
+      dev_1:
+        dataset_name: wmt22_ende_ced
+        language_pairs:
+          - en_de
+    slurm:
+      memory: 40G
+      time: '24:00:00'
+  base_wmt22_en_de_small:
+    name: base_wmt22_en_de_small
+    train_data:
+      train_1:
+        dataset_name: wmt22_ende_ced_small
         language_pairs:
           - en_de
     dev_data:
