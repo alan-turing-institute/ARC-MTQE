@@ -24,6 +24,14 @@ cd /bask/projects/v/<project_space_name>
 
 Check out the [Baskerville docs](https://docs.baskerville.ac.uk) for tips on getting started and running jobs. Or search for available applications and where to load them from [here](https://apps.baskerville.ac.uk/search).
 
+# Interactive jobs
+
+You need to run an [interactive job](https://docs.baskerville.ac.uk/interactive-jobs/) on Baskerville to set up the project:
+
+```bash
+srun --account <project_space_name> --qos <qos> --gpus 1 --time <time_in_minutes> --export=USER,HOME,PATH,TERM --pty /bin/bash
+```
+
 # Setting up a project
 
 If your repository is private, you will need to git clone through SSH. Create an SSH key on Baskerville:

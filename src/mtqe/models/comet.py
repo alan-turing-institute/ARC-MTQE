@@ -14,7 +14,8 @@ from mtqe.models.metrics import ClassificationMetrics
 
 class CEDModel(UnifiedMetric):
     """
-    New class created that inherits from the UnifiedMetric class from COMET
+    A binary critical error classifier that inherits from COMET's UnifiedMetric class.
+
     This class overrides the following methods:
     - prepare_sample
     - setup
@@ -25,52 +26,114 @@ class CEDModel(UnifiedMetric):
     - compute_loss
     - forward
     - on_validation_epoch_end
-    Additionally, new methods and hparams have been added.
 
-    Attributes
+    Additionally, new methods have been added:
+    - _check_param_combinations
+    - update_estimator
+
+    See UnifiedMetrics for description of all inherited methods:
+    https://github.com/Unbabel/COMET/blob/master/comet/models/multitask/unified_metric.py
+
+    Parameters
     ----------
-    TO DO - inherited attributes
-    oversample_minority:bool
-        Boolean value indicating whether or not to oversample the minority class
-        in the training data. If this is set to True, then it is expected that
-        `reload_dataloaders_every_n_epochs` is set to 1 in the Trainer config
-    exclude_outliers:int
+    nr_frozen_epochs: Union[float, int]
+        Number of epochs OR % of epoch that the encoder is frozen before unfreezing it. If
+        the value is greater than one, then the encoder is frozen for that number of epochs.
+        If the value is between 0 and 1, then the encoder is frozen for that percentage of
+        the first epoch. If the value is 0 then it is always froezen. Defaults to 0.9.
+    keep_embeddings_frozen: bool
+        Keeps the embedding layer of the encoder frozen during training. If `nf_frozen_epochs`
+        is greater than 0 then the encoder will be unfrozen during training while this allows 
+        for the embedding layer to always remain frozen. Defaults to `True`.
+    optimizer: str
+        Optimizer used during training. Defaults to 'AdamW'.
+    warmup_steps: int
+        Warmup steps for LR scheduler. Defaults to 0.
+    encoder_learning_rate: float
+        Learning rate used to fine-tune the encoder model. Defaults to 3.0e-06.
+    learning_rate: float
+        Learning rate used to fine-tune the top layers. Defaults to 3.0e-05.
+    layerwise_decay: float
+        Learning rate % decay from top-to-bottom encoder layers. Defaults to 0.95.
+    encoder_model: str
+        Encoder model architecture to be used. Defaults to 'XLM-RoBERTa'.
+    pretrained_model: str
+        Pretrained encoder model weights to load from Hugging Face. This won't be applied
+        if set `load_pretrained_weights` to `False`. Defaults to 'microsoft/infoxlm-large'.
+    sent_layer: Union[str, int]
+        Which encoder layer to use as input for the sentence level task ('mix' for pooling
+        info from all layers). Defaults to 'mix'.
+    layer_transformation: str
+        Transformation applied when pooling info from all layers of the encoder. Defaults
+        to 'sparsemax'.
+    layer_norm: bool
+        Apply layer normalization. Defaults to `True`.
+    word_layer: int
+        Encoder layer to be used for word-level classification. Defaults to 24.
+    loss: str
+        This parameter isn't actually used in the UnifiedMetrics class. Also, it is
+        hardcoded in the base COMET class to 'mse' irrespective of what is passed to it.
+    dropout: float
+        Dropout used in the top-layers. Defaults to 0.1.
+    batch_size: int
+         Batch size used during training. Defaults to 4.
+    train_data: Optional[List[str]]
+         List of paths to training data. Each file is loaded consecutively for each epoch.
+         Expects csv files with "src", "mt" and "score" columns. Defaults to `None`.
+    validation_data: Optional[List[str]] = None
+        List of paths to validation data. Validation results are averaged across validation
+        set. Expects csv files with "src", "mt" and "score" columns. Defaults to `None`.
+    hidden_sizes: List[int]
+        Size of hidden layers used in the classification head. Defaults to [3072, 1024].
+    activations: str
+        Activation function used within the classification head. Defaults to 'Tanh'.
+    final_activation: Optional[str]
+        Activation function used in the last layer of the regression head. For this model,
+        the only accepted value is `None`. Defaults to `None`.
+    input_segments: List[str]
+        List with input segment names to be used. Defaults to ["mt", "src", "ref"]. Can be
+        restricted to ["mt", "src"].
+    word_level_training: bool
+        If `True`, the model is trained with multitask (i.e., combined sentence and word level)
+        objective. We have not tried this objective with this model. Defaults to `False`.
+    loss_lambda: float
+         Weight assigned to the word-level loss. Defaults to 0.65.
+    load_pretrained_weights: bool
+        If set to `False` it avoids loading the weights of the pretrained model (e.g.
+        XLM-R) before it loads the COMET checkpoint. Unless training from scratch, this is
+        always desirable. Defaults to `False`.
+    oversample_minority: bool
+        Whether or not to oversample the minority clas in the training data.
+        If set to `True`, then it is expected that `reload_dataloaders_every_n_epochs`
+        is set to 1 in the Trainer config. Defaults to `False`.
+    exclude_outliers: int
         If set to a value greater than zero, then any records where the target
         (machine translated) text is longer than this value is excluded from
-        the training dataset.
-    error_weight:float
-        If set to a value greater than 1, then it is the weight applied to
-        all samples classed as a critical error. All samples that are not a
-        critical error will always have a weight of 1.
-    out_dim:int
-        The number of outputs in the model
-    random_weights:bool
-        A boolean value that determines whether the weights of the feed forward
-        head network are randomly initialised (`True`) or whether the default
-        weights from the checkpoint are used (`False`)
-    calc_threshold:bool
-        A boolean value that determines whether the value for setting the threshold
-        for determining the class is calculated using the training data (`True`)
-        or whether it is fixed at 0.5 (`False`) - will only take effect if the
-        loss function is binary cross entropy.
-    train_subset_size:int
-        The size of the training subset used for validation (and be extension also
-        used to determine the threshold if `calc_threshol` is `True`)
+        the training dataset. Defaults to 0.
+    error_weight: Union[float, int]
+        The weight applied to all samples classed as a critical error. All samples
+        that are not a critical error will always have a weight of 1. Defaults to 1.
+    out_dim: int
+        The number of outputs in the model. Defaults to 1.
+    random_weights: bool
+        Determines whether the weights of the classification head (feed forward network)
+        are randomly initialised (`True`) or whether the default weights from the checkpoint
+        are used (`False`). Defaults to `False`.
+    calc_threshold: bool
+        Indicates whether the threshold for binarising predictions is fixed at 0.5 (`False`)
+        or whether it is determined using prediction performance on the training data (`True`).
+        Will only take effect if the loss function is binary cross entropy. Defaults to `False`.
+    train_subset_size: int
+        The size of the training subset used for validation (and by extension used to determine
+        the binarisation threshold if `calc_threshol` is set to `True`). Defaults to 1000.
     train_subset_replace: bool
-        A boolean that determines whether the training subset is sampled with replacement or not.
-
-    Methods
-    -------
-    TO DO - inherited methods
-    _check_param_combinations()
-        Checks that valid combinations of hyperparameters have been provided.
-    update_estimator()
-        Updates the feed-forward head of the model if prescribed by the hyperparameters
-
+        Determines whether the training subset is sampled with replacement or not.
+        Defaults to `False`.
     """
 
     def __init__(
         self,
+        # inherited UnifiedMetrics parameters
         nr_frozen_epochs: Union[float, int] = 0.9,
         keep_embeddings_frozen: bool = True,
         optimizer: str = "AdamW",
@@ -96,15 +159,18 @@ class CEDModel(UnifiedMetric):
         word_level_training: bool = False,
         loss_lambda: float = 0.65,
         load_pretrained_weights: bool = False,
-        oversample_minority=False,
-        exclude_outliers=0,
-        error_weight=1,
-        out_dim=1,
-        random_weights=False,
-        calc_threshold=False,
-        train_subset_size=1000,
-        train_subset_replace=True,
+        # CEDModel specific parameters below
+        oversample_minority: bool = False,
+        exclude_outliers: int = 0,
+        error_weight: Union[float, int] = 1,
+        out_dim: int = 1,
+        random_weights: bool = False,
+        calc_threshold: bool = False,
+        train_subset_size: int = 1000,
+        train_subset_replace: bool = True,
     ):
+        # The UnifiedMetric.__init__() method calls LightningModule.save_hyperparameters(),
+        # which means all the provided arguments above are saved and accessible in self.hparams
         super().__init__(
             nr_frozen_epochs=nr_frozen_epochs,
             keep_embeddings_frozen=keep_embeddings_frozen,
@@ -135,12 +201,12 @@ class CEDModel(UnifiedMetric):
         # Check the validity of some combinations of parameters
         self._check_param_combinations()
 
-    def _check_param_combinations(self) -> None:
+    def _check_param_combinations(self):
         """
-        Method to check that valid combinations of hyperparameters have been provided.
-        The code may not function or may not have been tested on other combinations
-        NOTE: These checks might not be exhaustive and may want to add others
+        Method to check that valid hyperparameters (and their combinations) have been provided.
+        NOTE: These checks are not exhaustive.
         """
+        assert self.hparams.final_activation is None, "Final activation not valid - expecting `None`"
         assert self.hparams.loss in ["cross_entropy", "binary_cross_entropy_with_logits"], (
             "Unexpected loss function, expecting `cross_entropy`, or "
             + "`binary_cross_entropy_with_logits` and got: "
@@ -148,16 +214,10 @@ class CEDModel(UnifiedMetric):
         )
         if self.hparams.loss == "cross_entropy":
             assert self.hparams.out_dim > 1, "Cross entropy loss must have at least two class outputs"
-            assert (
-                self.hparams.final_activation is None
-            ), "Final activation for cross entropy loss not valid - expecting `None`"
         if self.hparams.loss == "binary_cross_entropy_with_logits":
             assert self.hparams.out_dim == 1, (
                 "Only one sentence class expected for binary cross entropy, " + self.hparams.out_dim + " provided"
             )
-            assert (
-                self.hparams.final_activation is None
-            ), "Final activation for cross entropy loss not valid - expecting `None`"
         assert self.hparams.out_dim <= 2, (
             "Not tested the implementation for greater than two outputs, there will also be some code that needs "
             + "updating for handling more than two outputs, such as setting error weights."
@@ -167,13 +227,12 @@ class CEDModel(UnifiedMetric):
             + "simultaneously."
         )
 
-    def update_estimator(self) -> None:
+    def update_estimator(self):
         """
-        Method that makes changes to the feed-forward head of the model if
-        prescribed by the hyperparameters. The changes that can be made are:
-         - Randomly initialising the weights, this is controlled by hparam `random_weights`
-         - Updating the number of output nodes (if the loss function
-        is cross entropy), this is controlled by the hparam `out_dim`
+        Update the feed-forward head of the model. The changes that can be made are:
+         - Randomly initialising the weights, controlled by hparam `random_weights`
+         - Updating number of output nodes (if the loss function is cross entropy),
+           controlled by the hparam `out_dim`
         """
         if self.hparams.random_weights:
             self.estimator = FeedForward(
@@ -192,24 +251,24 @@ class CEDModel(UnifiedMetric):
     ) -> Union[Tuple[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
         """
         This method tokenizes input data and prepares targets for training.
-        This is overriden from the COMET code to amend the format of the
-        scores and targets when there are multiple classes (in the case
-        of cross entropy loss function)
+        Updates the COMET method to amend format of the scores and targets
+        when there are multiple classes (for cross entropy loss function).
 
         Parameters
         ----------
         sample: List[Dict[str, Union[str, float]]]
-            Mini-batch
+            Mini-batch.
         stage: str
-            Model stage ('train' or 'predict'). Defaults to "fit".
+            Model stage ('fit', 'train', 'validate' or 'predict').
+            Defaults to 'fit'.
 
         Returns
         -------
         model_inputs["inputs"]: Tuple[Dict[str, torch.Tensor]]
-            Tokenised input sequence
+            Tokenised input sequence.
         targets: Dict[str, torch.Tensor]
             Dictionary containing the target values - only returned if the stage
-            is not `predict`
+            is not 'predict'.
         """
         inputs = {k: [d[k] for d in sample] for k in sample[0]}
         input_sequences = [
@@ -250,7 +309,7 @@ class CEDModel(UnifiedMetric):
 
         return model_inputs["inputs"], targets
 
-    def setup(self, stage: str) -> None:
+    def setup(self, stage: str):
         """
         Data preparation function called before training by Lightning.
         Overriden from COMET code to allow for configuring the size of the
@@ -260,7 +319,7 @@ class CEDModel(UnifiedMetric):
         Parameters
         ----------
         stage: str
-            either 'fit', 'validate', 'test', or 'predict'
+            Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in (None, "fit"):
             train_dataset = self.read_training_data(self.hparams.train_data[0])
@@ -283,7 +342,7 @@ class CEDModel(UnifiedMetric):
         locally on a Macbook. The num_workers variables were changed from 2 to 0.
         NOTE: A subset of training data is loaded for evaluation but is not mixed into
         the validation dataset and the score on the train subset is recorded separately
-        to the score on the validation dataset
+        to the score on the validation dataset.
 
         Returns
         -------
@@ -362,13 +421,13 @@ class CEDModel(UnifiedMetric):
             num_workers=0,
         )
 
-    def init_losses(self) -> None:
+    def init_losses(self):
         """
         Initializes Loss functions to be used.
         This overrides the method in the COMET code to set the loss function for classification
         Also determins the reduction of the loss function based on whether class weights are
         applied. If class weights are applied then the reduction is carried out when computing
-        the loss and the rediction here is set to `none`. Otherwise a `mean` reduction is used.
+        the loss and the reduction here is set to `None`. Otherwise a `mean` reduction is used.
         """
         if self.hparams.error_weight > 1:
             # The reduction of `mean` will be calculated in method `compute_loss` using the weights
@@ -387,14 +446,14 @@ class CEDModel(UnifiedMetric):
                 self.hparams.loss,
             )
 
-    def init_metrics(self) -> None:
+    def init_metrics(self):
         """
-        Initializes training and validation classification metrics
+        Initializes training and validation classification metrics.
         This overrides the method in the COMET code to use the ClassificationMetrics class instead of
-        RegressionMetrics
+        RegressionMetrics.
         NOTE: the names of the objects that store the classification metrics have not been overriden
         so still read `train_corr` and `val_corr` even though they are not just representing
-        correlations
+        correlations.
         """
         # Set params used for calculating metrics
         if self.hparams.loss == "binary_cross_entropy_with_logits":
@@ -434,7 +493,7 @@ class CEDModel(UnifiedMetric):
         Receives model batch prediction and respective targets and computes a loss value.
         This overrides the method in the COMET code to apply class weights if the hparam
         `error_weight` is set to a value greater than 1.
-        NOTE: the word-level loss function is not included here at all
+        NOTE: the word-level loss function is not included here at all.
         NOTE: this would need updating if the code were extended to allow for more than
         two classes.
 
@@ -459,7 +518,7 @@ class CEDModel(UnifiedMetric):
             # 1 to all samples without a critical error, and weight of `error_weight` to
             # those with a critical error.
             weights = (1 - target.score) * (self.hparams.error_weight - 1) + 1
-            # Multiple `weights` by `sentence_loss` and take the mean value
+            # Multiply `weights` by `sentence_loss` and take the mean value
             sentence_loss = torch.mean(weights * sentence_loss)
         return sentence_loss
 
@@ -473,8 +532,7 @@ class CEDModel(UnifiedMetric):
         """
         Forward function.
         Overriden from the COMET code to change the dimensions of the output
-        if `out_dim` greater than 1 (i.e., if cross-entropy is
-        being employed).
+        if `out_dim` greater than 1 (i.e., if cross-entropy is being employed).
 
         Parameters
         ----------
@@ -483,7 +541,7 @@ class CEDModel(UnifiedMetric):
         attention_mask: torch.Tensor
             Attention mask.
         token_type_ids: Optional[torch.Tensor]
-            Token type ids for BERT-like models. Defaults to None.
+            Token type ids for BERT-like models. Defaults to `None`.
 
         Returns
         -------
@@ -523,10 +581,10 @@ class CEDModel(UnifiedMetric):
         else:
             return Prediction(score=self.estimator(sentemb).view(-1))
 
-    def on_validation_epoch_end(self, *args, **kwargs) -> None:
+    def on_validation_epoch_end(self, *args, **kwargs):
         """
-        Computes and logs metrics
-        This overrides the COMET code to log additional metrics
+        Computes and logs metrics.
+        This overrides the COMET code to log additional metrics.
         """
         train_dict, train_max_metric_vals, train_at_max_mcc_vals, threshold = self.train_corr.compute()
         self.log_dict(train_dict, prog_bar=False, sync_dist=True)
