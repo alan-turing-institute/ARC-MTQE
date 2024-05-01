@@ -79,12 +79,13 @@ def wmt21_prompt(data: typing.Dict[str, str], idx: str, responses_dir: str, now_
         content = response.choices[0].message.content
         # stop if have found a critical error
         if content == "0":
-            return content
+            return content, err_cat
         # check that nothing unexpected is happening
         if content != "1":
             print(f"Invalid response for {idx}: ", content)
 
-    return content
+    # no critical error found
+    return content, "none"
 
 
 def gpt_predict(
@@ -144,6 +145,8 @@ def gpt_predict(
 
         # save full GPT answer as well as ERROR (0)/NOT ERROR (1) predictions made by the model in a CSV file
         predictions = []
+        # for WMT21 prompt only, keep track of which error category got to
+        err_categories = []
         responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
 
@@ -156,7 +159,8 @@ def gpt_predict(
                 "target_seg": row["mt"],
             }
             if prompt_type == "wmt21_annotator":
-                content = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
+                content, err_cat = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
+                err_categories.append(err_cat)
             else:
                 if prompt_type == "basic":
                     # basic template is the default
@@ -183,6 +187,8 @@ def gpt_predict(
             print("Label: " + str(row["score"]), " GPT response: " + str(answer))
 
         df_lp_preds = pd.DataFrame({"idx": df_data["idx"][:n], "llm_pred": predictions})
+        if prompt_type == "wmt21_annotator":
+            df_lp_preds["error_cat"] = err_categories
         df_lp_preds.to_csv(
             os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_{data_split}_llm_{prompt_type}_prompt.csv"), index=False
         )
