@@ -39,7 +39,9 @@ def evaluate(
     experiment_group_name: str
         The name of the experiment group to be evaluated
     pos_class_error: bool
-        Whether the positive class of the predictions represents an ERROR
+        Whether the positive class value in the predictions represents an ERROR. 
+        Defaults to `False`. This means positive labels in the predictions (1)  indicate 
+        NOT an error while negative labels (0) indicate an ERROR.
     pred_dir: str
         The directory where the predictions are stored
     eval_dir: str
