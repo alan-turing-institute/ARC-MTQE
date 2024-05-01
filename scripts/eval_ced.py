@@ -69,7 +69,7 @@ def evaluate(
             df_targets = load_ced_data(split, lp)
             targets = torch.Tensor(df_targets["score"])
             # If pos_class_error = False then the positive class is NOT an error
-            # and this will be reverse so that the positive class represents ERRORs
+            # and this will be reversed so that the positive class represents ERRORs
             if not pos_class_error:
                 targets = 1 - targets
 
