@@ -112,9 +112,12 @@ def supervised_predict(
         # predict
         model_output = model.predict(comet_data, batch_size=8, gpus=gpus)
 
-        # save logits output
-        # NOTE: the sigmoid function has not been applied to this output.
-        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores})
+        # save output
+        if experiment_group_name == "baseline":
+            df_results = pd.DataFrame({"idx": df_data["idx"], "score": model_output.scores})
+        else:
+            # NOTE: the sigmoid function has not been applied to this output.
+            df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores})
         df_results.to_csv(out_file_name, index=False)
 
     return model
