@@ -40,7 +40,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def wmt21_prompt(data: typing.Dict[str, str], idx: str, responses_dir: str, now_str: str, openai_model: str) -> str:
+def wmt21_prompt(
+    data: typing.Dict[str, str], idx: str, responses_dir: str, now_str: str, openai_model: str
+) -> typing.Tuple[str, str]:
     """
     Use WMT 2021 CED subtask annotator guidelines as prompts. Iteratively ask to identify
     each of the 5 critical error categories (stop if a critical error has been found).
@@ -64,8 +66,9 @@ def wmt21_prompt(data: typing.Dict[str, str], idx: str, responses_dir: str, now_
 
     Returns
     -------
-    str
-        Content of the GPT response.
+    tuple(str, str)
+        Content of the GPT response ("0" or "1") and the category of critical error found
+        ("none" if no critical error found).
     """
 
     for err_cat in ["tox", "saf", "nam", "sen", "num"]:
