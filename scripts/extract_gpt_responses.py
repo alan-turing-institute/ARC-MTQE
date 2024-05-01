@@ -1,3 +1,11 @@
+# ============================================================================
+# The basic and GEMBA prompts were run with only the CED score saved to a CSV
+# file. We have since decided to also save some of the other OpenAI response
+# metadata and the `llm_ced.py` script was updated accordingly. This script
+# creates the same CSVs as `llm_ced.py` but from the original full response
+# objects that we also saved to a file.
+# ============================================================================
+
 import os
 import pickle
 
@@ -46,7 +54,7 @@ def main():
                 "finish_reason": [],
                 "role": [],
                 "content": [],
-                "llm_pred": [],
+                "score": [],
             }
             for f in all_files:
                 if TIMESTAMPS[prompt_type][lp] in f:
@@ -69,10 +77,12 @@ def main():
                         parsed_response = parse_mqm_answer(content)
                         # use COMET style scoring: 1=meaning preserved, 0=critical error
                         score = 1 if len(parsed_response["critical"]) == 0 else 0
-                    data["llm_pred"].append(score)
+                    data["score"].append(score)
 
             df = pd.DataFrame(data)
-            df.to_csv(os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_test_llm_{prompt_type}_prompt_full_data.csv"))
+            predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", prompt_type)
+            os.makedirs(predictions_dir, exist_ok=True)
+            df.to_csv(os.path.join(predictions_dir, f"{lp}_test_llm_{prompt_type}_prompt_full_data.csv"))
 
 
 if __name__ == "__main__":
