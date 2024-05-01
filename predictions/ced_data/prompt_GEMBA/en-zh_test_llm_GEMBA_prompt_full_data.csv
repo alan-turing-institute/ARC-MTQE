@@ -1,4 +1,4 @@
-,idx,created,model,finish_reason,role,content,llm_pred
+,idx,created,model,finish_reason,role,content,score
 0,9870,1713773059,gpt-4-turbo-2024-04-09,stop,assistant,"Critical:
                 no-error
                 Major:
@@ -5230,7 +5230,7 @@ Minor:
                 no-error",1
 768,5474,1713771023,gpt-4-turbo-2024-04-09,stop,assistant,"Critical:
 - accuracy/mistranslation: ""让 我们 去 雪崩 !"" (""Let's go to the avalanche!"") and ""美国 三城 规则 !"" (""American three cities rule!"")
-
+  
 Major:
 - terminology/inappropriate for context: ""雪崩"" (""avalanche"") and ""规则"" (""rule"") are mistranslated in the context of sports team names and slogans.
 

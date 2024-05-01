@@ -1,4 +1,4 @@
-,idx,created,model,finish_reason,role,content,llm_pred
+,idx,created,model,finish_reason,role,content,score
 0,1887,1713540428,gpt-4-turbo-2024-04-09,stop,assistant,"Critical:
                 no-error
                 Major:
@@ -2244,7 +2244,7 @@ Major:
 - terminology/inappropriate for context: ""verrückter Liebhaber"" (crazy lover) is completely inappropriate and incorrect for the context.
 
 Minor:
-- no-error detected that fits this category.
+- no-error detected that fits this category. 
 
 The translation errors are critical as they significantly change the meaning and tone of the original message, making the German translation not only incorrect but also nonsensical in this context.",0
 312,3980,1713540198,gpt-4-turbo-2024-04-09,stop,assistant,"Critical:
