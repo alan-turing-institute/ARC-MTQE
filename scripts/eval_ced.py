@@ -53,54 +53,91 @@ def evaluate(
     if not os.path.isdir(results_path):
         os.mkdir(results_path)
     # list to store results per file
-    group_results = []
+    individual_results = []
+    ensemble_results = []
 
-    for file in os.listdir(group_dir):
-        file_words = file.split("_")
-        lp = file_words[0]
-        split = file_words[1]
-        seed = file_words[2]  # Note that for non-supervised model this may not represent a random seed
+    for lp in language_pairs:
+        for split in ["dev", "test"]:
+            filenames = [filename for filename in os.listdir(group_dir) if filename.startswith(lp + "_" + split)]
+            num_files = len(filenames)
 
-        assert lp in language_pairs, "Unexpected language pair found in predictions: " + lp
-        assert split in ["dev", "test"], "Unexpected split: " + split + ". Expecting either 'dev' or 'test."
+            # load true target scores
+            df_targets = load_ced_data(split, lp)
+            targets = torch.Tensor(df_targets["score"])
+            # If pos_class_error = False then the positive class is NOT and error
+            # and this will be reverse so that the positive class represents ERRORs
+            if not pos_class_error:
+                targets = 1 - targets
 
-        # load predictions
-        df_preds = pd.read_csv(os.path.join(group_dir, file))
+            cumulative_preds = torch.zeros(len(targets))
 
-        # load true target scores
-        df_targets = load_ced_data(split, lp)
+            for file in filenames:
+                file_words = file.split("_")
+                seed = file_words[2]  # Note that for non-supervised model this may not represent a random seed
 
-        # convert scores to Tensors
-        preds = torch.Tensor(df_preds["score"])
-        targets = torch.Tensor(df_targets["score"])
+                # load predictions
+                df_preds = pd.read_csv(os.path.join(group_dir, file))
 
-        # If pos_class_error = False then the positive class is NOT and error
-        # and this will be reverse so that the positive class represents ERRORs
-        if not pos_class_error:
-            preds = 1 - preds
-            targets = 1 - targets
+                # convert scores to Tensors
+                preds = torch.Tensor(df_preds["score"])
 
-        # binarise the predictions - threshold of 0.5 is currently hard-coded
-        threshold = 0.5
-        preds = preds > threshold
-        preds = preds.long()
+                if not pos_class_error:
+                    preds = 1 - preds
 
-        results = calculate_metrics(prefix="", preds=preds, targets=targets, threshold=0.5)
-        # Convert results from Tensor to float
-        for k in results:
-            if type(results[k]) is torch.Tensor:
-                results[k] = results[k].item()
-        # Record the language pair and data split
-        results["language_pair"] = lp
-        results["split"] = split
-        if seed.isdigit():
-            results["seed"] = int(seed)
-        else:
-            results["seed"] = seed
-        group_results.append(results)
+                # binarise the predictions - threshold of 0.5 is currently hard-coded
+                threshold = 0.5
+                preds = preds > threshold
+                preds = preds.long()
+                cumulative_preds += preds
+
+                results = get_results(preds=preds, targets=targets, threshold=0.5, lp=lp, split=split)
+                if seed.isdigit():
+                    results["seed"] = int(seed)
+                else:
+                    results["seed"] = seed
+                individual_results.append(results)
+
+            # Only ensemble if there was more than one file (i.e, seed) for each lp and split
+            if num_files > 1:  # Might want to check that num_files is an odd number?
+                majority_preds = cumulative_preds > (num_files / 2)
+                majority_preds = majority_preds.long()
+
+                results = get_results(preds=majority_preds, targets=targets, threshold=0.5, lp=lp, split=split)
+                results["seed"] = "ensemble"
+                ensemble_results.append(results)
 
     # Convert list of results to a dataframe
-    df = pd.DataFrame.from_dict(group_results)
+    df = create_results_df(individual_results)
+    # Save results
+    df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
+    # Log the max MCC for each lp / split combination
+    max_inds = list(df.groupby(["language_pair", "split"]).idxmax()["MCC"].values)
+    df_max = df.loc[max_inds]
+    df_max.to_csv(results_path + "/" + experiment_group_name + "_max_results.csv")
+    # Log the min MCC for each lp / split combination
+    min_inds = list(df.groupby(["language_pair", "split"]).idxmin()["MCC"].values)
+    df_min = df.loc[min_inds]
+    df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
+
+    df_ensemble = create_results_df(ensemble_results)
+    # Save results
+    df_ensemble.to_csv(results_path + "/" + experiment_group_name + "_ensemble_results.csv")
+
+
+def get_results(preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp: str, split: str) -> dict:
+    results = calculate_metrics(prefix="", preds=preds, targets=targets, threshold=threshold)
+    # Convert results from Tensor to float
+    for k in results:
+        if type(results[k]) is torch.Tensor:
+            results[k] = results[k].item()
+    # Record the language pair and data split
+    results["language_pair"] = lp
+    results["split"] = split
+    return results
+
+
+def create_results_df(results: dict) -> pd.DataFrame:
+    df = pd.DataFrame.from_dict(results)
     # Re-names the columns if they contain a "_" as a prefix
     try:
         df.rename(
@@ -116,16 +153,7 @@ def evaluate(
         )
     except Exception:
         pass
-    # Save results
-    df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
-    # Log the max MCC for each lp / split combination
-    max_inds = list(df.groupby(["language_pair", "split"]).idxmax()["MCC"].values)
-    df_max = df.loc[max_inds]
-    df_max.to_csv(results_path + "/" + experiment_group_name + "_max_results.csv")
-    # Log the min MCC for each lp / split combination
-    min_inds = list(df.groupby(["language_pair", "split"]).idxmin()["MCC"].values)
-    df_min = df.loc[min_inds]
-    df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
+    return df
 
 
 if __name__ == "__main__":
