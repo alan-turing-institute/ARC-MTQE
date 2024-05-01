@@ -147,10 +147,22 @@ def gpt_predict(
         predictions = []
         # for WMT21 prompt only, keep track of which error category got to
         err_categories = []
+
         responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
+        predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", prompt_type)
+        os.makedirs(predictions_dir)
 
         df_data = load_ced_data(data_split, lp)
+        response_data = {
+            "idx": df_data["idx"][:n],
+            "created": [],
+            "model": [],
+            "finish_reason": [],
+            "role": [],
+            "content": [],
+            "score": [],
+        }
         for _, row in df_data[:n].iterrows():
             data = {
                 "source_lang": src_name,
@@ -178,19 +190,32 @@ def gpt_predict(
             if prompt_type == "GEMBA":
                 parsed_response = parse_mqm_answer(content)
                 # use COMET style scoring: 1=meaning preserved, 0=critical error
-                answer = 1 if len(parsed_response["critical"]) == 0 else 0
+                score = 1 if len(parsed_response["critical"]) == 0 else 0
             else:
                 # both basic and wmt21_annotator prompts return 0/1 respoonses
-                answer = int(content)
+                score = int(content)
 
-            predictions.append(answer)
-            print("Label: " + str(row["score"]), " GPT response: " + str(answer))
+            predictions.append(score)
+            print("Label: " + str(row["score"]), " GPT response: " + str(score))
 
-        df_lp_preds = pd.DataFrame({"idx": df_data["idx"][:n], "llm_pred": predictions})
+            # save metadata
+            response_data["created"].append(response.created)
+            response_data["model"].append(response.model)
+            response_data["finish_reason"].append(response.choices[0].finish_reason)
+            response_data["role"].append(response.choices[0].message.role)
+            response_data["content"].append(content)
+            response_data["score"].append(score)
+
         if prompt_type == "wmt21_annotator":
-            df_lp_preds["error_cat"] = err_categories
+            response_data["error_cat"] = err_categories
+
+        df_lp_preds = pd.DataFrame(response_data)
+        # df_lp_preds = pd.DataFrame({"idx": df_data["idx"][:n], "llm_pred": predictions})
         df_lp_preds.to_csv(
-            os.path.join(PREDICTIONS_DIR, "ced_data", f"{lp}_{data_split}_llm_{prompt_type}_prompt.csv"), index=False
+            os.path.join(
+                PREDICTIONS_DIR, "ced_data", prompt_type, f"{lp}_{data_split}_llm_{prompt_type}_prompt_full_data.csv"
+            ),
+            index=False,
         )
 
 
