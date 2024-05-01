@@ -70,9 +70,7 @@ class ClassificationMetrics(RegressionMetrics):
         }
         self.vals_at_max_mcc = {}
 
-    def compute(
-        self, threshold: float = 0.5, train=True
-    ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], float]:
+    def compute(self, threshold: float = 0.5) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], float]:
         """
         Computes classification metrics.
 
@@ -128,7 +126,4 @@ class ClassificationMetrics(RegressionMetrics):
         self.max_vals = max_vals
         self.vals_at_max_mcc = vals_at_max_mcc
 
-        if train:
-            return report, max_vals, vals_at_max_mcc, threshold
-        else:
-            return report
+        return report, max_vals, vals_at_max_mcc, threshold

@@ -1,2 +1,2 @@
 ,threshold,MCC,precision,recall,f1,accuracy,language_pair,split
-0,0.5,tensor(0.3785),tensor(0.2937),tensor(0.6620),tensor(0.4069),tensor(0.8630),en-cs,dev
+0,0.5,0.3785306215286255,0.29374998807907104,0.6619718074798584,0.40692639350891113,0.8629999756813049,en-cs,dev

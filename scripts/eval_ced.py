@@ -5,8 +5,8 @@ import pandas as pd
 import torch
 
 from mtqe.data.loaders import load_ced_data
-from mtqe.models.metrics import ClassificationMetrics
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
+from mtqe.utils.metrics import calculate_metrics
 from mtqe.utils.paths import EVAL_DIR, PREDICTIONS_DIR
 
 
@@ -23,6 +23,7 @@ def parse_args():
 
 def evaluate(
     experiment_group_name: str,
+    pos_class_error: bool = False,
     pred_dir: str = PREDICTIONS_DIR,
     eval_dir: str = EVAL_DIR,
     language_pairs: list = LI_LANGUAGE_PAIRS_WMT_21_CED,
@@ -48,8 +49,6 @@ def evaluate(
         assert lp in language_pairs, "Unexpected language pair found in predictions: " + lp
         assert split in ["dev", "test"], "Unexpected split: " + split + ". Expecting either 'dev' or 'test."
 
-        metrics = ClassificationMetrics(prefix="")
-
         # load predictions
         df_preds = pd.read_csv(os.path.join(group_dir, file))
 
@@ -60,11 +59,23 @@ def evaluate(
         preds = torch.Tensor(df_preds["score"])
         targets = torch.Tensor(df_targets["score"])
 
-        # results = calculate_metrics(prefix = lp + "_" + split_name, preds = preds, targets=targets, threshold=0.5)
+        # If pos_class_error = False then the positive class is NOT and error
+        # and this will be reverse so that the positive class represents ERRORs
+        if not pos_class_error:
+            preds = 1 - preds
+            targets = 1 - targets
 
-        metrics.update(preds, targets)
+        # binarise the predictions - threshold of 0.5 is currently hard-coded
+        threshold = 0.5
+        preds = preds > threshold
+        preds = preds.long()
 
-        results = metrics.compute(threshold=0.5, train=False)
+        results = calculate_metrics(prefix="", preds=preds, targets=targets, threshold=0.5)
+        # Convert results from Tensor to float
+        for k in results:
+            if type(results[k]) is torch.Tensor:
+                results[k] = results[k].item()
+
         results["language_pair"] = lp
         results["split"] = split
         group_results.append(results)

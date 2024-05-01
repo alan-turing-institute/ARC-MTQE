@@ -86,15 +86,27 @@ def calculate_metrics(
         Tensor of predictions
     targets: torch.Tensor
         Tensor of true values (either 0 or 1)
+    threshold: int
+        The threshold used to calculate the predictions
+    num_classes: int
+        The number of classes
+    max_vals: dict or None
+        A dictionary that stores the maximum values achieved for all the metrics, can be
+        None in which case the maximum values won't get calculated
+    vals_at_max_mcc: dict or None
+        A dictionary that stores the values of the metrics at the maximum MCC value, can
+        be None in which case the maximum values won't get calculated
 
     Returns
     ----------
     report: dict
         Dictionary containing the classification metrics for the predictions and target values
-    max_vals: dict
-        Dictionary containing the maximum values achieved over all epochs - only returned if
+    max_vals: dict or None
+        Dictionary containing the maximum values achieved over all epochs - None is returned if
+        the max_vals parameter is passed to the function as None
     vals_at_max_mcc: dict
-        Dictionary containing the values of the metrics at the point the maximum MCC was achieved.
+        Dictionary containing the values of the metrics at the point the maximum MCC was achieved - None
+        is returned if the vals_at_max_mcc parameter is passed to the function as None
 
     """
 
@@ -148,6 +160,11 @@ def calculate_metrics(
 
 
 def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path: str):
+    """
+    WIP function to create plots of the evaluation metrics
+    Might want to consider using the pytorch metrics instead of sklearn - but
+    would be worth comparing the two to make sure they return the same values.
+    """
     # higher COMET score --> higher confidence it is NOT an error
     # However, we want the positive class to represent ERRORS
     # Therefore the labels are:  ERROR = 1, NOT = 0
@@ -194,7 +211,7 @@ def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path:
     ax3.set_xlabel("Threshold")
     ax3.legend(markerscale=0, loc="upper left", title="Best threshold")
 
-    y_pred_binary = preds > 0.5
+    y_pred_binary = preds > best_threshold
     score_precision = precision_score(targets, y_pred_binary)
     score_recall = recall_score(targets, y_pred_binary)
     score_f1 = f1_score(targets, y_pred_binary)
