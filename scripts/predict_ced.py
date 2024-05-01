@@ -57,6 +57,12 @@ def supervised_predict(
         Whether to make predictions for train, dev or test data. Defaults to 'dev'".
     lps: list[str]
         List of WMT21 language-pairs to make predictions for. Defaults to all.
+
+    Raises
+    ------
+    NotImplementedError
+        If a loss function other than 'binary_cross_entropy_with_logits' is used by the model.
+        This would require an alternative (or no) final activation function.
     """
     # Get the model name given the experiment group name, experiment name, and seed
     model_name = get_model_name(experiment_group_name, experiment_name, seed)
@@ -114,7 +120,9 @@ def supervised_predict(
         if model.hparams.loss == "binary_cross_entropy_with_logits":
             scores = sigmoid(Tensor(model_output.scores))
         else:
-            pass  #
+            raise NotImplementedError(
+                "Evaluating using this loss function has not been implemented: " + model.hparams.loss
+            )
 
         # save logits output
         # NOTE: the sigmoid function has not been applied to this output.
