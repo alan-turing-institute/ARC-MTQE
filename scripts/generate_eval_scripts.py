@@ -4,7 +4,9 @@ import os
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from mtqe.utils.paths import (  # CHECKPOINT_DIR,
+from mtqe.utils.models import get_model_name
+from mtqe.utils.paths import (
+    CHECKPOINT_DIR,
     CONFIG_DIR,
     ROOT_DIR,
     SLURM_DIR,
@@ -19,6 +21,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Get experiment group name")
 
     parser.add_argument("-g", "--group", required=True, help="Experiment group name")
+    parser.add_argument("-e", "--exp", required=True, help="Experiment name")
+    parser.add_argument("-d", "--data", required=True, help="Data split to make predictions for ('dev' or 'test').")
+    parser.add_argument(
+        "-l", "--lp", required=True, help="Language pair to make predictions for (e.g., 'en-cs'), can also be 'all'."
+    )
 
     return parser.parse_args()
 
@@ -26,12 +33,12 @@ def parse_args():
 def write_slurm_script(
     account_name: str,
     slurm_config: dict,
-    template_name: str = "slurm_train_template.sh",
+    template_name: str = "slurm_eval_template.sh",
     template_dir: str = TEMPLATES_DIR,
 ):
     """
     Given config values, writes a slurm file to a specified location
-    NOTE: the template name is currently given a default value of the only template
+    NOTE: the template name is currently given a default value of the only evaluation template
 
     Parameters
     ----------
@@ -48,7 +55,10 @@ def write_slurm_script(
     template = environment.get_template(template_name)
 
     for config in slurm_config:
-        python_call = config["python_call"]
+        python_call = ""
+        for call in config["python_calls"]:
+            python_call = python_call + call + "\n"
+
         script_content = template.render(
             account_name=account_name,
             time=config["time"],
@@ -61,7 +71,13 @@ def write_slurm_script(
 
 
 def generate_scripts(
-    experiment_group_name: str, config_dir: str = CONFIG_DIR, slurm_dir: str = SLURM_DIR, root_dir: str = ROOT_DIR
+    experiment_group_name: str,
+    experiment_name: str,
+    data_split: str,
+    lp: str,
+    config_dir: str = CONFIG_DIR,
+    slurm_dir: str = SLURM_DIR,
+    root_dir: str = ROOT_DIR,
 ):
     """
     This function generates slurm scripts that can then be run on an HPC cluster
@@ -86,30 +102,34 @@ def generate_scripts(
     scripts_path = os.path.join(slurm_dir, "eval_scripts", experiment_group_name)
     log_path = os.path.join(scripts_path, "slurm_eval_logs")
     # make the directory, if it doesn't already exist
-    if not os.path.isdir(scripts_path):
-        os.mkdir(scripts_path)
     if not os.path.isdir(log_path):
-        os.mkdir(log_path)
+        os.makedirs(log_path)
     # Account name for our HPC (Baskerville)
     account_name = config["slurm"]["account"]
     # Generate config for the slurm file for each model that will run
     slurm_config = [
         {
-            "python_call": "python "
-            + root_dir
-            + "/scripts/train_ced.py "
-            + "--group "
-            + experiment_group_name
-            + " "
-            + f"--exp {experiment_name} "
-            + f"--seed {seed}",
-            "experiment_name": experiment_name + "__" + str(seed),
-            "script_name": os.path.join(scripts_path, experiment_name + "__" + str(seed) + "__train.sh"),
-            "time": config["experiments"][experiment_name]["slurm"]["time"],
+            "python_calls": [
+                "python "
+                + root_dir
+                + "/scripts/eval_ced.py "
+                + "--group "
+                + experiment_group_name
+                + " "
+                + f"--exp {experiment_name} "
+                + f"--seed {seed} "
+                + "--path "
+                + get_checkpoint_path(experiment_group_name, experiment_name, seed)
+                + " "
+                + f"--data {data_split} "
+                + f"--lp {lp}"
+                for seed in config["seeds"]
+            ],
+            "experiment_name": experiment_name + "__" + lp,
+            "script_name": os.path.join(scripts_path, experiment_name + "__" + lp + "__eval.sh"),
+            "time": "01:00:00",  # hard coded to one hour
             "memory": config["experiments"][experiment_name]["slurm"]["memory"],
         }
-        for seed in config["seeds"]
-        for experiment_name in config["experiments"]
     ]
 
     # Don't send through a template_name, just take the default of the only template
@@ -117,10 +137,38 @@ def generate_scripts(
     write_slurm_script(account_name, slurm_config)
 
 
+def get_checkpoint_path(
+    experiment_group_name: str, experiment_name: str, seed: str, checkpoint_dir: str = CHECKPOINT_DIR
+) -> str:
+    folder_name_prefix = get_model_name(
+        experiment_group_name=experiment_group_name, experiment_name=experiment_name, seed=seed
+    )
+    folder_name_prefix = folder_name_prefix[:-15]
+
+    folders = [folder for folder in os.listdir(checkpoint_dir) if folder.startswith(folder_name_prefix)]
+
+    assert len(folders) == 1, "More than one checkpoint folder exists for " + folder_name_prefix
+
+    folder = folders[0]
+
+    checkpoint_path = os.path.join(checkpoint_dir, folder)
+
+    checkpoints = os.listdir(checkpoint_path)
+
+    assert len(checkpoints) == 1, "More than one checkpoint exists in " + folder
+
+    checkpoint = checkpoints[0]
+
+    return os.path.join(checkpoint_path, checkpoint)
+
+
 def main():
     args = parse_args()
     experiment_group_name = args.group
-    generate_scripts(experiment_group_name)
+    experiment_name = args.exp
+    data_split = args.data
+    lp = args.lp
+    generate_scripts(experiment_group_name, experiment_name, data_split, lp)
 
 
 if __name__ == "__main__":
