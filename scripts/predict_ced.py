@@ -90,6 +90,8 @@ def supervised_predict(
             f"{lp}_"
             + data_split
             + "_"
+            + seed
+            + "_"
             + os.path.split(os.path.dirname(checkpoint_path))[-1]
             + "_"
             + os.path.basename(checkpoint_path)[:-5]

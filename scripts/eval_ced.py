@@ -59,6 +59,7 @@ def evaluate(
         file_words = file.split("_")
         lp = file_words[0]
         split = file_words[1]
+        seed = file_words[2]  # Note that for non-supervised model this may not represent a random seed
 
         assert lp in language_pairs, "Unexpected language pair found in predictions: " + lp
         assert split in ["dev", "test"], "Unexpected split: " + split + ". Expecting either 'dev' or 'test."
@@ -92,6 +93,10 @@ def evaluate(
         # Record the language pair and data split
         results["language_pair"] = lp
         results["split"] = split
+        if seed.isdigit():
+            results["seed"] = int(seed)
+        else:
+            results["seed"] = seed
         group_results.append(results)
 
     # Convert list of results to a dataframe
@@ -113,6 +118,14 @@ def evaluate(
         pass
     # Save results
     df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
+    # Log the max MCC for each lp / split combination
+    max_inds = list(df.groupby(["language_pair", "split"]).idxmax()["MCC"].values)
+    df_max = df.loc[max_inds]
+    df_max.to_csv(results_path + "/" + experiment_group_name + "_max_results.csv")
+    # Log the min MCC for each lp / split combination
+    min_inds = list(df.groupby(["language_pair", "split"]).idxmin()["MCC"].values)
+    df_min = df.loc[min_inds]
+    df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
 
 
 if __name__ == "__main__":
