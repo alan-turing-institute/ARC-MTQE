@@ -150,6 +150,7 @@ def gpt_predict(
 
         responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
+        # this will fail if the directory already exists - might be a good idea in this case?
         predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", prompt_type)
         os.makedirs(predictions_dir)
 
