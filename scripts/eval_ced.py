@@ -30,15 +30,29 @@ def evaluate(
 ):
     """
     Evaluate predictions for a given experiment group using gold truth labels per language pair.
+    Saves the metrics as a csv file
+
+    Parameters
+    ----------
+    experiment_group_name: str
+        The name of the experiment group to be evaluated
+    pos_class_error: bool
+        Whether the positive class of the predictions represents an ERROR
+    pred_dir: str
+        The directory where the predictions are stored
+    eval_dir: str
+        The directory where the evaluations are to be saved
+    language_pairs: list
+        A list of the possible language pairs
     """
 
     group_dir = os.path.join(pred_dir, "ced_data", experiment_group_name)
-
     assert os.path.exists(group_dir), "Path for predictions for " + experiment_group_name + " does not exist"
 
     results_path = os.path.join(eval_dir, experiment_group_name)
     if not os.path.isdir(results_path):
         os.mkdir(results_path)
+    # list to store results per file
     group_results = []
 
     for file in os.listdir(group_dir):
@@ -75,12 +89,14 @@ def evaluate(
         for k in results:
             if type(results[k]) is torch.Tensor:
                 results[k] = results[k].item()
-
+        # Record the language pair and data split
         results["language_pair"] = lp
         results["split"] = split
         group_results.append(results)
 
+    # Convert list of results to a dataframe
     df = pd.DataFrame.from_dict(group_results)
+    # Re-names the columns if they contain a "_" as a prefix
     try:
         df.rename(
             columns={
@@ -95,7 +111,7 @@ def evaluate(
         )
     except Exception:
         pass
-
+    # Save results
     df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
 
 
