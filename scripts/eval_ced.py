@@ -30,7 +30,9 @@ def evaluate(
 ):
     """
     Evaluate predictions for a given experiment group using gold truth labels per language pair.
-    Saves the metrics as a csv file
+    Saves the metrics as a csv file.
+    If multiple predictions exist for a given language pair and data split (i.e., there are
+    multiple random seeds), then an ensemble prediction will be made and analysed
 
     Parameters
     ----------
@@ -102,6 +104,23 @@ def evaluate(
                 majority_preds = cumulative_preds > (num_files / 2)
                 majority_preds = majority_preds.long()
 
+                # Save majority predictions
+                majority_preds_np = majority_preds.numpy()
+                df_majority_preds = pd.DataFrame(majority_preds_np)
+                ensemble_path = os.path.join(group_dir, "ensemble_preds")
+                if not os.path.isdir(ensemble_path):
+                    os.mkdir(ensemble_path)
+                df_majority_preds.to_csv(
+                    ensemble_path
+                    + "/"
+                    + lp
+                    + "_"
+                    + split
+                    + "_"
+                    + experiment_group_name
+                    + "_ensemble_majority_preds.csv"
+                )
+
                 results = get_results(preds=majority_preds, targets=targets, threshold=0.5, lp=lp, split=split)
                 results["seed"] = "ensemble"
                 ensemble_results.append(results)
@@ -125,6 +144,25 @@ def evaluate(
 
 
 def get_results(preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp: str, split: str) -> dict:
+    """
+    Parameters
+    ----------
+    preds: torch.Tensor
+        Tensor of predictions
+    targets: torch.Tensor
+        Tensor of true target values
+    threshold: float
+        Threshold value to calculate the metrics
+    lp: str
+        ISO code for language pair
+    split: str
+        Data split, expecting 'dev' or 'test'
+
+    Returns
+    -------
+    results: dict
+        Dictionary of the metrics for the given preds and targets
+    """
     results = calculate_metrics(prefix="", preds=preds, targets=targets, threshold=threshold)
     # Convert results from Tensor to float
     for k in results:
@@ -137,6 +175,20 @@ def get_results(preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp
 
 
 def create_results_df(results: dict) -> pd.DataFrame:
+    """
+    Takes a dictionary of metrics for one or more experiments and returns a
+    pandas DataFrame with some columns re-named
+
+    Parameters
+    ----------
+    results: dict
+        Dictionary of metrics
+
+    Returns
+    -------
+    df: pd.DataFrame
+        DataFrame of the data in the dictionary
+    """
     df = pd.DataFrame.from_dict(results)
     # Re-names the columns if they contain a "_" as a prefix
     try:
