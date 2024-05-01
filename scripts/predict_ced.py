@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
-from torch import cuda
+from torch import Tensor, cuda, sigmoid
 
 from mtqe.data.loaders import comet_format, load_ced_data
 from mtqe.models.loaders import load_model_from_file
@@ -57,6 +57,12 @@ def supervised_predict(
         Whether to make predictions for train, dev or test data. Defaults to 'dev'".
     lps: list[str]
         List of WMT21 language-pairs to make predictions for. Defaults to all.
+
+    Raises
+    ------
+    NotImplementedError
+        If a loss function other than 'binary_cross_entropy_with_logits' is used by the model.
+        This would require an alternative (or no) final activation function.
     """
     # Get the model name given the experiment group name, experiment name, and seed
     model_name = get_model_name(experiment_group_name, experiment_name, seed)
@@ -90,6 +96,8 @@ def supervised_predict(
             f"{lp}_"
             + data_split
             + "_"
+            + seed
+            + "_"
             + os.path.split(os.path.dirname(checkpoint_path))[-1]
             + "_"
             + os.path.basename(checkpoint_path)[:-5]
@@ -108,9 +116,17 @@ def supervised_predict(
         # predict
         model_output = model.predict(comet_data, batch_size=8, gpus=gpus)
 
+        # apply activation function
+        if model.hparams.loss == "binary_cross_entropy_with_logits":
+            scores = sigmoid(Tensor(model_output.scores))
+        else:
+            raise NotImplementedError(
+                "Evaluating using this loss function has not been implemented: " + model.hparams.loss
+            )
+
         # save logits output
         # NOTE: the sigmoid function has not been applied to this output.
-        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores})
+        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
         df_results.to_csv(out_file_name, index=False)
 
     return model
