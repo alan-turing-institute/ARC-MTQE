@@ -80,7 +80,7 @@ def main():
                     data["score"].append(score)
 
             df = pd.DataFrame(data)
-            predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", prompt_type)
+            predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", f"prompt_{prompt_type}")
             os.makedirs(predictions_dir, exist_ok=True)
             df.to_csv(os.path.join(predictions_dir, f"{lp}_test_llm_{prompt_type}_prompt_full_data.csv"))
 
