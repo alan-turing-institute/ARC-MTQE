@@ -8,7 +8,7 @@ import yaml
 from torch import cuda
 
 from mtqe.data.loaders import comet_format, load_ced_data
-from mtqe.models.loaders import load_model_from_file
+from mtqe.models.loaders import load_comet_model, load_model_from_file
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
 from mtqe.utils.models import get_model_name
 from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
@@ -18,8 +18,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Get experiment config settings")
 
     parser.add_argument("-g", "--group", required=True, help="Experiment group name")
-    parser.add_argument("-e", "--exp", required=True, help="Experiment name")
-    parser.add_argument("-s", "--seed", required=True, help="Seed")
+    parser.add_argument("-e", "--exp", help="Experiment name")
+    parser.add_argument("-s", "--seed", help="Seed")
     parser.add_argument("-p", "--path", required=True, help="The path of the checkpoint")
     parser.add_argument("-d", "--data", required=True, help="Data split to make predictions for ('dev' or 'test').")
     parser.add_argument(
@@ -58,27 +58,31 @@ def supervised_predict(
     lps: list[str]
         List of WMT21 language-pairs to make predictions for. Defaults to all.
     """
-    # Get the model name given the experiment group name, experiment name, and seed
-    model_name = get_model_name(experiment_group_name, experiment_name, seed)
-    # Set the path to the checkpoint
-    checkpoint_path = Path(checkpoint_path)
-    # Make sure that the model name matches the checkpoint model name
-    assert model_name[:-15] == os.path.split(os.path.dirname(checkpoint_path))[-1][:-15], (
-        "Error, model name "
-        + model_name
-        + " does not match the checkpoint model name"
-        + os.path.dirname(checkpoint_path)
-    )
-    # Load the config file - want to load the model with the same hparams as used for training
-    # NOTE: There is no guarantee the config file has not been changed since training... this
-    # could be made more robust by saving the hparams or config with the checkpoint?
-    with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
-        config = yaml.safe_load(stream)
-    # Set or overwrite the model path in the config file
-    config["model_path"] = {"path": checkpoint_path}
 
-    # Load the model from the config file, setting the `train_model` param to False
-    model = load_model_from_file(config, experiment_name, train_model=False)
+    if experiment_group_name == "baseline":
+        model = load_comet_model(checkpoint_path)
+    else:
+        # Get the model name given the experiment group name, experiment name, and seed
+        model_name = get_model_name(experiment_group_name, experiment_name, seed)
+        # Set the path to the checkpoint
+        checkpoint_path = Path(checkpoint_path)
+        # Make sure that the model name matches the checkpoint model name
+        assert model_name[:-15] == os.path.split(os.path.dirname(checkpoint_path))[-1][:-15], (
+            "Error, model name "
+            + model_name
+            + " does not match the checkpoint model name"
+            + os.path.dirname(checkpoint_path)
+        )
+        # Load the config file - want to load the model with the same hparams as used for training
+        # NOTE: There is no guarantee the config file has not been changed since training... this
+        # could be made more robust by saving the hparams or config with the checkpoint?
+        with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
+            config = yaml.safe_load(stream)
+        # Set or overwrite the model path in the config file
+        config["model_path"] = {"path": checkpoint_path}
+
+        # Load the model from the config file, setting the `train_model` param to False
+        model = load_model_from_file(config, experiment_name, train_model=False)
 
     # save results here
     out_dir = os.path.join(PREDICTIONS_DIR, "ced_data", experiment_group_name)
@@ -120,10 +124,16 @@ def main():
 
     args = parse_args()
     experiment_group_name = args.group
-    experiment_name = args.exp
-    seed = args.seed
     checkpoint_path = args.path
     data_split = args.data
+
+    if experiment_group_name == "baseline":
+        experiment_name = None
+        seed = None
+    else:
+        experiment_name = args.exp
+        seed = args.seed
+
     if args.lp == "all":
         lps = LI_LANGUAGE_PAIRS_WMT_21_CED
     else:
