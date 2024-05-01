@@ -51,11 +51,11 @@ def create_wmt21_template(error_type: str) -> typing.List[typing.Dict[str, str]]
             + "a negation (with or without an explicit negation word), or reverses the sentiment of the sentence "
             + "(e.g. a negative sentence becomes positive or vice-versa). Sentiment errors do not always involve "
             + "a full negation, for example, replacing 'possibly' with 'with certainty' constitutes a deviation "
-            + "in sentiment. "
+            + "in sentiment polarity. "
         ),
         "num": (
             "deviation in units/time/date/numbers. A number/date/time or unit are translated incorrectly "
-            + "(or translated it as gibberish), or removed, which could lead someone to miss an appointment, get "
+            + "(or translated as gibberish), or removed, which could lead someone to miss an appointment, get "
             + "lost, etc. "
         ),
     }
