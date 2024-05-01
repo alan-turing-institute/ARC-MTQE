@@ -87,6 +87,12 @@ def generate_scripts(
     ----------
     experiment_group_name: str
         The name of the experiment group (should match a config yaml file name)
+    experiment_name: str
+        The name of the experiment name to be evaluated
+    data_split: str
+        The data split to be evaluated (expecting either 'dev' or 'test')
+    lp: str
+        The ISO code of the language pair to be evaluated
     config_dir: str
         The path where the config files are stored
     slurm_dir: str
@@ -140,6 +146,25 @@ def generate_scripts(
 def get_checkpoint_path(
     experiment_group_name: str, experiment_name: str, seed: str, checkpoint_dir: str = CHECKPOINT_DIR
 ) -> str:
+    """
+    Returns the checkpoint path for a given exp group, exp name and seed combination
+
+    Parameters
+    ----------
+    experiment_group_name: str
+        The name of the experiment group
+    experiment_name: str
+        The name of the experiment
+    seed: str
+        The random seed (as a string type)
+    checkpoint_dir:
+        The directory where checkpoints are stored
+
+    Returns
+    -------
+    str:
+        The path to the checkpoint
+    """
     folder_name_prefix = get_model_name(
         experiment_group_name=experiment_group_name, experiment_name=experiment_name, seed=seed
     )
