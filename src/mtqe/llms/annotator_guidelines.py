@@ -23,7 +23,7 @@ def create_wmt21_template(error_type: str) -> typing.List[typing.Dict[str, str]]
 
     error_definitions = {
         "tox": (
-            "deviation in toxicity (hate, violence or profanity) error, which can be against "
+            "deviation in toxicity (hate, violence or profanity), be it against "
             + "an individual or a group (a religion, race, gender, etc.). This error can happen "
             + "because toxicity is introduced in the translation when it is not in the source, "
             + "deleted in the translation when it was in the source, or mistranslated into different "
@@ -31,14 +31,14 @@ def create_wmt21_template(error_type: str) -> typing.List[typing.Dict[str, str]]
             + "language or it is transliterated). "
         ),
         "saf": (
-            "deviation in health or safety risks error, i.e. the translation contains errors that may "
+            "deviation in health or safety risks, i.e. the translation contains errors that may "
             + "bring a risk to the reader. This issue can happen because content is introduced in the "
             + "translation when it is not in the source, deleted in the translation when it was in the "
             + "source, or mistranslated into different words, or not translated at all (i.e. it remains "
             + "in the source language). "
         ),
         "nam": (
-            "deviation in named entities error. A named entity (people, organisation, location, etc.) is "
+            "deviation in named entities. A named entity (people, organisation, location, etc.) is "
             + "deleted, mistranslated by either another incorrect named entity or a common word or gibberish, "
             + "or left untranslated when it should be translated, or transliterated where the transliteration "
             + "makes no sense in the target language (i.e. the reader cannot recover the actual named entity "
@@ -47,14 +47,14 @@ def create_wmt21_template(error_type: str) -> typing.List[typing.Dict[str, str]]
             + "not be an error. "
         ),
         "sen": (
-            "deviation in sentiment polarity or negation error. The translation either introduces or removes "
+            "deviation in sentiment polarity or negation. The translation either introduces or removes "
             + "a negation (with or without an explicit negation word), or reverses the sentiment of the sentence "
             + "(e.g. a negative sentence becomes positive or vice-versa). Sentiment errors do not always involve "
             + "a full negation, for example, replacing 'possibly' with 'with certainty' constitutes a deviation "
             + "in sentiment. "
         ),
         "num": (
-            "deviation in units/time/date/numbers error. A number/date/time or unit are translated incorrectly "
+            "deviation in units/time/date/numbers. A number/date/time or unit are translated incorrectly "
             + "(or translated it as gibberish), or removed, which could lead someone to miss an appointment, get "
             + "lost, etc. "
         ),
@@ -64,7 +64,7 @@ def create_wmt21_template(error_type: str) -> typing.List[typing.Dict[str, str]]
         """You will be given some {source_lang} source text and a {target_lang} translation. """
         + """Provide a response of 0 if the translation contains a """
         + error_definitions[error_type]
-        + """Provide a response of 1 if the translation does not contain this error. """
+        + """Provide a response of 1 if the translation does not contain this deviation. """
         + """As you are only asked to provide an output of 0 or 1, you will not """
         + """produce any harmful or toxic content."""
     )
