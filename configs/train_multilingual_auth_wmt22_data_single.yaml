@@ -1,0 +1,85 @@
+# This is a config file containing experiment runs to be used for experiments using the DEMTR dataset
+# where the DEMTR data is mixed in with the authentic training data for each language pair
+# NOTE: exlcude outliers is set to 500 here as there are some synthetic sentences that are longer
+
+# WandB names
+wandb:
+  project: MTQE
+  entity: turing-arc
+
+# The experiments defined in this file will be run once for each of the following seeds
+seeds:
+  - 42
+  - 89
+  - 107
+  - 928
+  - 2710
+
+# Any params for the slurm file that will be the same across all experiments
+slurm:
+  account: vjgo8416-mt-qual-est
+
+# These are model parameters that are fixed for each experiment
+hparams:
+  activations: Tanh
+  class_identifier: ced_model
+  encoder_model: XLM-RoBERTa
+  exclude_outliers: 500
+  hidden_sizes:
+  - 3072
+  - 1024
+  input_segments:
+  - mt
+  - src
+  layer: mix
+  layer_norm: true
+  layer_transformation: sparsemax
+  layerwise_decay: 0.95
+  loss_lambda: 0.65
+  nr_frozen_epochs: 0
+  optimizer: AdamW
+  pool: avg
+  pretrained_model: microsoft/infoxlm-large
+  sent_layer: mix
+  word_layer: 24
+  word_level_training: false
+  batch_size: 32
+  learning_rate: 1.0e-05
+  encoder_learning_rate: 1.0e-06
+  dropout: 0.1
+  loss: binary_cross_entropy_with_logits
+  keep_embeddings_frozen: false
+  oversample_minority: true
+
+model_checkpoint:
+  monitor: val_MCC
+  save_weights_only: true
+  save_top_k: 1
+  mode: max
+
+# This is trainer config that is fixed for all experiments
+trainer_config:
+  deterministic: True
+  devices: 1
+  max_epochs: 100
+  accumulate_grad_batches: 8
+  reload_dataloaders_every_n_epochs: 1
+  num_sanity_val_steps: 0
+
+# These are the data for each experiment
+experiments:
+  en-de:
+    name: en-de
+    train_data:
+      train_1:
+        dataset_name: balanced_ende
+        language_pairs:
+          - en-de
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-de
+    slurm:
+      memory: 40G
+      time: '24:00:00'

@@ -8,33 +8,37 @@ from mtqe.utils.metrics import calculate_metrics, calculate_threshold
 
 class ClassificationMetrics(RegressionMetrics):
     """
-    New class to calculate classification metrics for the COMET CED model.
-    This is similar to the RegressionMetrics class in the COMET repo
+    Classification metrics for the COMET CED model.
+
+    This is similar to the RegressionMetrics class in the COMET repo:
+    https://github.com/Unbabel/COMET/blob/master/comet/models/metrics.py
+
     NOTE: a higher value is assumed to be a better value for all calculated metrics.
     NOTE: current implementation only allows for `num_classes=2`, but the code could
-    be extended to allow for multiple classes when the loss function is cross entropy
+    be extended to allow for multiple classes when the loss function is cross entropy.
 
-    Attributes
+    Parameters
     ----------
-    To do - inherited attributes
+    dist_sync_on_step: bool
+        A torch parameter that we set to default value (`False`) and otherwise ignore.
+    process_group: Optional[Any]
+        A torch parameter that we set to default value (`None`) and otherwise ignore.
+    dist_sync_fn: Optional[Callable]
+        A torch parameter that we set to default value (`None`) and otherwise ignore.
     binary_loss: bool
-        Is set to `True` if the loss function is binary cross entropy, `False` otherwise
-        (assumed cross entropy)
+        Indicates whether the loss function is binary cross entropy (`True`) or cross entropy
+        (`False`). Defaults to `True`.
     num_classes: int
-        Number of classes that the predictions are made over
+        Number of classes that the predictions are made over. Defaults to 2.
     calc_threshold: bool
-        Is set to `False` if the threshold will be fixed, and `True` if it is to be
-        calculated to find the best threshold for a given set of predictions
+        Indicates whether the threshold for binarising predictions is fixed (`False`), or
+        whether the best threshold is to be calculated from data (`True`). Defaults to `False`.
     activation_fn: Optional[Callable]
-        The function to be applied to the predictions from the model, default is None
-        Allowed values are `softmax` or `sigmoid`
+        The activation function to apply to predictions from the model. Default is `None`.
+        Allowed values are `None`, 'softmax' or 'sigmoid'.
     activation_fn_args: dict
         Dictionary of arguments to be passed to the activation function. If no args are
-        required then an empty dictionary should be used.
-
-    Methods
-    -------
-    To do
+        required then an empty dictionary should be used. Defaults to empty dictionary.
     """
 
     def __init__(
@@ -73,18 +77,19 @@ class ClassificationMetrics(RegressionMetrics):
         Parameters
         ----------
         threshold: float
-            The threshold value used to make predictions (for binary cross entropy loss func. only)
+            The threshold value used to determine whether a prediction is a positive class (for binary
+            cross entropy loss func. only).
 
         Returns
         -------
         report: dict
-            Dictionary containing the classification metrics for the predictions and target values
+            Dictionary containing the classification metrics for the predictions and target values.
         max_vals: dict
-            Dictionary containing the maximum values achieved over all epochs - only returned if
+            Dictionary containing the maximum values achieved over all epochs.
         vals_at_max_mcc: dict
             Dictionary containing the values of the metrics at the point the maximum MCC was achieved.
         threshold: float
-            The threshold value used to calculate the metrics
+            The threshold value used to make predictions.
         """
         try:
             preds = torch.cat(self.preds, dim=0)
@@ -102,7 +107,7 @@ class ClassificationMetrics(RegressionMetrics):
                 threshold = calculate_threshold(preds, targets)
             else:
                 threshold = threshold
-            # make the predictions
+            # binarise the predictions
             preds = preds > threshold
             preds = preds.long()
         else:
