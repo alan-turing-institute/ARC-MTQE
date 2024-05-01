@@ -88,3 +88,4 @@ COMET_QE_21 = os.path.join(ROOT_DIR, "models", "wmt21-comet-qe-da", "checkpoints
 # OUTPUTS
 PREDICTIONS_DIR = os.path.join(ROOT_DIR, "predictions")
 OUTPUTS_DIR = os.path.join(ROOT_DIR, "outputs")
+EVAL_DIR = os.path.join(ROOT_DIR, "evaluations")
