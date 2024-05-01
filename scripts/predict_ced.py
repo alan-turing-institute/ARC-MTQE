@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
-from torch import cuda
+from torch import Tensor, cuda, sigmoid
 
 from mtqe.data.loaders import comet_format, load_ced_data
 from mtqe.models.loaders import load_model_from_file
@@ -108,9 +108,15 @@ def supervised_predict(
         # predict
         model_output = model.predict(comet_data, batch_size=8, gpus=gpus)
 
+        # apply activation function
+        if model.hparams.loss == "binary_cross_entropy_with_logits":
+            scores = sigmoid(Tensor(model_output.scores))
+        else:
+            pass  #
+
         # save logits output
         # NOTE: the sigmoid function has not been applied to this output.
-        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores})
+        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
         df_results.to_csv(out_file_name, index=False)
 
     return model
