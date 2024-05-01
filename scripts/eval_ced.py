@@ -39,8 +39,8 @@ def evaluate(
     experiment_group_name: str
         The name of the experiment group to be evaluated
     pos_class_error: bool
-        Whether the positive class value in the predictions represents an ERROR. 
-        Defaults to `False`. This means positive labels in the predictions (1)  indicate 
+        Whether the positive class value in the predictions represents an ERROR.
+        Defaults to `False`. This means positive labels in the predictions (1)  indicate
         NOT an error while negative labels (0) indicate an ERROR.
     pred_dir: str
         The directory where the predictions are stored
@@ -77,7 +77,13 @@ def evaluate(
 
             for file in filenames:
                 file_words = file.split("_")
-                seed = file_words[2]  # Note that for non-supervised model this may not represent a random seed
+                if file_words[2].isdigit():
+                    # file_words[2] will represent a random seed for supervised models only
+                    seed = file_words[2]
+                    model_type = "supervised"
+                else:
+                    seed = "-"
+                    model_type = file_words[2]
 
                 # load predictions
                 df_preds = pd.read_csv(os.path.join(group_dir, file))
@@ -94,11 +100,10 @@ def evaluate(
                 preds = preds.long()
                 cumulative_preds += preds
 
-                results = get_results(preds=preds, targets=targets, threshold=0.5, lp=lp, split=split)
-                if seed.isdigit():
-                    results["seed"] = int(seed)
-                else:
-                    results["seed"] = seed
+                results = get_results(
+                    preds=preds, targets=targets, threshold=0.5, lp=lp, split=split, seed=seed, model_type=model_type
+                )
+
                 individual_results.append(results)
 
             # Only ensemble if there was more than one file (i.e, seed) for each lp and split
@@ -123,8 +128,16 @@ def evaluate(
                     + "_ensemble_majority_preds.csv"
                 )
 
-                results = get_results(preds=majority_preds, targets=targets, threshold=0.5, lp=lp, split=split)
-                results["seed"] = "ensemble"
+                results = get_results(
+                    preds=majority_preds,
+                    targets=targets,
+                    threshold=0.5,
+                    lp=lp,
+                    split=split,
+                    seed="-",
+                    model_type="majority_ensemble",
+                )
+
                 ensemble_results.append(results)
 
     # Convert list of results to a dataframe
@@ -145,7 +158,9 @@ def evaluate(
     df_ensemble.to_csv(results_path + "/" + experiment_group_name + "_ensemble_results.csv")
 
 
-def get_results(preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp: str, split: str) -> dict:
+def get_results(
+    preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp: str, split: str, seed: str, model_type: str
+) -> dict:
     """
     Parameters
     ----------
@@ -173,6 +188,8 @@ def get_results(preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp
     # Record the language pair and data split
     results["language_pair"] = lp
     results["split"] = split
+    results["seed"] = seed
+    results["model_type"] = model_type
     return results
 
 
