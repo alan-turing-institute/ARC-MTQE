@@ -89,16 +89,19 @@ def supervised_predict(
     os.makedirs(out_dir, exist_ok=True)
 
     for lp in lps:
-        out_file_name = os.path.join(
-            out_dir,
-            f"{lp}_"
-            + data_split
-            + "_"
-            + os.path.split(os.path.dirname(checkpoint_path))[-1]
-            + "_"
-            + os.path.basename(checkpoint_path)[:-5]
-            + ".csv",
-        )
+        if experiment_group_name == "baseline":
+            out_file_name = os.path.join(out_dir, f"{lp}_{data_split}_baseline_{checkpoint_path}.csv")
+        else:
+            out_file_name = os.path.join(
+                out_dir,
+                f"{lp}_"
+                + data_split
+                + "_"
+                + os.path.split(os.path.dirname(checkpoint_path))[-1]
+                + "_"
+                + os.path.basename(checkpoint_path)[:-5]
+                + ".csv",
+            )
 
         # load data
         df_data = load_ced_data(data_split, lp)
