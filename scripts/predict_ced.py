@@ -12,7 +12,7 @@ from mtqe.data.loaders import comet_format, load_ced_data
 from mtqe.models.loaders import load_comet_model, load_model_from_file
 from mtqe.utils.format import create_now_str
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.logging import get_git_commit_hash, hash_df
+from mtqe.utils.logging import get_git_commit_hash, hash_df, hash_file
 from mtqe.utils.models import get_model_name
 from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
 
@@ -149,6 +149,7 @@ def supervised_predict(
             "git_commit_hash": commit_hash,
             "checkpoint_path": checkpoint_path,
             "out_file_name": out_file_name,
+            "output_file_hash": hash_file(out_file_name),
             "input_data_hash": hash_df(df_data),
         }
         with open(out_file_name.replace(".csv", f"_{create_now_str()}.json"), "w") as f:
