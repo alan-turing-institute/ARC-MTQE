@@ -1,25 +1,45 @@
 import hashlib
 import os
+import typing
 
 import git
+import pandas as pd
+from pandas.util import hash_pandas_object
 
 from mtqe.utils.paths import ROOT_DIR
 
 
-def hash_file(filepath: str):
+def hash_df(df: pd.DataFrame) -> typing.List[str]:
     """
-    Hash the contents of a file.
+    Hash contents of a DataFrame by row.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Pandas DataFrame to hash.
+
+    Returns
+    -------
+    list[str]
+        Hash of the DataFrame object by row.
+    """
+
+    return list(hash_pandas_object(df))
+
+
+def hash_file(filepath: str) -> str:
+    """
+    Hash contents of a file.
 
     Parameters
     ----------
     filepath : str
         A string pointing to the file you want to hash
-    m : hashlib hash object, optional (default is None to create a new object)
-        hash_file updates m with the contents of filepath and returns m
 
     Returns
     -------
-    hashlib hash object
+    str
+        Hash of the file.
     """
 
     assert os.path.exists(filepath), "Path {} does not exist".format(filepath)
@@ -38,7 +58,7 @@ def hash_file(filepath: str):
     return m.hexdigest()
 
 
-def get_git_commit_hash(repo_path: str = ROOT_DIR):
+def get_git_commit_hash(repo_path: str = ROOT_DIR) -> str:
     """
     Get commit digest for current HEAD commit. If the current working directory
     contains uncommitted changes, raises `RepositoryDirtyError`.

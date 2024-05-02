@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import typing
 from pathlib import Path
@@ -9,7 +10,9 @@ from torch import Tensor, cuda, sigmoid
 
 from mtqe.data.loaders import comet_format, load_ced_data
 from mtqe.models.loaders import load_comet_model, load_model_from_file
+from mtqe.utils.format import create_now_str
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
+from mtqe.utils.logging import get_git_commit_hash, hash_df
 from mtqe.utils.models import get_model_name
 from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
 
@@ -64,6 +67,9 @@ def supervised_predict(
         If a loss function other than 'binary_cross_entropy_with_logits' is used by the model.
         This would require an alternative (or no) final activation function.
     """
+
+    # will throw an error if there are uncommitted changes in repository
+    commit_hash = get_git_commit_hash()
 
     if experiment_group_name == "baseline":
         model = load_comet_model(checkpoint_path)
@@ -137,6 +143,16 @@ def supervised_predict(
                 )
             df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
         df_results.to_csv(out_file_name, index=False)
+
+    # create log in same place as file --> Q: should this be elsewhere?
+    log = {
+        "git_commit_hash": commit_hash,
+        "checkpoint_path": checkpoint_path,
+        "out_file_name": out_file_name,
+        "input_data_hash": hash_df(df_data),
+    }
+    with open(out_file_name.replace(".csv", f"_{create_now_str()}.json"), "w") as f:
+        json.dump(log, f)
 
     return model
 
