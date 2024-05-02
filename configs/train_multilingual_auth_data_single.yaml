@@ -110,3 +110,18 @@ experiments:
     slurm:
       memory: 40G
       time: '12:00:00'
+  en-ja:
+    name: en-ja
+    train_data:
+      train_1:
+        dataset_name: multilingual_ced
+        language_pairs:
+          - en-ja
+    dev_data:
+      dev_1:
+        dataset_name: ced
+        language_pairs:
+          - en-ja
+    slurm:
+      memory: 40G
+      time: '12:00:00'
