@@ -33,12 +33,12 @@ def parse_args():
 def write_slurm_script(
     account_name: str,
     slurm_config: dict,
-    template_name: str = "slurm_eval_template.sh",
+    template_name: str = "slurm_pred_template.sh",
     template_dir: str = TEMPLATES_DIR,
 ):
     """
     Given config values, writes a slurm file to a specified location
-    NOTE: the template name is currently given a default value of the only evaluation template
+    NOTE: the template name is currently given a default value of the only prediction template
 
     Parameters
     ----------
@@ -81,18 +81,18 @@ def generate_scripts(
 ):
     """
     This function generates slurm scripts that can then be run on an HPC cluster
-    One script is generated for each experiment group with multiple evaluations per script
+    One script is generated for each experiment group with multiple predictions per script
 
     Parameters
     ----------
     experiment_group_name: str
         The name of the experiment group (should match a config yaml file name)
     experiment_name: str
-        The name of the experiment name to be evaluated
+        The name of the experiment name to be used
     data_split: str
-        The data split to be evaluated (expecting either 'dev' or 'test')
+        The data split to be used (expecting either 'dev' or 'test')
     lp: str
-        The ISO code of the language pair to be evaluated
+        The ISO code of the language pair to be used
     config_dir: str
         The path where the config files are stored
     slurm_dir: str
@@ -105,8 +105,8 @@ def generate_scripts(
         config = yaml.safe_load(stream)
 
     # path where the slurm scripts will be stored
-    scripts_path = os.path.join(slurm_dir, "eval_scripts", experiment_group_name)
-    log_path = os.path.join(scripts_path, "slurm_eval_logs")
+    scripts_path = os.path.join(slurm_dir, "pred_scripts", experiment_group_name)
+    log_path = os.path.join(scripts_path, "slurm_pred_logs")
     # make the directory, if it doesn't already exist
     if not os.path.isdir(log_path):
         os.makedirs(log_path)
@@ -118,7 +118,7 @@ def generate_scripts(
             "python_calls": [
                 "python "
                 + root_dir
-                + "/scripts/eval_ced.py "
+                + "/scripts/pred_ced.py "
                 + "--group "
                 + experiment_group_name
                 + " "
@@ -132,7 +132,7 @@ def generate_scripts(
                 for seed in config["seeds"]
             ],
             "experiment_name": experiment_name + "__" + lp,
-            "script_name": os.path.join(scripts_path, experiment_name + "__" + lp + "__eval.sh"),
+            "script_name": os.path.join(scripts_path, experiment_name + "__" + lp + "__pred.sh"),
             "time": "01:00:00",  # hard coded to one hour
             "memory": config["experiments"][experiment_name]["slurm"]["memory"],
         }
