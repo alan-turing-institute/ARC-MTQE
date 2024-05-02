@@ -147,7 +147,7 @@ def supervised_predict(
         # create log in same place as file --> Q: should this be elsewhere?
         log = {
             "git_commit_hash": commit_hash,
-            "checkpoint_path": checkpoint_path,
+            "checkpoint_path": str(checkpoint_path),
             "out_file_name": out_file_name,
             "output_file_hash": hash_file(out_file_name),
             "input_data_hash": hash_df(df_data),
