@@ -144,15 +144,15 @@ def supervised_predict(
             df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
         df_results.to_csv(out_file_name, index=False)
 
-    # create log in same place as file --> Q: should this be elsewhere?
-    log = {
-        "git_commit_hash": commit_hash,
-        "checkpoint_path": checkpoint_path,
-        "out_file_name": out_file_name,
-        "input_data_hash": hash_df(df_data),
-    }
-    with open(out_file_name.replace(".csv", f"_{create_now_str()}.json"), "w") as f:
-        json.dump(log, f)
+        # create log in same place as file --> Q: should this be elsewhere?
+        log = {
+            "git_commit_hash": commit_hash,
+            "checkpoint_path": checkpoint_path,
+            "out_file_name": out_file_name,
+            "input_data_hash": hash_df(df_data),
+        }
+        with open(out_file_name.replace(".csv", f"_{create_now_str()}.json"), "w") as f:
+            json.dump(log, f)
 
     return model
 
