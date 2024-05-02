@@ -101,7 +101,6 @@ def wmt21_prompt(
         if content == "0":
             response_data["error_cat"] = err_cat
             response_data["score"] = int(content)
-            print(response_data)
             return response_data
         # check that nothing unexpected is happening
         if content != "1":
@@ -110,7 +109,6 @@ def wmt21_prompt(
     # no critical error found
     response_data["error_cat"] = "none"
     response_data["score"] = int(content)
-    print(response_data)
     return response_data
 
 
