@@ -62,7 +62,11 @@ def evaluate(
 
     for lp in language_pairs:
         for split in ["dev", "test"]:
-            filenames = [filename for filename in os.listdir(group_dir) if filename.startswith(lp + "_" + split)]
+            filenames = [
+                filename
+                for filename in os.listdir(group_dir)
+                if (filename.startswith(lp + "_" + split) and filename.endswith(".csv"))
+            ]
             num_files = len(filenames)
 
             # load true target scores
