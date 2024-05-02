@@ -8,7 +8,7 @@ import yaml
 from torch import Tensor, cuda, sigmoid
 
 from mtqe.data.loaders import comet_format, load_ced_data
-from mtqe.models.loaders import load_model_from_file
+from mtqe.models.loaders import load_comet_model, load_model_from_file
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
 from mtqe.utils.models import get_model_name
 from mtqe.utils.paths import CONFIG_DIR, PREDICTIONS_DIR
@@ -18,8 +18,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Get experiment config settings")
 
     parser.add_argument("-g", "--group", required=True, help="Experiment group name")
-    parser.add_argument("-e", "--exp", required=True, help="Experiment name")
-    parser.add_argument("-s", "--seed", required=True, help="Seed")
+    parser.add_argument("-e", "--exp", help="Experiment name")
+    parser.add_argument("-s", "--seed", help="Seed")
     parser.add_argument("-p", "--path", required=True, help="The path of the checkpoint")
     parser.add_argument("-d", "--data", required=True, help="Data split to make predictions for ('dev' or 'test').")
     parser.add_argument(
@@ -64,45 +64,53 @@ def supervised_predict(
         If a loss function other than 'binary_cross_entropy_with_logits' is used by the model.
         This would require an alternative (or no) final activation function.
     """
-    # Get the model name given the experiment group name, experiment name, and seed
-    model_name = get_model_name(experiment_group_name, experiment_name, seed)
-    # Set the path to the checkpoint
-    checkpoint_path = Path(checkpoint_path)
-    # Make sure that the model name matches the checkpoint model name
-    assert model_name[:-15] == os.path.split(os.path.dirname(checkpoint_path))[-1][:-15], (
-        "Error, model name "
-        + model_name
-        + " does not match the checkpoint model name"
-        + os.path.dirname(checkpoint_path)
-    )
-    # Load the config file - want to load the model with the same hparams as used for training
-    # NOTE: There is no guarantee the config file has not been changed since training... this
-    # could be made more robust by saving the hparams or config with the checkpoint?
-    with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
-        config = yaml.safe_load(stream)
-    # Set or overwrite the model path in the config file
-    config["model_path"] = {"path": checkpoint_path}
 
-    # Load the model from the config file, setting the `train_model` param to False
-    model = load_model_from_file(config, experiment_name, train_model=False)
+    if experiment_group_name == "baseline":
+        model = load_comet_model(checkpoint_path)
+    else:
+        # Get the model name given the experiment group name, experiment name, and seed
+        model_name = get_model_name(experiment_group_name, experiment_name, seed)
+        # Set the path to the checkpoint
+        checkpoint_path = Path(checkpoint_path)
+        # Make sure that the model name matches the checkpoint model name
+        assert model_name[:-15] == os.path.split(os.path.dirname(checkpoint_path))[-1][:-15], (
+            "Error, model name "
+            + model_name
+            + " does not match the checkpoint model name"
+            + os.path.dirname(checkpoint_path)
+        )
+        # Load the config file - want to load the model with the same hparams as used for training
+        # NOTE: There is no guarantee the config file has not been changed since training... this
+        # could be made more robust by saving the hparams or config with the checkpoint?
+        with open(os.path.join(config_dir, experiment_group_name + ".yaml")) as stream:
+            config = yaml.safe_load(stream)
+        # Set or overwrite the model path in the config file
+        config["model_path"] = {"path": checkpoint_path}
+
+        # Load the model from the config file, setting the `train_model` param to False
+        model = load_model_from_file(config, experiment_name, train_model=False)
 
     # save results here
     out_dir = os.path.join(PREDICTIONS_DIR, "ced_data", experiment_group_name)
     os.makedirs(out_dir, exist_ok=True)
 
     for lp in lps:
-        out_file_name = os.path.join(
-            out_dir,
-            f"{lp}_"
-            + data_split
-            + "_"
-            + seed
-            + "_"
-            + os.path.split(os.path.dirname(checkpoint_path))[-1]
-            + "_"
-            + os.path.basename(checkpoint_path)[:-5]
-            + ".csv",
-        )
+
+        if experiment_group_name == "baseline":
+            out_file_name = os.path.join(out_dir, f"{lp}_{data_split}_baseline_{checkpoint_path}.csv")
+        else:
+            out_file_name = os.path.join(
+                out_dir,
+                f"{lp}_"
+                + data_split
+                + "_"
+                + seed
+                + "_"
+                + os.path.split(os.path.dirname(checkpoint_path))[-1]
+                + "_"
+                + os.path.basename(checkpoint_path)[:-5]
+                + ".csv",
+            )
 
         # load data
         df_data = load_ced_data(data_split, lp)
@@ -116,17 +124,18 @@ def supervised_predict(
         # predict
         model_output = model.predict(comet_data, batch_size=8, gpus=gpus)
 
-        # apply activation function
-        if model.hparams.loss == "binary_cross_entropy_with_logits":
-            scores = sigmoid(Tensor(model_output.scores))
+        # save output
+        if experiment_group_name == "baseline":
+            df_results = pd.DataFrame({"idx": df_data["idx"], "score": model_output.scores})
         else:
-            raise NotImplementedError(
-                "Evaluating using this loss function has not been implemented: " + model.hparams.loss
-            )
-
-        # save logits output
-        # NOTE: the sigmoid function has not been applied to this output.
-        df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
+            # apply activation function
+            if model.hparams.loss == "binary_cross_entropy_with_logits":
+                scores = sigmoid(Tensor(model_output.scores))
+            else:
+                raise NotImplementedError(
+                    "Evaluating using this loss function has not been implemented: " + model.hparams.loss
+                )
+            df_results = pd.DataFrame({"idx": df_data["idx"], "logits": model_output.scores, "score": scores})
         df_results.to_csv(out_file_name, index=False)
 
     return model
@@ -136,10 +145,16 @@ def main():
 
     args = parse_args()
     experiment_group_name = args.group
-    experiment_name = args.exp
-    seed = args.seed
     checkpoint_path = args.path
     data_split = args.data
+
+    if experiment_group_name == "baseline":
+        experiment_name = None
+        seed = None
+    else:
+        experiment_name = args.exp
+        seed = args.seed
+
     if args.lp == "all":
         lps = LI_LANGUAGE_PAIRS_WMT_21_CED
     else:

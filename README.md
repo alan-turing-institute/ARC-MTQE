@@ -99,7 +99,7 @@ make analyse_da_xl
 To make COMETKiwi-22 predictions for the  CED test data:
 
 ```bash
-make analyse_ced
+make baseline_predict
 ```
 
 To use the OpenAI API to make critical error predictions run the following script. The parameters passed to the script indicate, which prompt (`basic` or `GEMBA`) and GPT model (`gpt-3.5-turbo`) to use and how many translations, which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to make predictions for. For example:
