@@ -58,10 +58,10 @@ def wmt21_prompt(
     ----------
     data: dict[str, str]
         A dictionary with the following keys:
-                - source_lang
-                - source_seg
-                - target_lang
-                - target_seg
+            - source_lang
+            - source_seg
+            - target_lang
+            - target_seg
     idx: str
         A unique identifier.
     responses_dir: str
@@ -76,13 +76,13 @@ def wmt21_prompt(
     Returns
     -------
     tuple(str, dict[str, str])
-        Content of the GPT response ("0" or "1") and ....
+        Content of the last GPT response ("0" or "1") and a dictionary with data on responses
+        to all the queried prompts.
     """
 
     response_data = {"idx": idx}
 
     for err_cat in err_categories:
-
         template = create_wmt21_template(err_cat)
         messages = apply_template(data, template)
         response = openai.chat.completions.create(model=openai_model, messages=messages, temperature=0, seed=1234)
@@ -96,19 +96,22 @@ def wmt21_prompt(
         response_data[f"finish_reason_{err_cat}"] = response.choices[0].finish_reason
         response_data[f"role_{err_cat}"] = response.choices[0].message.role
         response_data[f"content_{err_cat}"] = content
-        response_data[f"score_{err_cat}"] = int(content)
 
         # stop if have found a critical error
         if content == "0":
             response_data["error_cat"] = err_cat
-            return content, err_cat, response_data
+            response_data["score"] = int(content)
+            print(response_data)
+            return response_data
         # check that nothing unexpected is happening
         if content != "1":
             print(f"Invalid response for {idx}: ", content)
 
     # no critical error found
     response_data["error_cat"] = "none"
-    return content, response_data
+    response_data["score"] = int(content)
+    print(response_data)
+    return response_data
 
 
 def gpt_predict(
@@ -169,20 +172,17 @@ def gpt_predict(
         src_name = DI_IOS_TO_LANGUAGE_NAME[src]
         target_name = DI_IOS_TO_LANGUAGE_NAME[target]
 
-        # save full GPT answer as well as ERROR (0)/NOT ERROR (1) predictions made by the model in a CSV file
-        predictions = []
-
         responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
         predictions_dir = os.path.join(PREDICTIONS_DIR, "ced_data", f"prompt_{prompt_type}")
         os.makedirs(predictions_dir, exist_ok=True)
 
         df_data = load_ced_data(data_split, lp)
-        # have slightly different keys for GEMBA/basic vs wmt21_annotator prompts
-        RESPONSE_KEYS = ["created", "model", "finish_reason", "role", "content", "score"]
-        response_data = {"idx": []}
+        # have slightly different keys for GEMBA and basic vs wmt21_annotator prompts data
+        RESPONSE_KEYS = ["created", "model", "finish_reason", "role", "content"]
+        response_data = {"idx": [], "score": []}
         if prompt_type == "wmt21_annotator":
-            response_data["err_cat"] = []
+            response_data["eror_cat"] = []
             for key in RESPONSE_KEYS:
                 for err_cat in err_categories:
                     response_data[f"{key}_{err_cat}"] = []
@@ -197,14 +197,16 @@ def gpt_predict(
                 "target_lang": target_name,
                 "target_seg": row["mt"],
             }
+
             if prompt_type == "wmt21_annotator":
-                content, response_row = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
-                # TODO: can't just append here since some columns will never get any data....
+                response_row = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
+                # save response data
                 for key in response_data.keys():
+                    # the wmt21_annotator prompt exits early if a critical error is found, leaving
+                    # some columns empty
                     if key in response_row:
                         response_data[key].append(response_row[key])
                     else:
-                        # Q: is empty string the best option here?
                         response_data[key].append("")
             else:
                 if prompt_type == "basic":
@@ -220,7 +222,7 @@ def gpt_predict(
                     pickle.dump(response, fp)
                 content = response.choices[0].message.content
 
-                # save metadata
+                # save response data
                 response_data["idx"].append(row["idx"])
                 response_data["created"].append(response.created)
                 response_data["model"].append(response.model)
@@ -237,11 +239,7 @@ def gpt_predict(
                     score = int(content)
                 response_data["score"].append(score)
 
-            predictions.append(score)
-            print("Label: " + str(row["score"]), " GPT response: " + str(score))
-
         df_lp_preds = pd.DataFrame(response_data)
-        # df_lp_preds = pd.DataFrame({"idx": df_data["idx"][:n], "llm_pred": predictions})
         df_lp_preds.to_csv(
             os.path.join(
                 PREDICTIONS_DIR, "ced_data", prompt_type, f"{lp}_{data_split}_llm_{prompt_type}_prompt_full_data.csv"
@@ -252,14 +250,13 @@ def gpt_predict(
 
 def main():
 
-    os.makedirs(os.path.join(PREDICTIONS_DIR, "ced_data"), exist_ok=True)
-
     args = parse_args()
     if args.lp == "all":
         lps = LI_LANGUAGE_PAIRS_WMT_21_CED
     else:
         lps = [args.lp]
 
+    os.makedirs(os.path.join(PREDICTIONS_DIR, "ced_data", args.prompt), exist_ok=True)
     gpt_predict(data_split=args.data, lps=lps, n=int(args.number), prompt_type=args.prompt, openai_model=args.model)
 
     print("DONE!")
