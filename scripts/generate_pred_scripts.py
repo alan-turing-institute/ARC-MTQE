@@ -118,7 +118,7 @@ def generate_scripts(
             "python_calls": [
                 "python "
                 + root_dir
-                + "/scripts/pred_ced.py "
+                + "/scripts/predict_ced.py "
                 + "--group "
                 + experiment_group_name
                 + " "
