@@ -145,14 +145,16 @@ def supervised_predict(
         df_results.to_csv(out_file_name, index=False)
 
         # create log in same place as file --> Q: should this be elsewhere?
+        datetime_str = create_now_str()
         log = {
+            "created": datetime_str,
             "git_commit_hash": commit_hash,
             "checkpoint_path": str(checkpoint_path),
             "out_file_name": out_file_name,
             "output_file_hash": hash_file(out_file_name),
             "input_data_hash": hash_df(df_data),
         }
-        with open(out_file_name.replace(".csv", f"_{create_now_str()}.json"), "w") as f:
+        with open(out_file_name.replace(".csv", f"_{datetime_str}.json"), "w") as f:
             json.dump(log, f)
 
     return model
