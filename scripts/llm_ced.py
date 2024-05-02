@@ -17,6 +17,8 @@ from mtqe.utils.language_pairs import (
 )
 from mtqe.utils.paths import PREDICTIONS_DIR
 
+ERROR_CATEGORIES = ["tox", "saf", "nam", "sen", "num"]
+
 
 def parse_args():
     """
@@ -41,8 +43,13 @@ def parse_args():
 
 
 def wmt21_prompt(
-    data: typing.Dict[str, str], idx: str, responses_dir: str, now_str: str, openai_model: str
-) -> typing.Tuple[str, str]:
+    data: typing.Dict[str, str],
+    idx: str,
+    responses_dir: str,
+    now_str: str,
+    openai_model: str,
+    err_categories: typing.List[str] = ERROR_CATEGORIES,
+) -> typing.Tuple[str, typing.Dict[str, str]]:
     """
     Use WMT 2021 CED subtask annotator guidelines as prompts. Iteratively ask to identify
     each of the 5 critical error categories (stop if a critical error has been found).
@@ -63,32 +70,45 @@ def wmt21_prompt(
         A datetime string.
     openai_model: str
         The name of the OpenAI model to be used (e.g., 'gpt-3.5-turbo').
+    err_categories: list[str]
+        List of critical error categories to query.
 
     Returns
     -------
-    tuple(str, str)
-        Content of the GPT response ("0" or "1") and the category of critical error found
-        ("none" if no critical error found).
+    tuple(str, dict[str, str])
+        Content of the GPT response ("0" or "1") and ....
     """
 
-    for err_cat in ["tox", "saf", "nam", "sen", "num"]:
+    response_data = {"idx": idx}
+
+    for err_cat in err_categories:
+
         template = create_wmt21_template(err_cat)
         messages = apply_template(data, template)
         response = openai.chat.completions.create(model=openai_model, messages=messages, temperature=0, seed=1234)
-
+        response_data[err_cat] = err_cat
         with open(os.path.join(responses_dir, f"{now_str}_{idx}_{err_cat}.obj"), "wb") as fp:
             pickle.dump(response, fp)
 
         content = response.choices[0].message.content
+        response_data[f"created_{err_cat}"] = response.created
+        response_data[f"model_{err_cat}"] = response.model
+        response_data[f"finish_reason_{err_cat}"] = response.choices[0].finish_reason
+        response_data[f"role_{err_cat}"] = response.choices[0].message.role
+        response_data[f"content_{err_cat}"] = content
+        response_data[f"score_{err_cat}"] = int(content)
+
         # stop if have found a critical error
         if content == "0":
-            return content, err_cat
+            response_data["error_cat"] = err_cat
+            return content, err_cat, response_data
         # check that nothing unexpected is happening
         if content != "1":
             print(f"Invalid response for {idx}: ", content)
 
     # no critical error found
-    return content, "none"
+    response_data["error_cat"] = "none"
+    return content, response_data
 
 
 def gpt_predict(
@@ -97,6 +117,7 @@ def gpt_predict(
     n: int = 2,
     prompt_type: str = "basic",
     openai_model: str = "gpt-3.5-turbo",
+    err_categories: typing.List[str] = ERROR_CATEGORIES,
 ) -> typing.Dict[str, typing.List[int]]:
     """
     Make predictions for dev or test data.
@@ -114,6 +135,8 @@ def gpt_predict(
         One of "basic", "GEMBA" or "wmt21_annotator".
     openai_model: str
         The name of the OpenAI model to be used. Defaults to 'gpt-3.5-turbo'.
+    err_categories: list[str]
+        List of critical error categories to query.
 
     Returns
     -------
@@ -148,8 +171,6 @@ def gpt_predict(
 
         # save full GPT answer as well as ERROR (0)/NOT ERROR (1) predictions made by the model in a CSV file
         predictions = []
-        # for WMT21 prompt only, keep track of which error category got to
-        err_categories = []
 
         responses_dir = os.path.join(PREDICTIONS_DIR, "gpt_answers", data_split, prompt_type, lp)
         os.makedirs(responses_dir, exist_ok=True)
@@ -157,15 +178,18 @@ def gpt_predict(
         os.makedirs(predictions_dir, exist_ok=True)
 
         df_data = load_ced_data(data_split, lp)
-        response_data = {
-            "idx": df_data["idx"][:n],
-            "created": [],
-            "model": [],
-            "finish_reason": [],
-            "role": [],
-            "content": [],
-            "score": [],
-        }
+        # have slightly different keys for GEMBA/basic vs wmt21_annotator prompts
+        RESPONSE_KEYS = ["created", "model", "finish_reason", "role", "content", "score"]
+        response_data = {"idx": []}
+        if prompt_type == "wmt21_annotator":
+            response_data["err_cat"] = []
+            for key in RESPONSE_KEYS:
+                for err_cat in err_categories:
+                    response_data[f"{key}_{err_cat}"] = []
+        else:
+            for key in RESPONSE_KEYS:
+                response_data[key] = []
+
         for _, row in df_data[:n].iterrows():
             data = {
                 "source_lang": src_name,
@@ -174,8 +198,14 @@ def gpt_predict(
                 "target_seg": row["mt"],
             }
             if prompt_type == "wmt21_annotator":
-                content, err_cat = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
-                err_categories.append(err_cat)
+                content, response_row = wmt21_prompt(data, row["idx"], responses_dir, now_str, openai_model)
+                # TODO: can't just append here since some columns will never get any data....
+                for key in response_data.keys():
+                    if key in response_row:
+                        response_data[key].append(response_row[key])
+                    else:
+                        # Q: is empty string the best option here?
+                        response_data[key].append("")
             else:
                 if prompt_type == "basic":
                     # basic template is the default
@@ -190,27 +220,25 @@ def gpt_predict(
                     pickle.dump(response, fp)
                 content = response.choices[0].message.content
 
-            if prompt_type == "GEMBA":
-                parsed_response = parse_mqm_answer(content)
-                # use COMET style scoring: 1=meaning preserved, 0=critical error
-                score = 1 if len(parsed_response["critical"]) == 0 else 0
-            else:
-                # both basic and wmt21_annotator prompts return 0/1 respoonses
-                score = int(content)
+                # save metadata
+                response_data["idx"].append(row["idx"])
+                response_data["created"].append(response.created)
+                response_data["model"].append(response.model)
+                response_data["finish_reason"].append(response.choices[0].finish_reason)
+                response_data["role"].append(response.choices[0].message.role)
+                response_data["content"].append(content)
+
+                if prompt_type == "GEMBA":
+                    parsed_response = parse_mqm_answer(content)
+                    # use COMET style scoring: 1=meaning preserved, 0=critical error
+                    score = 1 if len(parsed_response["critical"]) == 0 else 0
+                else:
+                    # both basic and wmt21_annotator prompts return 0/1 respoonses
+                    score = int(content)
+                response_data["score"].append(score)
 
             predictions.append(score)
             print("Label: " + str(row["score"]), " GPT response: " + str(score))
-
-            # save metadata
-            response_data["created"].append(response.created)
-            response_data["model"].append(response.model)
-            response_data["finish_reason"].append(response.choices[0].finish_reason)
-            response_data["role"].append(response.choices[0].message.role)
-            response_data["content"].append(content)
-            response_data["score"].append(score)
-
-        if prompt_type == "wmt21_annotator":
-            response_data["error_cat"] = err_categories
 
         df_lp_preds = pd.DataFrame(response_data)
         # df_lp_preds = pd.DataFrame({"idx": df_data["idx"][:n], "llm_pred": predictions})
