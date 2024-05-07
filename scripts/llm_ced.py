@@ -180,7 +180,7 @@ def gpt_predict(
         RESPONSE_KEYS = ["created", "model", "finish_reason", "role", "content"]
         response_data = {"idx": [], "score": []}
         if prompt_type == "wmt21_annotator":
-            response_data["eror_cat"] = []
+            response_data["error_cat"] = []
             for key in RESPONSE_KEYS:
                 for err_cat in err_categories:
                     response_data[f"{key}_{err_cat}"] = []
