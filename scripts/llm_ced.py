@@ -1,6 +1,7 @@
 import argparse
 import os
 import pickle
+import re
 import typing
 
 import openai
@@ -97,29 +98,29 @@ def wmt21_prompt(
         response_data[f"role_{err_cat}"] = response.choices[0].message.role
         response_data[f"content_{err_cat}"] = content
 
+        # remove spaces and any character that isn't a letter or number
+        clean_content = re.sub("[^A-Za-z0-9]+", "", content)
+
         # stop if have found a critical error (score can be at end of a longer response)
-        if content[-1] == "0":
+        if clean_content[-1] == "0":
             response_data["error_cat"] = err_cat
             response_data["score"] = 0
             return response_data
-        # check that nothing unexpected is happening, if yes then mark as needing to review
-        # by giving score of -1 & no error_cat
-        if content[-1] != "1":
+
+        # check that did not get unexpected response, if yes then mark for review by
+        # giving score of -1 & no error_cat
+        if clean_content[-1] != "1":
             response_data["error_cat"] = ""
             response_data["score"] = -1
             print(f"Unexpected response for {idx}: ", content)
 
-    # do nothing if have already marked this for review
-    # otherwise check if have a final score OR mark for review
+    # do nothing if have already marked this for review othewrwise, no critical error
+    # found (all responses must have been a 1)
     if "score" in response_data:
         pass
-    elif content == "1" or content[-1] == "1":
-        # no critical error found
+    else:
         response_data["error_cat"] = "none"
         response_data["score"] = 1
-    else:
-        response_data["error_cat"] = ""
-        response_data["score"] = -1
 
     return response_data
 
