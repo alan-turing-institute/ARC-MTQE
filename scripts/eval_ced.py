@@ -6,7 +6,7 @@ import torch
 
 from mtqe.data.loaders import load_ced_data
 from mtqe.utils.language_pairs import LI_LANGUAGE_PAIRS_WMT_21_CED
-from mtqe.utils.metrics import calculate_metrics
+from mtqe.utils.metrics import calculate_metrics, calculate_threshold
 from mtqe.utils.paths import EVAL_DIR, PREDICTIONS_DIR
 
 
@@ -61,6 +61,7 @@ def evaluate(
     ensemble_results = []
 
     for lp in language_pairs:
+        best_thresholds = {}
         for split in ["dev", "test"]:
             filenames = [
                 filename
@@ -77,7 +78,13 @@ def evaluate(
             if not pos_class_error:
                 targets = 1 - targets
 
-            cumulative_preds = torch.zeros(len(targets))
+            # cumulative_preds = torch.zeros(len(targets))
+            # cumulative_preds = {0: torch.zeros(len(targets)), 1: torch.zeros(len(targets))}
+            preds_by_threshold = {
+                "default": {"threshold": 0.5, "cumulative_preds": torch.zeros(len(targets))},
+                "best": {"cumulative_preds": torch.zeros(len(targets))},
+                "extreme": {"threshold": 0.1, "cumulative_preds": torch.zeros(len(targets))},
+            }
 
             for file in filenames:
                 file_words = file.split("_")
@@ -98,51 +105,70 @@ def evaluate(
                 if not pos_class_error:
                     preds = 1 - preds
 
-                # binarise the predictions - threshold of 0.5 is currently hard-coded
-                threshold = 0.5
-                preds = preds > threshold
-                preds = preds.long()
-                cumulative_preds += preds
+                if split == "dev":
+                    best_threshold = calculate_threshold(preds, targets)
+                    best_thresholds[seed + "_" + model_type] = best_threshold
+                else:  # is test set
+                    # use the threshold calculated on the same model using the dev dataset
+                    best_threshold = best_thresholds[seed + "_" + model_type]
+                preds_by_threshold["best"]["threshold"] = best_threshold
 
-                results = get_results(
-                    preds=preds, targets=targets, threshold=0.5, lp=lp, split=split, seed=seed, model_type=model_type
-                )
+                for key in preds_by_threshold:
+                    threshold = preds_by_threshold[key]["threshold"]
+                    preds = preds > threshold
+                    preds = preds.long()
 
-                individual_results.append(results)
+                    preds_by_threshold["key"]["cumulative_preds"] += preds
 
-            # Only ensemble if there was more than one file (i.e, seed) for each lp and split
-            if num_files > 1:  # Might want to check that num_files is an odd number?
-                majority_preds = cumulative_preds > (num_files / 2)
-                majority_preds = majority_preds.long()
+                    results = get_results(
+                        preds=preds,
+                        targets=targets,
+                        threshold=threshold,
+                        lp=lp,
+                        split=split,
+                        seed=seed,
+                        model_type=model_type,
+                    )
 
-                # Save majority predictions
-                majority_preds_np = majority_preds.numpy()
-                df_majority_preds = pd.DataFrame(majority_preds_np)
-                ensemble_path = os.path.join(group_dir, "ensemble_preds")
-                if not os.path.isdir(ensemble_path):
-                    os.mkdir(ensemble_path)
-                df_majority_preds.to_csv(
-                    ensemble_path
-                    + "/"
-                    + lp
-                    + "_"
-                    + split
-                    + "_"
-                    + experiment_group_name
-                    + "_ensemble_majority_preds.csv"
-                )
+                    individual_results.append(results)
 
-                results = get_results(
-                    preds=majority_preds,
-                    targets=targets,
-                    threshold=0.5,
-                    lp=lp,
-                    split=split,
-                    seed="-",
-                    model_type="majority_ensemble",
-                )
+            for key in preds_by_threshold:
+                # Only ensemble if there was more than one file (i.e, seed) for each lp and split
+                if num_files > 1:  # Might want to check that num_files is an odd number?
+                    threshold = preds_by_threshold[key]["threshold"]
+                    majority_preds = preds_by_threshold[key]["cumulative_preds"] > (num_files / 2)
+                    majority_preds = majority_preds.long()
 
-                ensemble_results.append(results)
+                    # Save majority predictions
+                    majority_preds_np = majority_preds.numpy()
+                    df_majority_preds = pd.DataFrame(majority_preds_np)
+                    ensemble_path = os.path.join(group_dir, "ensemble_preds")
+                    if not os.path.isdir(ensemble_path):
+                        os.mkdir(ensemble_path)
+                    df_majority_preds.to_csv(
+                        ensemble_path
+                        + "/"
+                        + lp
+                        + "_"
+                        + split
+                        + "_"
+                        + experiment_group_name
+                        + "_ensemble_majority_preds_"
+                        + threshold
+                        + ".csv"
+                    )
+
+                    results = get_results(
+                        preds=majority_preds,
+                        targets=targets,
+                        threshold=threshold,
+                        lp=lp,
+                        split=split,
+                        seed="-",
+                        model_type="majority_ensemble",
+                    )
+
+                    ensemble_results.append(results)
 
     # Convert list of results to a dataframe
     df = create_results_df(individual_results)
@@ -172,24 +198,29 @@ def get_results(
         Tensor of predictions
     targets: torch.Tensor
         Tensor of true target values
-    threshold: float
-        Threshold value to calculate the metrics
+    threshold: str
+        Threshold value used to calculate the metrics - cast as a string
     lp: str
         ISO code for language pair
     split: str
         Data split, expecting 'dev' or 'test'
+    seed: str
+        The random seed used to train the model - cast as a string
+    model_type: str
+        A name for the model type
 
     Returns
     -------
     results: dict
         Dictionary of the metrics for the given preds and targets
     """
-    results = calculate_metrics(prefix="", preds=preds, targets=targets, threshold=threshold)
+    results = calculate_metrics(prefix="", preds=preds, targets=targets)
     # Convert results from Tensor to float
     for k in results:
         if type(results[k]) is torch.Tensor:
             results[k] = results[k].item()
-    # Record the language pair and data split
+    # Record additional information in the results dictionary
+    results["threshold"] = threshold
     results["language_pair"] = lp
     results["split"] = split
     results["seed"] = seed

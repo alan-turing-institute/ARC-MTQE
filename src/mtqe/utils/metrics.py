@@ -63,7 +63,7 @@ def calculate_metrics(
     prefix: str,
     preds: torch.Tensor,
     targets: torch.Tensor,
-    threshold: int,
+    threshold: float = 0.5,
     num_classes: int = 2,
     max_vals: dict = None,
     vals_at_max_mcc: dict = None,
@@ -86,7 +86,7 @@ def calculate_metrics(
         Tensor of predictions
     targets: torch.Tensor
         Tensor of true values (either 0 or 1)
-    threshold: int
+    threshold: float
         The threshold used to calculate the predictions
     num_classes: int
         The number of classes
