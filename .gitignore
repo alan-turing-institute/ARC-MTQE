@@ -137,6 +137,7 @@ checkpoints/
 wandb/
 scripts/slurm_train_logs/
 scripts/slurm_scripts
+tables/
 .vscode/
 
 # Poetry

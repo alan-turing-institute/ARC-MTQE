@@ -1,0 +1,15 @@
+,train_type,experiment_group,en-cs,en-de,en-ja,en-zh
+0,One-step,train_monolingual_auth_data,0.472,0.484,,0.329
+1,One-step,train_monolingual_auth_data_enja,,,0.180,
+2,One-step,train_multilingual_auth_data_all,0.483,0.503,0.262,0.320
+3,One-step,train_multilingual_auth_data_single,0.494,0.517,0.256,0.320
+4,One-step,train_multilingual_auth_demetr_data_single,0.423,0.473,0.212,0.270
+5,One-step,train_multilingual_auth_wmt22_data_single,,0.469,,
+6,Two-step,second_step_base_auth_data,0.493,0.480,,0.313
+7,Two-step,second_step_base_auth_data_enja,,,0.275,
+8,Two-step,second_step_base_demetr_auth_data,0.482,0.521,,0.246
+9,Two-step,second_step_base_demetr_auth_data_enja,,,0.262,
+10,Two-step,second_step_base_demetr_data,0.499,0.488,,0.276
+11,Two-step,second_step_base_demetr_data_enja,,,0.276,
+12,Two-step,second_step_base_wmt22_data,,0.484,,
+13,Two-step,second_step_base_wmt22_small_data,,0.479,,

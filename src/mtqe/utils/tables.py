@@ -40,4 +40,12 @@ def create_latex_table(col_names: typing.List, results: typing.Dict[str, typing.
         "\\end{table}",
     ]
 
+    tex_full = (
+        "\\begin{table}\n"
+        "\\centering\n"
+        "\\begin{tabular}{" + textabular + "}\n" + texheader + "\n" + texdata + "\n"
+        "\\end{tabular}\n"
+        "\\end{table}\n"
+    )
+
     return tex_full
