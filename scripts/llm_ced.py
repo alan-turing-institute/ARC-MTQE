@@ -98,16 +98,16 @@ def wmt21_prompt(
         response_data[f"content_{err_cat}"] = content
 
         # stop if have found a critical error (score can be at end of a longer response)
-        if content == "0" or content[-1] == "0":
+        if content[-1] == "0":
             response_data["error_cat"] = err_cat
             response_data["score"] = 0
             return response_data
         # check that nothing unexpected is happening, if yes then mark as needing to review
         # by giving score of -1 & no error_cat
-        if content != "1" or content[-1] != "1":
+        if content[-1] != "1":
             response_data["error_cat"] = ""
             response_data["score"] = -1
-            print(f"Unexpected response for {idx}: ", content[-1])
+            print(f"Unexpected response for {idx}: ", content)
 
     # do nothing if have already marked this for review
     # otherwise check if have a final score OR mark for review
