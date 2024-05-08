@@ -65,7 +65,7 @@ def evaluate(
     ensemble_results = []
 
     for lp in language_pairs:
-        best_thresholds = {}
+        best_thresholds = {}  # Stores the best threshold on the dev dataset for each model
         for split in ["dev", "test"]:
             filenames = [
                 filename
@@ -77,11 +77,14 @@ def evaluate(
             # load true target scores
             df_targets = load_ced_data(split, lp)
             targets = torch.Tensor(df_targets["score"])
+
             # If pos_class_error = False then the positive class is NOT an error
             # and this will be reversed so that the positive class represents ERRORs
             if not pos_class_error:
                 targets = 1 - targets
 
+            # Dictionary to record the cumulative predictions for each threshold strategy
+            # (used later to calculate ensemble predictions using majority voting)
             preds_by_threshold = {
                 "default": {"threshold": 0.5, "cumulative_preds": torch.zeros(len(targets))},
                 "best": {"cumulative_preds": torch.zeros(len(targets))},
@@ -108,6 +111,7 @@ def evaluate(
                     preds = 1 - preds
 
                 if split == "dev":
+                    # Calculate the 'best' threshold for MCC on the dev data
                     best_threshold = calculate_threshold(preds, targets)
                     best_thresholds[seed + "_" + model_type] = best_threshold
                 else:  # is test set
@@ -136,9 +140,11 @@ def evaluate(
 
                     individual_results.append(results)
 
+            # Calculate an ensemble prediction per threshold strategy.
             for key in preds_by_threshold:
                 # Only ensemble if there was more than one file (i.e, seed) for each lp and split
-                if num_files > 1:  # Might want to check that num_files is an odd number?
+                # And if the number of files is an odd number as these ensembles use majority voting
+                if (num_files > 1) and ((num_files % 2) == 1):
                     if key == "best":
                         # When selecting the 'best' threshold, this can be different for each model
                         # so just going to record a threshold of 0 - the 'threshold_strategy' feature
@@ -147,6 +153,7 @@ def evaluate(
                     else:
                         threshold = preds_by_threshold[key]["threshold"]
 
+                    # Calculate the majority prediction over all the random seeds
                     majority_preds = preds_by_threshold[key]["cumulative_preds"] > (num_files / 2)
                     majority_preds = majority_preds.long()
 
@@ -195,7 +202,7 @@ def evaluate(
     df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
 
     df_ensemble = create_results_df(ensemble_results)
-    # Save results
+    # Save ensemble results
     df_ensemble.to_csv(results_path + "/" + experiment_group_name + "_ensemble_results.csv")
 
 
