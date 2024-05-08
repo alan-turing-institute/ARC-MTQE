@@ -67,6 +67,7 @@ def evaluate(
 
             # load true target scores
             df_targets = load_ced_data(split, lp)
+            df_targets.sort_values("idx", inplace=True)
             targets = torch.Tensor(df_targets["score"])
             # If pos_class_error = False then the positive class is NOT an error
             # and this will be reversed so that the positive class represents ERRORs
@@ -87,7 +88,8 @@ def evaluate(
 
                 # load predictions
                 df_preds = pd.read_csv(os.path.join(group_dir, file))
-
+                # make sure predictions are in the same order as the targets, sort on idx:
+                df_preds.sort_values("idx", inplace=True)
                 # convert scores to Tensors
                 preds = torch.Tensor(df_preds["score"])
 
