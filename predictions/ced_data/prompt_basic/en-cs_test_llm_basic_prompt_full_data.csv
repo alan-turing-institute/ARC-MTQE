@@ -1,4 +1,4 @@
-,idx,created,model,finish_reason,role,content,llm_pred
+,idx,created,model,finish_reason,role,content,score
 0,9169,1713463114,gpt-4-turbo-2024-04-09,stop,assistant,1,1
 1,6528,1713463883,gpt-4-turbo-2024-04-09,stop,assistant,1,1
 2,7150,1713463390,gpt-4-turbo-2024-04-09,stop,assistant,0,0
