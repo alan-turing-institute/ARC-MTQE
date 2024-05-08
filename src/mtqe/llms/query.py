@@ -25,7 +25,7 @@ def apply_template(data: typing.Dict[str, str], template: typing.List[typing.Dic
 
     Parameters
     ----------
-    data: union[str, list[dict
+    data: dict[str, str]
         A dictionary with the following keys:
             - source_lang
             - source_seg
@@ -54,6 +54,9 @@ def parse_mqm_answer(gpt_answer: str) -> typing.Dict[str, typing.List[str]]:
 
     NOTE: This function is adapted from the GEMBA package:
     - https://github.com/MicrosoftTranslator/GEMBA/blob/main/gemba/gemba_mqm_utils.py
+
+    NOTE: any non-translation is treated as a critical error, even if
+    GPT response marks is as separate severity (e.g., major).
 
     Parameters
     ----------
