@@ -56,6 +56,10 @@ def evaluate(
     results_path = os.path.join(eval_dir, experiment_group_name)
     if not os.path.isdir(results_path):
         os.mkdir(results_path)
+
+    ensemble_path = os.path.join(group_dir, "ensemble_preds")
+    if not os.path.isdir(ensemble_path):
+        os.mkdir(ensemble_path)
     # list to store results per file
     individual_results = []
     ensemble_results = []
@@ -78,8 +82,6 @@ def evaluate(
             if not pos_class_error:
                 targets = 1 - targets
 
-            # cumulative_preds = torch.zeros(len(targets))
-            # cumulative_preds = {0: torch.zeros(len(targets)), 1: torch.zeros(len(targets))}
             preds_by_threshold = {
                 "default": {"threshold": 0.5, "cumulative_preds": torch.zeros(len(targets))},
                 "best": {"cumulative_preds": torch.zeros(len(targets))},
@@ -115,15 +117,17 @@ def evaluate(
 
                 for key in preds_by_threshold:
                     threshold = preds_by_threshold[key]["threshold"]
-                    preds = preds > threshold
-                    preds = preds.long()
+                    binary_preds = preds > threshold
+                    binary_preds = binary_preds.long()
 
-                    preds_by_threshold["key"]["cumulative_preds"] += preds
+                    preds_by_threshold[key]["cumulative_preds"] += binary_preds
 
                     results = get_results(
-                        preds=preds,
+                        experiment_group=experiment_group_name,
+                        preds=binary_preds,
                         targets=targets,
                         threshold=threshold,
+                        threshold_strategy=key,
                         lp=lp,
                         split=split,
                         seed=seed,
@@ -135,16 +139,21 @@ def evaluate(
             for key in preds_by_threshold:
                 # Only ensemble if there was more than one file (i.e, seed) for each lp and split
                 if num_files > 1:  # Might want to check that num_files is an odd number?
-                    threshold = preds_by_threshold[key]["threshold"]
+                    if key == "best":
+                        # When selecting the 'best' threshold, this can be different for each model
+                        # so just going to record a threshold of 0 - the 'threshold_strategy' feature
+                        # will record that the strategy is selecting the 'best' threshold.
+                        threshold = 0
+                    else:
+                        threshold = preds_by_threshold[key]["threshold"]
+
                     majority_preds = preds_by_threshold[key]["cumulative_preds"] > (num_files / 2)
                     majority_preds = majority_preds.long()
 
                     # Save majority predictions
                     majority_preds_np = majority_preds.numpy()
                     df_majority_preds = pd.DataFrame(majority_preds_np)
-                    ensemble_path = os.path.join(group_dir, "ensemble_preds")
-                    if not os.path.isdir(ensemble_path):
-                        os.mkdir(ensemble_path)
+
                     df_majority_preds.to_csv(
                         ensemble_path
                         + "/"
@@ -154,14 +163,16 @@ def evaluate(
                         + "_"
                         + experiment_group_name
                         + "_ensemble_majority_preds_"
-                        + threshold
+                        + key
                         + ".csv"
                     )
 
                     results = get_results(
+                        experiment_group=experiment_group_name,
                         preds=majority_preds,
                         targets=targets,
                         threshold=threshold,
+                        threshold_strategy=key,
                         lp=lp,
                         split=split,
                         seed="-",
@@ -175,11 +186,11 @@ def evaluate(
     # Save results
     df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
     # Log the max MCC for each lp / split combination
-    max_inds = list(df.groupby(["language_pair", "split"]).idxmax()["MCC"].values)
+    max_inds = list(df.groupby(["language_pair", "split", "threshold_strategy"]).idxmax()["MCC"].values)
     df_max = df.loc[max_inds]
     df_max.to_csv(results_path + "/" + experiment_group_name + "_max_results.csv")
     # Log the min MCC for each lp / split combination
-    min_inds = list(df.groupby(["language_pair", "split"]).idxmin()["MCC"].values)
+    min_inds = list(df.groupby(["language_pair", "split", "threshold_strategy"]).idxmin()["MCC"].values)
     df_min = df.loc[min_inds]
     df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
 
@@ -189,17 +200,30 @@ def evaluate(
 
 
 def get_results(
-    preds: torch.Tensor, targets: torch.Tensor, threshold: float, lp: str, split: str, seed: str, model_type: str
+    experiment_group: str,
+    preds: torch.Tensor,
+    targets: torch.Tensor,
+    threshold: float,
+    threshold_strategy: str,
+    lp: str,
+    split: str,
+    seed: str,
+    model_type: str,
 ) -> dict:
     """
     Parameters
     ----------
+    experiment_group: str
+        The name of the experiment group that the results are from
     preds: torch.Tensor
         Tensor of predictions
     targets: torch.Tensor
         Tensor of true target values
-    threshold: str
+    threshold: float
         Threshold value used to calculate the metrics - cast as a string
+    threshold_strategy: str
+        A given name for selecting the binarisation threshold (e.g., 'default' for 0.5, 'best' for best selction
+        using dev dataset)
     lp: str
         ISO code for language pair
     split: str
@@ -220,11 +244,13 @@ def get_results(
         if type(results[k]) is torch.Tensor:
             results[k] = results[k].item()
     # Record additional information in the results dictionary
-    results["threshold"] = threshold
+    results["_threshold"] = threshold
+    results["threshold_strategy"] = threshold_strategy
     results["language_pair"] = lp
     results["split"] = split
     results["seed"] = seed
     results["model_type"] = model_type
+    results["exp_group"] = experiment_group
     return results
 
 
