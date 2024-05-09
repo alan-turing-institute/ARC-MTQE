@@ -76,6 +76,7 @@ def evaluate(
 
             # load true target scores
             df_targets = load_ced_data(split, lp)
+            df_targets.sort_values("idx", inplace=True)
             targets = torch.Tensor(df_targets["score"])
 
             # If pos_class_error = False then the positive class is NOT an error
@@ -103,21 +104,28 @@ def evaluate(
 
                 # load predictions
                 df_preds = pd.read_csv(os.path.join(group_dir, file))
-
+                # make sure predictions are in the same order as the targets, sort on idx:
+                df_preds.sort_values("idx", inplace=True)
                 # convert scores to Tensors
                 preds = torch.Tensor(df_preds["score"])
 
                 if not pos_class_error:
                     preds = 1 - preds
 
-                if split == "dev":
-                    # Calculate the 'best' threshold for MCC on the dev data
-                    best_threshold = calculate_threshold(preds, targets)
-                    best_thresholds[seed + "_" + model_type] = best_threshold
-                else:  # is test set
-                    # use the threshold calculated on the same model using the dev dataset
-                    best_threshold = best_thresholds[seed + "_" + model_type]
-                preds_by_threshold["best"]["threshold"] = best_threshold
+                if model_type == "llm":
+                    # There is probably a neater way of doing this, but if predictions are made
+                    # using LLMs, then don't need to do calculations for each threshold, so just
+                    # keep the 'default' key in the dict
+                    preds_by_threshold = {"default": preds_by_threshold["default"]}
+                else:
+                    if split == "dev":
+                        # Calculate the 'best' threshold for MCC on the dev data
+                        best_threshold = calculate_threshold(preds, targets)
+                        best_thresholds[seed + "_" + model_type] = best_threshold
+                    else:  # is test set
+                        # use the threshold calculated on the same model using the dev dataset
+                        best_threshold = best_thresholds[seed + "_" + model_type]
+                    preds_by_threshold["best"]["threshold"] = best_threshold
 
                 for key in preds_by_threshold:
                     threshold = preds_by_threshold[key]["threshold"]

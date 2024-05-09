@@ -18,6 +18,7 @@ unbabel-comet = "^2.2.1"
 wandb = "^0.16.4"
 pyyaml = "^6.0.1"
 GitPython = "^3.1.43"
+seaborn = "^0.13.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4.2"

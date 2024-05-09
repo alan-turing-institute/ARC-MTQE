@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
     PrecisionRecallDisplay,
@@ -30,15 +31,44 @@ def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, t
     )
 
     num_plots = len(preds)
-    fig, axs = plt.subplots(1, num_plots, figsize=(20, 5))
+    fig, axs = plt.subplots(1, num_plots, figsize=(20, 5), sharey="row")
 
     for ind, _ in enumerate(preds):
         cm = confusion_matrix(targets[ind], preds[ind])
-        cm_display = ConfusionMatrixDisplay(cm)
-        cm_display.plot(ax=axs[ind])
+        # cm_display = ConfusionMatrixDisplay(cm, display_labels=['No Critical Error', 'Critical Error'])
+        cm_display = sns.heatmap(
+            cm,
+            fmt="0.0f",
+            cmap="gray_r",
+            annot=True,
+            vmin=0,
+            vmax=0,
+            cbar=False,
+            linecolor="k",
+            linewidths=0.5,
+            square=True,
+            yticklabels=["No Critical Error", "Critical Error"],
+            xticklabels=["No Critical Error", "Critical Error"],
+            ax=axs[ind],
+        )
+        # cm_display.plot(ax=axs[ind])
+        cm_display.set_title(plot_names[ind])
+        # cm_display.colorbar.remove()
+        cm_display.set_xlabel("")
+        if ind != 0:
+            cm_display.set_ylabel("")
+        else:
+            cm_display.set_ylabel("True label", fontsize=16)
+        sns.despine(left=False, right=False, top=False, bottom=False)
 
-    fig.suptitle(fig_name, fontsize=16)
-    fig.tight_layout()
+    fig.text(0.5, 0.1, "Predicted label", fontsize=16, ha="center")
+    plt.subplots_adjust(wspace=0.40, hspace=0.1)
+
+    # fig.colorbar(cm_display.im_, ax=axs)
+    # fig.text(0.5, 0.9, fig_name, ha='center')
+    # fig.suptitle(0.5, 1.5, fig_name, fontsize=16, ha='center')
+    fig.text(0.5, 1.02, fig_name, fontsize=20, ha="center")
+    # fig.tight_layout()
 
     return fig
 
