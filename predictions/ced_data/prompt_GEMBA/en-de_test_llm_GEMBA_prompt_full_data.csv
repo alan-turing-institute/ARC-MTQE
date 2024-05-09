@@ -1,4 +1,4 @@
-,idx,created,model,finish_reason,role,content,llm_pred
+,idx,created,model,finish_reason,role,content,score
 0,1887,1713540428,gpt-4-turbo-2024-04-09,stop,assistant,"Critical:
                 no-error
                 Major:
