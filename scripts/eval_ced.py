@@ -217,6 +217,10 @@ def evaluate(
     df_med = df_med.loc[inds]
     df_med.to_csv(results_path + "/" + experiment_group_name + "_median_results.csv")
 
+    # Log the mean values by lp / split / threshold strategy combination
+    df_mean = df.groupby(["language_pair", "split", "threshold_strategy", "exp_group"]).mean("MCC").reset_index()
+    df_mean.to_csv(results_path + "/" + experiment_group_name + "_mean_results.csv")
+
     df_ensemble = create_results_df(ensemble_results)
     # Save ensemble results
     df_ensemble.to_csv(results_path + "/" + experiment_group_name + "_ensemble_results.csv")
