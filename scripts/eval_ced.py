@@ -192,14 +192,30 @@ def evaluate(
     df = create_results_df(individual_results)
     # Save results
     df.to_csv(results_path + "/" + experiment_group_name + "_results.csv")
-    # Log the max MCC for each lp / split combination
+    # Log the max MCC for each lp / split / threshold strategy combination
     max_inds = list(df.groupby(["language_pair", "split", "threshold_strategy"]).idxmax()["MCC"].values)
     df_max = df.loc[max_inds]
     df_max.to_csv(results_path + "/" + experiment_group_name + "_max_results.csv")
-    # Log the min MCC for each lp / split combination
+    # Log the min MCC for each lp / split / threshold strategy combination
     min_inds = list(df.groupby(["language_pair", "split", "threshold_strategy"]).idxmin()["MCC"].values)
     df_min = df.loc[min_inds]
     df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
+
+    # Log the median MCC for each lp / split / threshold strategy combination
+    # First sort dataframe in order of MCC ascending for each group
+    df_med = df.sort_values(["language_pair", "split", "threshold_strategy", "MCC"]).reset_index(drop=True)
+    num_rows = df_med.shape[0]
+    num_unique = df[["language_pair", "split", "threshold_strategy"]].drop_duplicates().shape[0]
+    # Check that the number of unique groups exactly divides by the total number of rows
+    assert num_rows % num_unique < 1, "There doesn't appear to be the same number of random seeds for each group."
+    # NOTE: making an assumption that if the above assertion passes, then there are the same number of random
+    # seeds for each group - could have some more checks here.
+    step_value = num_rows / num_unique
+    assert step_value % 2 == 1, "The number of random seeds isn't odd, therefore we can't select the median record."
+    # Index values to select:
+    inds = [(step_value - 1) / 2 + step_value * i for i in range(num_unique)]
+    df_med = df_med.loc[inds]
+    df_med.to_csv(results_path + "/" + experiment_group_name + "_median_results.csv")
 
     df_ensemble = create_results_df(ensemble_results)
     # Save ensemble results
