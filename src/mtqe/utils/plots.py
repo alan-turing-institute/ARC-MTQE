@@ -1,3 +1,6 @@
+import math
+
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -69,6 +72,58 @@ def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, t
     # fig.suptitle(0.5, 1.5, fig_name, fontsize=16, ha='center')
     fig.text(0.5, 1.02, fig_name, fontsize=20, ha="center")
     # fig.tight_layout()
+
+    return fig
+
+
+def create_histogram_plot(fig_name: str, plot_names: list, preds: list):
+    """
+    Plots histogram of output scores of a supervised model.
+    """
+
+    num_plots = len(preds)
+    fig, axs = plt.subplots(int(num_plots / 2), 2, figsize=(20, 20), sharey="all", sharex="col")
+
+    for ind, _ in enumerate(preds):
+        row = math.floor(ind / 2)
+        col = 0 if ind % 2 < 1 else 1
+
+        hist = sns.histplot(data=preds[ind], binwidth=0.1, binrange=[0, 1], ax=axs[row, col])
+        hist.set_title(plot_names[ind], fontsize=16)
+
+    fig.text(0.5, 0.9, fig_name, fontsize=20, ha="center")
+    # fig.suptitle(fig_name, fontsize=20, ha="center")
+
+    return fig
+
+
+def create_calib_plot(fig_name: str, plot_names: list, x_vals: list, y_vals):
+    """
+    Calibration plots
+    """
+
+    num_plots = len(y_vals)
+    fig, axs = plt.subplots(int(num_plots / 2), 2, figsize=(20, 20), sharey="all", sharex="col")
+
+    for ind, _ in enumerate(y_vals):
+        row = math.floor(ind / 2)
+        col = 0 if ind % 2 < 1 else 1
+
+        data = {"x": x_vals[ind], "y": y_vals[ind]}
+
+        scatter = sns.scatterplot(data, x="x", y="y", ax=axs[row, col])
+
+        scatter.set_title(plot_names[ind], fontsize=16)
+
+        line = mlines.Line2D([0, 1], [0, 1], color="grey")
+        line.set_linestyle("dashed")
+        scatter.add_line(line)
+
+        axs[row, col].set_xlim(0, 1)
+        axs[row, col].set_ylim(0, 1)
+
+    fig.text(0.5, 0.9, fig_name, fontsize=20, ha="center")
+    # fig.suptitle(fig_name, fontsize=20, ha="center")
 
     return fig
 
@@ -148,3 +203,55 @@ def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path:
     fig.suptitle(title, fontsize=16)
     fig.tight_layout()
     fig.savefig(plots_path + "/" + plot_name + "_plot.png", bbox_inches="tight")
+
+
+def create_annotator_cm_plot(fig_name: str, plot_names: list, preds: list, targets: list):
+    """ """
+
+    assert len(preds) == len(targets), (
+        "Expecting the same number of predictions and targets, got " + len(preds) + " and " + len(targets)
+    )
+
+    num_plots = len(preds)
+    fig, axs = plt.subplots(1, num_plots, figsize=(20, 5), sharey="row")
+
+    for ind, _ in enumerate(preds):
+        cm = confusion_matrix(targets[ind], preds[ind])
+        cm = cm[:, :2]
+        # cm_display = ConfusionMatrixDisplay(cm, display_labels=['No Critical Error', 'Critical Error'])
+        cm_display = sns.heatmap(
+            cm,
+            fmt="0.0f",
+            cmap="gray_r",
+            annot=True,
+            vmin=0,
+            vmax=0,
+            cbar=False,
+            linecolor="k",
+            linewidths=0.5,
+            square=False,
+            # yticklabels=["No Critical Error", "Critical Error"],
+            xticklabels=["No Critical Error", "Critical Error"],
+            ax=axs[ind],
+        )
+        # cm_display.plot(ax=axs[ind])
+        cm_display.set_title(plot_names[ind])
+        cm_display.set_xlim(0, 2)
+        # cm_display.colorbar.remove()
+        cm_display.set_xlabel("")
+        if ind != 0:
+            cm_display.set_ylabel("")
+        else:
+            cm_display.set_ylabel("True label", fontsize=16)
+        sns.despine(left=False, right=False, top=False, bottom=False)
+
+    fig.text(0.5, -0.1, "Predicted label", fontsize=16, ha="center")
+    plt.subplots_adjust(wspace=0.40, hspace=0.1)
+
+    # fig.colorbar(cm_display.im_, ax=axs)
+    # fig.text(0.5, 0.9, fig_name, ha='center')
+    # fig.suptitle(0.5, 1.5, fig_name, fontsize=16, ha='center')
+    fig.text(0.5, 1.02, fig_name, fontsize=20, ha="center")
+    # fig.tight_layout()
+
+    return fig
