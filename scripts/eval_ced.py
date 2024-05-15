@@ -210,20 +210,22 @@ def evaluate(
     df_min.to_csv(results_path + "/" + experiment_group_name + "_min_results.csv")
 
     # Log the median MCC for each lp / split / threshold strategy combination
-    # First sort dataframe in order of MCC ascending for each group
-    df_med = df.sort_values(["language_pair", "split", "threshold_strategy", "MCC"]).reset_index(drop=True)
-    num_rows = df_med.shape[0]
-    num_unique = df[["language_pair", "split", "threshold_strategy"]].drop_duplicates().shape[0]
-    # Check that the number of unique groups exactly divides by the total number of rows
-    assert num_rows % num_unique < 1, "There doesn't appear to be the same number of random seeds for each group."
-    # NOTE: making an assumption that if the above assertion passes, then there are the same number of random
-    # seeds for each group - could have some more checks here.
-    step_value = num_rows / num_unique
-    assert step_value % 2 == 1, "The number of random seeds isn't odd, therefore we can't select the median record."
-    # Index values to select:
-    inds = [(step_value - 1) / 2 + step_value * i for i in range(num_unique)]
-    df_med = df_med.loc[inds]
-    df_med.to_csv(results_path + "/" + experiment_group_name + "_median_results.csv")
+    df_median = (
+        df.groupby(["language_pair", "split", "threshold_strategy", "exp_group"])
+        .agg(
+            {
+                "MCC": "median",
+                "seed": "first",
+                "threshold": "first",
+                "precision": "first",
+                "recall": "first",
+                "f1": "first",
+                "accuracy": "first",
+            }
+        )
+        .reset_index()
+    )
+    df_median.to_csv(results_path + "/" + experiment_group_name + "_median_results.csv")
 
     # Log the mean values by lp / split / threshold strategy combination
     df_mean = df.groupby(["language_pair", "split", "threshold_strategy", "exp_group"]).mean("MCC").reset_index()
