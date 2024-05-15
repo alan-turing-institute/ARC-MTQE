@@ -102,15 +102,15 @@ def calculate_metrics(
 
     # create metrics objects and score predictions
     mcc = MatthewsCorrCoef(task="binary", num_classes=num_classes).to(device)
-    mcc_val = mcc(targets, preds)
+    mcc_val = mcc(preds, targets)
     score_precision = Precision(task="binary").to(device)
-    precision_val = score_precision(targets, preds)
+    precision_val = score_precision(preds, targets)
     score_recall = Recall(task="binary").to(device)
-    recall_val = score_recall(targets, preds)
+    recall_val = score_recall(preds, targets)
     score_f1 = F1Score(task="binary").to(device)
-    f1_val = score_f1(targets, preds)
+    f1_val = score_f1(preds, targets)
     score_acc = Accuracy(task="binary").to(device)
-    acc_val = score_acc(targets, preds)
+    acc_val = score_acc(preds, targets)
 
     # create dictionary with metric values
     report = {

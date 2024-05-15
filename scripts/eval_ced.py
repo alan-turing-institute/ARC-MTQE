@@ -112,7 +112,7 @@ def evaluate(
                 if not pos_class_error:
                     preds = 1 - preds
 
-                if model_type == "llm":
+                if model_type in ["baseline", "llm"]:
                     # There is probably a neater way of doing this, but if predictions are made
                     # using LLMs, then don't need to do calculations for each threshold, so just
                     # keep the 'default' key in the dict
