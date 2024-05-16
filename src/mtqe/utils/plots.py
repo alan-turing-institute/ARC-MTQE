@@ -38,7 +38,6 @@ def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, t
 
     for ind, _ in enumerate(preds):
         cm = confusion_matrix(targets[ind], preds[ind])
-        # cm_display = ConfusionMatrixDisplay(cm, display_labels=['No Critical Error', 'Critical Error'])
         cm_display = sns.heatmap(
             cm,
             fmt="0.0f",
@@ -54,9 +53,7 @@ def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, t
             xticklabels=["No Critical Error", "Critical Error"],
             ax=axs[ind],
         )
-        # cm_display.plot(ax=axs[ind])
         cm_display.set_title(plot_names[ind])
-        # cm_display.colorbar.remove()
         cm_display.set_xlabel("")
         if ind != 0:
             cm_display.set_ylabel("")
@@ -67,11 +64,7 @@ def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, t
     fig.text(0.5, 0.1, "Predicted label", fontsize=16, ha="center")
     plt.subplots_adjust(wspace=0.40, hspace=0.1)
 
-    # fig.colorbar(cm_display.im_, ax=axs)
-    # fig.text(0.5, 0.9, fig_name, ha='center')
-    # fig.suptitle(0.5, 1.5, fig_name, fontsize=16, ha='center')
     fig.text(0.5, 1.02, fig_name, fontsize=20, ha="center")
-    # fig.tight_layout()
 
     return fig
 
@@ -92,14 +85,13 @@ def create_histogram_plot(fig_name: str, plot_names: list, preds: list):
         hist.set_title(plot_names[ind], fontsize=16)
 
     fig.text(0.5, 0.9, fig_name, fontsize=20, ha="center")
-    # fig.suptitle(fig_name, fontsize=20, ha="center")
 
     return fig
 
 
 def create_calib_plot(fig_name: str, plot_names: list, x_vals: list, y_vals):
     """
-    Calibration plots
+    Calibration plots - scatter plots - for each language pair
     """
 
     num_plots = len(y_vals)
@@ -123,7 +115,6 @@ def create_calib_plot(fig_name: str, plot_names: list, x_vals: list, y_vals):
         axs[row, col].set_ylim(0, 1)
 
     fig.text(0.5, 0.9, fig_name, fontsize=20, ha="center")
-    # fig.suptitle(fig_name, fontsize=20, ha="center")
 
     return fig
 
@@ -206,7 +197,9 @@ def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path:
 
 
 def create_annotator_cm_plot(fig_name: str, plot_names: list, preds: list, targets: list):
-    """ """
+    """
+    Plots a confusion matrix for each language pair
+    """
 
     assert len(preds) == len(targets), (
         "Expecting the same number of predictions and targets, got " + len(preds) + " and " + len(targets)
@@ -218,7 +211,6 @@ def create_annotator_cm_plot(fig_name: str, plot_names: list, preds: list, targe
     for ind, _ in enumerate(preds):
         cm = confusion_matrix(targets[ind], preds[ind])
         cm = cm[:, :2]
-        # cm_display = ConfusionMatrixDisplay(cm, display_labels=['No Critical Error', 'Critical Error'])
         cm_display = sns.heatmap(
             cm,
             fmt="0.0f",
@@ -230,14 +222,11 @@ def create_annotator_cm_plot(fig_name: str, plot_names: list, preds: list, targe
             linecolor="k",
             linewidths=0.5,
             square=False,
-            # yticklabels=["No Critical Error", "Critical Error"],
             xticklabels=["No Critical Error", "Critical Error"],
             ax=axs[ind],
         )
-        # cm_display.plot(ax=axs[ind])
         cm_display.set_title(plot_names[ind])
         cm_display.set_xlim(0, 2)
-        # cm_display.colorbar.remove()
         cm_display.set_xlabel("")
         if ind != 0:
             cm_display.set_ylabel("")
@@ -248,10 +237,27 @@ def create_annotator_cm_plot(fig_name: str, plot_names: list, preds: list, targe
     fig.text(0.5, -0.1, "Predicted label", fontsize=16, ha="center")
     plt.subplots_adjust(wspace=0.40, hspace=0.1)
 
-    # fig.colorbar(cm_display.im_, ax=axs)
-    # fig.text(0.5, 0.9, fig_name, ha='center')
-    # fig.suptitle(0.5, 1.5, fig_name, fontsize=16, ha='center')
     fig.text(0.5, 1.02, fig_name, fontsize=20, ha="center")
-    # fig.tight_layout()
+
+    return fig
+
+
+def create_precision_recall_curve(fig_name: str, plot_names: list, preds: list, targets: list):
+    """
+    Plots a precision-recall curve for each language pair
+    """
+    assert len(preds) == len(targets), (
+        "Expecting the same number of predictions and targets, got " + len(preds) + " and " + len(targets)
+    )
+
+    num_plots = len(preds)
+    fig, axs = plt.subplots(1, num_plots, figsize=(20, 5), sharey="row")
+
+    for ind, _ in enumerate(preds):
+        _ = PrecisionRecallDisplay.from_predictions(targets[ind], preds[ind], ax=axs[ind], plot_chance_level=True)
+        axs[ind].legend(loc=1)
+        axs[ind].set_title(plot_names[ind])
+
+    fig.text(0.5, 1, fig_name, fontsize=20, ha="center")
 
     return fig
