@@ -2,6 +2,7 @@ from typing import Dict
 
 import numpy as np
 import torch
+from scipy import stats
 from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Precision, Recall
 
 
@@ -143,3 +144,51 @@ def calculate_metrics(
         return report, max_vals, vals_at_max_mcc
     else:
         return report
+
+
+def williams_test(
+    human_metric_a_corr: float, human_metric_b_corr: float, metric_a_metric_b_corr: float, n: int = 1000
+) -> float:
+    """
+    William's significance test for whether metric_a_corr is the same as
+    the metric_b_corr (one-sided).
+
+    NOTE: the method expects that r12 is bigger than r13. The values can be
+    swapped, this is merely to ensure the
+
+    From: https://github.com/inmoonlight/nlp-williams/blob/master/williams.py
+
+    Parameters
+    ----------
+    human_metric_a_corr: float
+        Correlation between human scores and metric A.
+    human_metric_a_corr: float
+        Correlation between human scores and metric B.
+    metric_a_metric_b_corr: float
+        Correlation between metric A and metric B.
+    n: int
+        The number of
+
+    Returns
+    ----------
+    float
+        The p-value
+    """
+
+    # this is to make sure that the t-value is positive
+    # it does not affect the result in any way
+    if human_metric_a_corr > human_metric_b_corr:
+        r12 = human_metric_a_corr
+        r13 = human_metric_b_corr
+    else:
+        r12 = human_metric_b_corr
+        r13 = human_metric_a_corr
+    r23 = metric_a_metric_b_corr
+
+    K = 1 - r12**2 - r13**2 - r23**2 + 2 * r12 * r13 * r23
+    denominator = np.sqrt(2 * K * (n - 1) / (n - 3) + (((r12 + r13) ** 2) / 4) * ((1 - r23) ** 3))
+    numerator = (r12 - r13) * np.sqrt((n - 1) * (1 + r23))
+    t = numerator / denominator
+    p = 1 - stats.t.cdf(abs(t), df=n - 3)
+
+    return p
