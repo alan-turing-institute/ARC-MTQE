@@ -257,7 +257,13 @@ def create_precision_recall_curve(fig_name: str, plot_names: list, preds: list, 
         _ = PrecisionRecallDisplay.from_predictions(targets[ind], preds[ind], ax=axs[ind], plot_chance_level=True)
         axs[ind].legend(loc=1)
         axs[ind].set_title(plot_names[ind])
+        axs[ind].set_xlabel("Recall")
+        if ind > 0:
+            axs[ind].set_ylabel("")
+        else:
+            axs[ind].set_ylabel("Precision")
 
+    # fig.text(0.5, -0.1, "Recall", fontsize=16, ha="center")
     fig.text(0.5, 1, fig_name, fontsize=20, ha="center")
 
     return fig
