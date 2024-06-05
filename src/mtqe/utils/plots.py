@@ -19,15 +19,10 @@ from sklearn.metrics import (
 )
 
 
-def historgram_scores_plot():
-    """
-    Plots a histogram of the [0, 1] predictions made by a supervised model.
-    """
-    pass
-
-
 def create_confusion_matrix_plot(fig_name: str, plot_names: list, preds: list, targets: list):
-    """ """
+    """
+    Plots a confusion matrices for given lists of targets and predictions
+    """
 
     assert len(preds) == len(targets), (
         "Expecting the same number of predictions and targets, got " + len(preds) + " and " + len(targets)
@@ -121,7 +116,7 @@ def create_calib_plot(fig_name: str, plot_names: list, x_vals: list, y_vals):
 
 def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path: str):
     """
-    WIP function to create plots of the evaluation metrics
+    Function to create plots of the evaluation metrics
     Might want to consider using the pytorch metrics instead of sklearn - but
     would be worth comparing the two to make sure they return the same values.
     """
