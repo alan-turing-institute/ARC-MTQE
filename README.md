@@ -2,6 +2,8 @@
 
 Machine Translation Quality Estimation.
 
+⚠️ This is a work in progress ⚠️
+
 ## Set up
 
 Clone this repository and change the current working directory.
