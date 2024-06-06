@@ -98,7 +98,7 @@ It is also possible to make predictions with the COMETKiwi-XL 2023 model but not
 make analyse_da_xl
 ```
 
-To make COMETKiwi-22 predictions for the  CED test data:
+To make COMETKiwi-22 predictions for the  CED test and dev data:
 
 ```bash
 make baseline_predict
@@ -111,6 +111,12 @@ poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test -m gpt-4-turbo
 ```
 
 ## Evaluation
+
+To evaluate the baseline predictions:
+
+```bash
+poetry run python scripts/baseline_eval.py
+```
 
 To create a latex table in the outputs directory with performance scores of the different COMET models on the WMT 2023 DA data:
 

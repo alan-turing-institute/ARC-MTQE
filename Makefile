@@ -94,3 +94,4 @@ eval_da:
 
 baseline_predict:
 	poetry run python scripts/predict_ced.py -g baseline -p cometkiwi_22 -d test -l all
+	poetry run python scripts/predict_ced.py -g baseline -p cometkiwi_22 -d dev -l all
