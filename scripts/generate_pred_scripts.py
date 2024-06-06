@@ -22,7 +22,6 @@ def parse_args():
 
     parser.add_argument("-g", "--group", required=True, help="Experiment group name")
     parser.add_argument("-e", "--exp", required=True, help="Experiment name")
-    parser.add_argument("-d", "--data", required=True, help="Data split to make predictions for ('dev' or 'test').")
     parser.add_argument(
         "-l", "--lp", required=True, help="Language pair to make predictions for (e.g., 'en-cs'), can also be 'all'."
     )
@@ -73,7 +72,6 @@ def write_slurm_script(
 def generate_scripts(
     experiment_group_name: str,
     experiment_name: str,
-    data_split: str,
     lp: str,
     config_dir: str = CONFIG_DIR,
     slurm_dir: str = SLURM_DIR,
@@ -82,6 +80,7 @@ def generate_scripts(
     """
     This function generates slurm scripts that can then be run on an HPC cluster
     One script is generated for each experiment group with multiple predictions per script
+    Predictions for dev and test are made
 
     Parameters
     ----------
@@ -89,8 +88,6 @@ def generate_scripts(
         The name of the experiment group (should match a config yaml file name)
     experiment_name: str
         The name of the experiment name to be used
-    data_split: str
-        The data split to be used (expecting either 'dev' or 'test')
     lp: str
         The ISO code of the language pair to be used
     config_dir: str
@@ -130,10 +127,11 @@ def generate_scripts(
                 + f"--data {data_split} "
                 + f"--lp {lp}"
                 for seed in config["seeds"]
+                for data_split in ["dev", "test"]
             ],
             "experiment_name": experiment_name + "__" + lp,
             "script_name": os.path.join(scripts_path, experiment_name + "__" + lp + "__pred.sh"),
-            "time": "01:00:00",  # hard coded to one hour
+            "time": "01:00:00",  # hard coded to 1 hour
             "memory": config["experiments"][experiment_name]["slurm"]["memory"],
         }
     ]
@@ -191,9 +189,8 @@ def main():
     args = parse_args()
     experiment_group_name = args.group
     experiment_name = args.exp
-    data_split = args.data
     lp = args.lp
-    generate_scripts(experiment_group_name, experiment_name, data_split, lp)
+    generate_scripts(experiment_group_name, experiment_name, lp)
 
 
 if __name__ == "__main__":

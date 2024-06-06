@@ -144,7 +144,9 @@ def load_ced_test_data(lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
     return df_full[["idx", "src", "mt", "score"]]
 
 
-def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd.DataFrame:
+def load_ced_data(
+    data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR, incl_annotations: bool = False
+) -> pd.DataFrame:
     """
     Load WMT 2021 Critical Error Detection 'train', 'dev' or 'test' data for given language pair.
 
@@ -156,6 +158,8 @@ def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd
         The langauge pair, passed as IOS code (e.g., "en-cs").
     mlqepe_dir: str
         Path to the `data/` directory in clone of the `sheffieldnlp/mlqe-pe` GitHub repository.
+    incl_annotations: bool
+        False if the function does not return annotations as a column in the dataframe, True otherwise
 
     Returns
     ----------
@@ -165,6 +169,7 @@ def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd
             - "src": source text
             - "mt": machine translated text
             - "score": whether the translation contains a critical error (0) or not (1)
+            - "annotations": the scores from the individual annotators (only if incl_annotations is True)
     """
 
     if data_split == "test":
@@ -177,7 +182,10 @@ def load_ced_data(data_split: str, lp: str, mlqepe_dir: str = MLQE_PE_DIR) -> pd
         # NOT en error = 1, CRITICAL ERROR = 0
         df_data["score"] = score_ced(df_data["error"])
 
-    return df_data[["idx", "src", "mt", "score"]]
+    if incl_annotations:
+        return df_data[["idx", "src", "mt", "score", "annotations"]]
+    else:
+        return df_data[["idx", "src", "mt", "score"]]
 
 
 def load_wmt22_ced_data(data_split: str, lp: str = "en-de", wmt22_data_dir: str = WMT_QE_22_DIR):

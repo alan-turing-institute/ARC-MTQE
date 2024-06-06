@@ -1,21 +1,8 @@
 from typing import Dict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    PrecisionRecallDisplay,
-    RocCurveDisplay,
-    accuracy_score,
-    confusion_matrix,
-    f1_score,
-    matthews_corrcoef,
-    precision_recall_curve,
-    precision_score,
-    recall_score,
-    roc_curve,
-)
+from scipy import stats
 from torchmetrics import Accuracy, F1Score, MatthewsCorrCoef, Precision, Recall
 
 
@@ -63,7 +50,7 @@ def calculate_metrics(
     prefix: str,
     preds: torch.Tensor,
     targets: torch.Tensor,
-    threshold: int,
+    threshold: float = 0.5,
     num_classes: int = 2,
     max_vals: dict = None,
     vals_at_max_mcc: dict = None,
@@ -86,7 +73,7 @@ def calculate_metrics(
         Tensor of predictions
     targets: torch.Tensor
         Tensor of true values (either 0 or 1)
-    threshold: int
+    threshold: float
         The threshold used to calculate the predictions
     num_classes: int
         The number of classes
@@ -116,15 +103,15 @@ def calculate_metrics(
 
     # create metrics objects and score predictions
     mcc = MatthewsCorrCoef(task="binary", num_classes=num_classes).to(device)
-    mcc_val = mcc(targets, preds)
+    mcc_val = mcc(preds, targets)
     score_precision = Precision(task="binary").to(device)
-    precision_val = score_precision(targets, preds)
+    precision_val = score_precision(preds, targets)
     score_recall = Recall(task="binary").to(device)
-    recall_val = score_recall(targets, preds)
+    recall_val = score_recall(preds, targets)
     score_f1 = F1Score(task="binary").to(device)
-    f1_val = score_f1(targets, preds)
+    f1_val = score_f1(preds, targets)
     score_acc = Accuracy(task="binary").to(device)
-    acc_val = score_acc(targets, preds)
+    acc_val = score_acc(preds, targets)
 
     # create dictionary with metric values
     report = {
@@ -159,78 +146,49 @@ def calculate_metrics(
         return report
 
 
-def create_plots(plot_name: str, preds: np.array, targets: np.array, plots_path: str):
+def williams_test(
+    human_metric_a_corr: float, human_metric_b_corr: float, metric_a_metric_b_corr: float, n: int = 1000
+) -> float:
     """
-    WIP function to create plots of the evaluation metrics
-    Might want to consider using the pytorch metrics instead of sklearn - but
-    would be worth comparing the two to make sure they return the same values.
+    William's significance test for whether metric_a_corr is the same as
+    the metric_b_corr (one-sided).
+
+    NOTE: the method expects that r12 is bigger than r13. The values can be
+    swapped, this is merely to ensure the
+
+    From: https://github.com/inmoonlight/nlp-williams/blob/master/williams.py
+
+    Parameters
+    ----------
+    human_metric_a_corr: float
+        Correlation between human scores and metric A.
+    human_metric_a_corr: float
+        Correlation between human scores and metric B.
+    metric_a_metric_b_corr: float
+        Correlation between metric A and metric B.
+    n: int
+        The number of
+
+    Returns
+    ----------
+    float
+        The p-value
     """
-    # higher COMET score --> higher confidence it is NOT an error
-    # However, we want the positive class to represent ERRORS
-    # Therefore the labels are:  ERROR = 1, NOT = 0
-    preds = 1 - preds
-    targets = 1 - targets
 
-    # RESULTS
-    # 1. Precision, Recall, FPR, TPR
-    prec, rec, _ = precision_recall_curve(targets, preds)
-    fpr, tpr, _ = roc_curve(targets, preds)
-    cm = confusion_matrix(targets, preds >= 0.5)
+    # this is to make sure that the t-value is positive
+    # it does not affect the result in any way
+    if human_metric_a_corr > human_metric_b_corr:
+        r12 = human_metric_a_corr
+        r13 = human_metric_b_corr
+    else:
+        r12 = human_metric_b_corr
+        r13 = human_metric_a_corr
+    r23 = metric_a_metric_b_corr
 
-    pr_display = PrecisionRecallDisplay(precision=prec, recall=rec).plot()
-    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr).plot()
-    cm_display = ConfusionMatrixDisplay(cm)
+    K = 1 - r12**2 - r13**2 - r23**2 + 2 * r12 * r13 * r23
+    denominator = np.sqrt(2 * K * (n - 1) / (n - 3) + (((r12 + r13) ** 2) / 4) * ((1 - r23) ** 3))
+    numerator = (r12 - r13) * np.sqrt((n - 1) * (1 + r23))
+    t = numerator / denominator
+    p = 1 - stats.t.cdf(abs(t), df=n - 3)
 
-    # 2. MCC
-    # tresholds for binarizing COMET output
-    thresholds = np.arange(0.01, 0.99, 0.01)
-    mccs = []
-    for t in thresholds:
-        # the model is treated as an error detector
-        # i.e., scores above threshold are "ERROR" predictions
-        # y_hat = (df_results["comet_score"] >= t).astype(int)
-        y_hat = (preds >= t).astype(int)
-        mcc = matthews_corrcoef(targets, y_hat)
-        mccs.append(mcc)
-
-    # PLOT
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(12, 4))
-
-    roc_display.plot(ax=ax1)
-    ax1.plot([0, 1], [0, 1], transform=ax1.transAxes, color="black", ls="--")
-    pr_display.plot(ax=ax2)
-    ax2.axhline(y=sum(targets) / len(targets), color="black", linestyle="--")
-    ax3.legend(loc="lower right")
-    cm_display.plot(ax=ax4)
-
-    idx_max = np.argmax(mccs)
-    best_threshold = thresholds[idx_max]
-    label = f"{best_threshold:.2f}"
-    ax3.scatter(thresholds, mccs, s=10, label=label)
-    ax3.set_ylabel("MCC")
-    ax3.set_xlabel("Threshold")
-    ax3.legend(markerscale=0, loc="upper left", title="Best threshold")
-
-    y_pred_binary = preds > best_threshold
-    score_precision = precision_score(targets, y_pred_binary)
-    score_recall = recall_score(targets, y_pred_binary)
-    score_f1 = f1_score(targets, y_pred_binary)
-    score_acc = accuracy_score(targets, y_pred_binary)
-
-    title = (
-        plot_name
-        + " | Best threshold: "
-        + f"{best_threshold:.2f}"
-        + " | Precision: "
-        + f"{score_precision:.2f}"
-        + " | Recall: "
-        + f"{score_recall:.2f}"
-        + " | F1: "
-        + f"{score_f1:.2f}"
-        + " | Acc: "
-        + f"{score_acc:.2f}"
-    )
-
-    fig.suptitle(title, fontsize=16)
-    fig.tight_layout()
-    fig.savefig(plots_path + "/" + plot_name + "_plot.png", bbox_inches="tight")
+    return p
