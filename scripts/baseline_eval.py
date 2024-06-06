@@ -18,7 +18,7 @@ def main():
     """
 
     language_pairs = LI_LANGUAGE_PAIRS_WMT_21_CED
-    results = {"COMET-KIWI": [], "ceiling COMET-KIWI": []}
+    results = {"COMET-KIWI": [], "Threshold": []}
     for lp in language_pairs:
 
         # NOTES:
@@ -55,8 +55,8 @@ def main():
 
         # MCC on test data given the best threshold on the validation data
         results["COMET-KIWI"].append(mccs_test[idx_dev_max])
-        # the best MCC on test data from all thesholds
-        results["ceiling COMET-KIWI"].append(max(mccs_test))
+        # the best threshold
+        results["Threshold"].append(thresholds[idx_dev_max])
 
     tex_full = create_latex_table(LI_LANGUAGE_PAIRS_WMT_21_CED, results)
 
