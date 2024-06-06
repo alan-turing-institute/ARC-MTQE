@@ -128,9 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Data, models and output files
+# Folders in repo to exclude
 /data/
 /models/
+/evaluations/
 results/
 lightning_logs/
 checkpoints/

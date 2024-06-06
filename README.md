@@ -11,6 +11,8 @@ text. CED was introduced at the Conference on Machine Translation (WMT) 2021 QE 
 
 This project investigates CED using one of the highest performing QE models from WMT 2022 ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as our starting point. We used the COMETKiwi-22 as our baseline and evaluated its performance on the CED task using a binarisation threshold. We also tried a number of fine-tuning strategies with the WMT 2021 authentic CED data ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)) as well as synthetic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)). Additionally, we also investigated large language models (LLMs) given their emergence at WMT 2023 ([Blain et al.,2023](https://doi.org/10.18653/v1/2023.wmt-1.52); [Freitag et al., 2023](https://doi.org/10.18653/v1/2023.wmt-1.51)), although they are not the main focus of this project.
 
+From a practical perspective, accuracy/efficiency trade-offs are a key consideration ([Shterionov et al., 2019](https://aclanthology.org/W19-6738/)). We therefore avoided using large QE models such as COMET-KIWI-XL, COMET-KIWI-XXL or xCOMET ([Rei et al., 2023](https://doi.org/10.18653/v1/2023.wmt-1.73)) or prioritising model ensembles.
+
 ## Set up
 
 Clone this repository and change the current working directory.
@@ -65,25 +67,33 @@ export OPENAI_API_KEY="your_api_key"
 ## Structure of this repository
 
 ```
-
+├── checkpoints/
+├── configs/
 ├── data/
 │   ├── demetr/
 │   ├── mlqe-pe/
+│   ├── processed/
 │   ├── unbabel/
 │   ├── wmt-qe-2022-data/
 │   ├── wmt-qe-2023-data/
 │   ├── preprocessed/
-├── models/
+├── evaluations/
 │   ├── ...
+├── notes/
 ├── notebooks/
 │   ├── ...
 │   outputs/
 │   ├── ...
 ├── predictions/
-│   ├── ced_test_data/
-│   ├── da_test_data/
+│   ├── ...
 ├── scripts/
 │   ├── ...
+├── src/
+│   ├── mtqe/
+│   │   ├── data/
+│   │   ├── llms/
+│   │   ├── models/
+│   │   ├── utils/
 ```
 
 ## Links
