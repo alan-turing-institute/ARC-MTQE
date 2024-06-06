@@ -131,6 +131,7 @@ dmypy.json
 # Data, models and output files
 /data/
 /models/
+/evaluations/
 results/
 lightning_logs/
 checkpoints/
