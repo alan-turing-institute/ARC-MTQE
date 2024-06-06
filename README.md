@@ -13,6 +13,16 @@ This project investigates CED using one of the highest performing QE models from
 
 From a practical perspective, accuracy/efficiency trade-offs are a key consideration ([Shterionov et al., 2019](https://aclanthology.org/W19-6738/)). We therefore avoided using large QE models such as COMET-KIWI-XL, COMET-KIWI-XXL or xCOMET ([Rei et al., 2023](https://doi.org/10.18653/v1/2023.wmt-1.73)) or prioritising model ensembles.
 
+## QE Models
+
+As well as the CED models that are developed in this project, this repo also provides the functionality to download and make predictions using direct assessment (DA) data with the [COMET-QE](https://aclanthology.org/2020.wmt-1.101/) model from 2020. This model has often been used as a baseline in WMT subtasks. The repo also has the functionality to make predictions using DA data and the [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) model. This is not essential for the main CED work, but it allows the user to benchmark how these models work 'out of the box' at the task they were trained for, without any further fine-tuning.
+
+The code base could also be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) for CED. This would require an update to the `load_model_from_file` function in `src/mtqe/models/loaders.py` which is currently hard-coded to download COMETKiwi-22:
+
+`model_path = download_model("Unbabel/wmt22-cometkiwi-da")`
+
+This could be updated to allow for the pre-trained QE model to be changed to, for example, [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl) or [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl).
+
 ## Set up
 
 Clone this repository and change the current working directory.
