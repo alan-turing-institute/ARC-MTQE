@@ -26,7 +26,7 @@ We also adapted COMETKiwi-22 for binary classification in the [CEDModel](src/mtq
 - Fine-tune `CEDModel` with the WMT released authentic training data
 - Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune the `CEDModel` with the WMT authentic data
 
-See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and the scripts [README](scripts/README.md.md) on how to train models.
+See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and the scripts [README](scripts/README.md) on how to train models.
 
 ### LLM prompts
 
