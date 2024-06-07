@@ -7,8 +7,9 @@ Code to train and evaluate models for detecting critical errors in machine trans
 - [Background](#background)
 - [Approaches](#approaches)
 - [Structure of this repository](#structure-of-this-repository)
-- [Set up](#set-up)
+- [Quick start](#quick-start)
 - [Useful links and files](#useful-links-and-files)
+- [Development](#development)
 
 ## Background
 
@@ -52,7 +53,9 @@ See the [notes/](notes/) directory for an overview of the [different training st
 │   ├── ...
 ```
 
-## Set up
+## Getting started
+
+### Set up
 
 Clone this repository and change the current working directory.
 
@@ -66,6 +69,8 @@ Install dependencies and pre-commit hooks with Poetry:
 ```bash
 make setup
 ```
+
+### Data
 
 Download and preprocess datasets:
 
@@ -81,16 +86,18 @@ This adds the following directories:
 │   ├── preprocessed/          -- preprocessed data used in experiments
 ```
 
+### HuggingFace
+
 To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
 
 ```bash
 poetry run huggingface-cli login
 ```
 
-To use the COMET models, you must also acknowledge the license for their latest models on the HuggingFace page:
+To use any of the COMET models, you must also acknowledge their license on the HuggingFace page:
 - [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)
-- [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl)
-- [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl)
+
+### WandB
 
 We use [WandB](https://wandb.ai/) to track experiments. It is necessary to login first (you should only need to do this once). The below code will prompt you for an API key, which you can find in the [User Settings](https://wandb.ai/settings):
 
@@ -99,15 +106,20 @@ import wandb
 wandb.login()
 ```
 
+### OpenAI
+
 To make predictions using GPT, you need an OpenAI API key saved as an environment variable named OPENAI_API_KEY. To do this in a Mac terminal:
 
 ```
 export OPENAI_API_KEY="your_api_key"
 ```
 
+### Training, predictions and evaluation
+
+This is described [here](scripts/README.md).
+
 ## Useful links and files
 
-- [Instructions for making and evaluating predictions](scripts/README.md) on the WMT test data.
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md).
 - [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
 - [Instructions for using Baskerville's Tier 2 HPC service](notes/Baskerville.md) to train models.
