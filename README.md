@@ -112,6 +112,10 @@ export OPENAI_API_KEY="your_api_key"
 - [Baskerville instructions](notes/BASKERVILLE.md)
 - [Notes on COMET codebase](notes/COMET.md)
 
+## Train models
+
+
+
 ## Make predictions
 
 To make predictions for WMT 2023 DA test data using the COMET-QE 2020 and 2021 models and the COMETKiwi 2022 model:
