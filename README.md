@@ -18,20 +18,20 @@ The goal of critical error detection (CED) is to identify translated text that d
 
 ### Trained models
 
-We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point, which outputs quality scores between 0 and 1 (1=perfect translation).
+We used [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) ((Rei et al., 2022)[https://aclanthology.org/2022.wmt-1.60/]), which outputs quality scores between 0 and 1 (1=perfect translation).
 
-For the baseline, we picked a binarisation threshold using the dev data and used it to binarise COMETKiwi-22 predictions on the test data.
+For the baseline, we picked a binarisation threshold using the WMT dev data and used it to binarise COMETKiwi-22 predictions on the test data.
 
 We also adapted COMETKiwi-22 for binary classification in the [CEDModel](src/mtqe/models/comet.py) class. Broadly, we tried two main training strategies:
 - Fine-tune `CEDModel` with the WMT released authentic training data
-- Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune the `CEDModel` with the WMT authentic data
+- Pre-train the `CEDModel` with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune  with the WMT authentic data
 
-See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and the scripts [README](scripts/README.md) on how to train models.
+See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and the [scripts/README](scripts/README.md) file on how to train models.
 
 ### LLM prompts
 
 - We tried three LLM prompts:
-    - The [basic](src/mtqe/llms/query.py) prompt asks if the translation has the same meaning as the original
+    - The [basic](src/mtqe/llms/query.py) prompt asks if the translation has the same meaning as the original text
     - [GEMBA-MQM](src/mtqe/llms/gemba.py) from [Kocmi and Federmann (2024)](https://arxiv.org/abs/2310.13988)
     - Using the original [WMT annotator guidelines](src/mtqe/llms/annotator_guidelines.py) from [Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)
 
@@ -42,7 +42,7 @@ See the [notes/](notes/) directory for an overview of the [different training st
 ├── data/
 │   ├── ...                    -- downloaded data files
 │   ├── preprocessed/          -- preprocessed data used in experiments
-├── notes/
+├── notes/                     -- includes overview of training strategies
 │   ├── ...
 ├── notebooks/
 │   ├── ...
@@ -103,15 +103,16 @@ To make predictions using GPT, you need an OpenAI API key saved as an environmen
 export OPENAI_API_KEY="your_api_key"
 ```
 
-## Useful links and notes
+## Useful links and files
 
+- [Instructions for making and evaluating predictions](scripts/README.md) on the WMT test data
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md).
 - [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
-- [Instruction](notes/Baskerville.md) for using Baskerville's Tier 2 HPC service to train models.
+- [Instructions for using Baskerville's Tier 2 HPC service](notes/Baskerville.md) to train models.
 
 ## Development
 
-The code base could be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) for CED. This would require an update to the [load_model_from_file](src/mtqe/models/loaders.py) which is currently hard-coded to download COMETKiwi-22:
+The code base could be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da). This would require an update to the [load_model_from_file](src/mtqe/models/loaders.py) which is currently hard-coded to download COMETKiwi-22:
 
 ```python
 model_path = download_model("Unbabel/wmt22-cometkiwi-da")
