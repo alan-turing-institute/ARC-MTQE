@@ -26,6 +26,8 @@ We also adapted COMETKiwi-22 for binary classification in the [CEDModel](src/mtq
 - Fine-tune `CEDModel` with the WMT released authentic training data
 - Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune the `CEDModel` with the WMT authentic data
 
+See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and on [how to train models](notes/TRAINING.md).
+
 ### LLM prompts
 
 - We tried three LLM prompts:
@@ -101,12 +103,11 @@ To make predictions using GPT, you need an OpenAI API key saved as an environmen
 export OPENAI_API_KEY="your_api_key"
 ```
 
-If using Baskerville's Tier 2 HPC service to train models, see [notes on setting up](notes/BASKERVILLE.md).
-
 ## Useful links and notes
 
-- [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
+- [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md).
 - [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
+- [Instruction](notes/BASKERVILLE.md) for using Baskerville's Tier 2 HPC service to train models.
 
 ## Development
 
