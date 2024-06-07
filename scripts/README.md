@@ -104,8 +104,23 @@ poetry run python baseline_eval.py
 
 ### Trained models and LLMs
 
-The predictions from the trained models and the LLM prompts can be evaluated using the `eval_ced.py` script. The only parameter that needs to be passed for the evaluation to be run for all predictions that have been generated for that experiemnt group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`. For example:
+The predictions from the trained models and the LLM prompts can be evaluated using the `eval_ced.py` script. The only parameter that needs to be passed is the name of the experiment group. The script will then evaluate all the predictions that have been made for that experiment group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`. For example:
 
 ```bash
 poetry run python eval_ced.py -g train_monolingual_auth_data
 ```
+
+Each model is evaluated using three thresholds:
+- The default threshold of 0.5
+- An 'extreme' threshold of 0.1
+- And the 'best' threshold which is calculated as the threshold that achieves the highest MCC on the dev data
+
+All the results for the given experiment group will be stored in the file with the suffix `_results.csv`. The files with the suffix `_max_results.csv`, `_mean_results.csv`, `_median_results.csv` and `_min_results.csv` will respectively show the maximum, mean, median and minimum MCC (and the corresponding metrics such as precision and recall) achieved over all the random seeds that were run. The file with the suffix `_ensemble_results.csv` will show the MCC values when majority voting takes place over all the random seeds.
+
+### Plots
+
+The notebook `metrics.ipynb` provides some code to plot confusion matrices and precision-recall curves for the predictions. It is necessary to have run the evaluation script before using this notebook as the evaluation script identifies the random seed that achieved, for example, the median MCC value which can then be used to make the plots.
+
+### Latex tables of results
+
+The notebook `create_tables.ipynb` provides some code to plot a metric or metrics (such as MCC or precision and recall) in latex tables.
