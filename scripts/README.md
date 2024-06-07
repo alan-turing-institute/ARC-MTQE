@@ -1,83 +1,111 @@
 # Scripts
 
+Scripts to train models, generate predictions and evaluate performance.
+
+## Table of contents
+
+- [Train models](#train-models)
+- [Predictions](#predictions)
+- [Evaluation](#evaluation)
+
 ## Train models
 
 ### Config files
-YAML config files are used to control the parameters for training a model, such as the model hyperparameters and parameters for saving model checkpoints. Examples of these are found in the `configs` folder in the repo. Each config file will contain a 'group' of experiments with each experiment in the group reperesenting a different language pair (or group of language pairs in the multilingual setting).
 
-Some notes on the different sections of the config files can be found [here](notes/configs.md).
+YAML config files are used to control the parameters for training a model, such as the model hyperparameters and parameters for saving model checkpoints. Examples of these are found in the [configs/](../configs/) directory. Each config file will contain a `group` of experiments with each experiment in the group reperesenting a different language pair (or group of language pairs in the multilingual setting).
+
+Some notes on the different sections of the config files can be found [here](../notes/configs.md).
 
 ### Train a single model
 
-Models can be trained using the `train_ced.py` script. Either the COMETKiwi-22 model weights are used a starting point, or model weights saved from a previous run (in the `checkpoints` folder) - this is controlled in the config file.
+Models can be trained using the `train_ced.py` script. Either the COMETKiwi-22 model weights are used a starting point, or model weights saved from a previous run (in the `checkpoints` folder which is created when training models) - this is controlled in the config file.
 
-The parameters to use when running the script to train a model are the experiment group (this is the name of the config file, without the `.yaml` extension), the experiment name (which must match one listed in the config file) and the initial random seed (which, again, must match one listed in the config file).
+The script arguments are:
+- experiment group (this is the name of the config file, without the `.yaml` extension)
+- experiment name (which must match the one listed in the config file)
+- the initial random seed (which, again, must match one listed in the config file).
 
 For example:
 ```bash
-python scripts/train_ced.py -g train_monolingual_auth_data -e en_cs -s 42
+poetry run python train_ced.py -g train_monolingual_auth_data -e en_cs -s 42
 ```
+
+See the [notes/](../notes/models.md) directory for an overview of available training strategies and the corresponding config files.
 
 ### Generate slurm scripts
 
 Slurm scripts for training models can be generated per experiment group (i.e., per config file) using the `generate_train_scripts.py` script. For this all that is needed is the experiment group name (i.e., the config file name). For example:
 
 ```bash
-python scripts/generate_train_scripts.py -g train_monolingual_auth_data
+poetry run python generate_train_scripts.py -g train_monolingual_auth_data
 ```
 
-This will generate one slurm script per model to be trained. That is, one slurm script per experiment and random seed listed in the config file. These will be saved into the folder `scripts/slurm_scripts/<experiment_group_name>`
+This will generate one slurm script per model to train. That is, one slurm script per experiment and random seed listed in the config file. These will be saved into the `scripts/slurm_scripts/<experiment_group_name>` folder.
 
-## Make predictions
+## Predictions
 
-To make predictions for WMT 2023 DA test data using the COMET-QE 2020 and 2021 models and the COMETKiwi 2022 model:
+### Overview
 
-```bash
-make analyse_da
-```
+The predictions from the trained models and LLM prompts are stored in the [ARC-MTQE/predictions/ced](../predictions/ced_data/) directory with a different folder for each experiment group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`.
 
-It is also possible to make predictions with the COMETKiwi-XL 2023 model but note that this can take couple of hours per language pair (there are 5 in the 2023 DA test set):
-
-```bash
-make analyse_da_xl
-```
+### Baseline
 
 To make baseline COMETKiwi-22 predictions for the  CED test and dev data:
 
 ```bash
-make baseline_predict
+poetry run python predict_ced.py -g baseline -p cometkiwi_22 -d test -l all
+poetry run python predict_ced.py -g baseline -p cometkiwi_22 -d dev -l all
 ```
 
-To make predictions for a trained CED model, the `predict_ced.py` script can be used. The parameters to be passed to the script are the experiment group (the name of the config file that was used to train the model), the experiment name (matching one in the config file), the initial random seed (again, matching one in the config file), the path of the checkpoint containing the weights of the model, the data split on which to make the predictions (either `dev` or `test`) and the language pair on which to make the predictions (either `en-cs`, `en-de`, `en-ja`, `en-zh` or `all`). For example:
+### Trained models
+
+Once a model has been trained, to make predictions use the `predict_ced.py` script.
+
+The script arguments are:
+- the experiment group (the name of the config file that was used to train the model)
+- the experiment name (matching one in the config file)
+- the initial random seed (again, matching one in the config file)
+- the path of the checkpoint containing the weights of the model
+- the data split to make predictions for (either `dev` or `test`)
+- the language pair to make predictions for (either `en-cs`, `en-de`, `en-ja`, `en-zh` or `all`)
+
+For example:
 
 ```bash
-python scripts/predict_ced.py -g train_monolingual_auth_data -e en_cs -s 42 -p checkpoints/train_monolingual_auth_data__en-cs__42__20240416_174404/epoch=0-step=468.ckpt -d test -lp en-cs
+poetry run python predict_ced.py -g train_monolingual_auth_data -e en_cs -s 42 -p checkpoints/train_monolingual_auth_data__en-cs__42__20240416_174404/epoch=0-step=468.ckpt -d test -lp en-cs
 ```
 
-To use the OpenAI API to make critical error predictions run the following script. The parameters passed to the script indicate, which prompt (`basic`, `GEMBA` or `wmt21_annotator`) and GPT model (e.g., `gpt-3.5-turbo` or `gpt-4-turbo`) to use and how many translations, which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to make predictions for. For example:
+### LLM prompts
+
+To use the OpenAI API to make critical error predictions run the following script.
+
+The script arguments are:
+- prompt (`basic`, `GEMBA` or `wmt21_annotator`)
+- GPT model to use (e.g., `gpt-3.5-turbo` or `gpt-4-turbo`)
+- how many data rows to make predictions for (test data has 1000 rows)
+- the language pair to make predictions for (e.g., `en-cs` but can also be `all`)
+- the data split to make predictions for (`train`, `dev` or `test`)
+
+For example:
 
 ```bash
-poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test -m gpt-4-turbo
+poetry run python llm_ced.py -n 1000 -p GEMBA -l all -d test -m gpt-4-turbo
 ```
-
-The predictions from the trained models and LLM prompts are stored in the `predictions/ced` path with a different folder for each experiment group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`.
 
 ## Evaluation
 
-To evaluate the baseline predictions:
+### Baseline
+
+Once predictions have been made for both the test and dev data, run:
 
 ```bash
-poetry run python scripts/baseline_eval.py
+poetry run python baseline_eval.py
 ```
 
-To create a latex table in the outputs directory with performance scores of the different COMET models on the WMT 2023 DA data:
-
-```bash
-make eval_da
-```
+### Trained models and LLMs
 
 The predictions from the trained models and the LLM prompts can be evaluated using the `eval_ced.py` script. The only parameter that needs to be passed for the evaluation to be run for all predictions that have been generated for that experiemnt group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`. For example:
 
 ```bash
-python scripts/eval_ced.py -g train_monolingual_auth_data
+poetry run python eval_ced.py -g train_monolingual_auth_data
 ```
