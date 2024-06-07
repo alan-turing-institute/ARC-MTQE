@@ -39,9 +39,7 @@ See the [notes/](notes/) directory for an overview of the [different training st
 
 ```
 ├── configs/                   -- configs used for training experiments
-├── data/
-│   ├── ...                    -- downloaded data files
-│   ├── preprocessed/          -- preprocessed data used in experiments
+│   ├── ...
 ├── notes/                     -- includes overview of training strategies
 │   ├── ...
 ├── notebooks/                 -- plots and tables of results
@@ -73,6 +71,14 @@ Download and preprocess datasets:
 
 ```bash
 make data
+```
+
+This adds the following directories:
+
+```
+├── data/
+│   ├── ...                    -- downloaded data files
+│   ├── preprocessed/          -- preprocessed data used in experiments
 ```
 
 To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
