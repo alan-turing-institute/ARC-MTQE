@@ -8,7 +8,7 @@ Code to train and evaluate models for detecting critical errors in machine trans
 - [Approaches](#approaches)
 - [Structure of this repository](#structure-of-this-repository)
 - [Set up](#set-up)
-- [Useful links and notes](#useful-links-and-notes)
+- [Useful links and files](#useful-links-and-files)
 
 ## Background
 
