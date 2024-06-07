@@ -51,11 +51,7 @@ See the [notes/](notes/) directory for an overview of the [different training st
 ├── scripts/                   -- training, prediction and evaluation code
 │   ├── ...
 ├── src/                       -- model and prompt implementations
-│   ├── mtqe/
-│   │   ├── data/
-│   │   ├── llms/
-│   │   ├── models/
-│   │   ├── utils/
+│   ├── ...
 ```
 
 ## Set up
@@ -105,7 +101,7 @@ export OPENAI_API_KEY="your_api_key"
 
 ## Useful links and files
 
-- [Instructions for making and evaluating predictions](scripts/README.md) on the WMT test data
+- [Instructions for making and evaluating predictions](scripts/README.md) on the WMT test data.
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md).
 - [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
 - [Instructions for using Baskerville's Tier 2 HPC service](notes/Baskerville.md) to train models.
