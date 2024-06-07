@@ -1,12 +1,35 @@
 # Critical Error Detection for Machine Translation
 
-Code to train and evaluate models for detecting critical errors in machine translations using only the original source text and the translated text.
+Code to train and evaluate models for detecting critical errors in machine translations using only the original source text and the machine translated text.
+
+## Table of contents
+
+- [Background](#background)
+- [Approaches](#approaches)
+- [Structure of this repository](#structure-of-this-repository)
+- [Set up](#set-up)
+- [Useful links and notes](#useful-links-and-notes)
 
 ## Background
 
 The goal of critical error detection (CED) is to identify translated text that deviates in meaning from the original text. CED was introduced at the Conference on Machine Translation (WMT) 2021 quality estimation (QE) subtask ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)), which also released a unique dataset of authentic critical error annotations in translations of Wikipedia comments. See [Knight et al. (2024)](https://doi.org/10.5281/zenodo.10931558) for a literature review on machine translation quality estimation (MTQE) including CED.
 
-This project investigated CED using ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point. We used COMETKiwi-22 as our baseline and evaluated its performance on the WMT CED test data using a binarisation threshold. We also tried a number of fine-tuning strategies with the WMT 2021 authentic CED data ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)) as well as synthetic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)). Additionally, we also investigated three prompting strategies with large language models (LLMs) given their emergence at WMT 2023 ([Blain et al.,2023](https://doi.org/10.18653/v1/2023.wmt-1.52); [Freitag et al., 2023](https://doi.org/10.18653/v1/2023.wmt-1.51)), although they are not the main focus of this project.
+## Approaches
+
+### Trained models
+
+We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point. Broadly, we tried three approaches:
+- Baseline: pick a binarisation threshold on the dev data and use to make binary predictions on the test data
+- Fine-tune with COMETKiwi-22 the WMT released authentic training data
+- Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and fine-tune with the WMT authentic data
+
+### LLM prompts
+
+- We tried three LLM prompts:
+    - The [basic](src/mtqe/llms/query.py) prompt asks if the translation has the same meaning as the original
+    - [GEMBA-MQM](src/mtqe/llms/gemba.py) from [Kocmi and Federmann (2024)](https://arxiv.org/abs/2310.13988)
+    - Using the original [WMT annotator guidelines](src/mtqe/llms/annotator_guidelines.py) from [Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)
+
 
 ## Structure of this repository
 
@@ -76,7 +99,8 @@ To make predictions using GPT, you need an OpenAI API key saved as an environmen
 export OPENAI_API_KEY="your_api_key"
 ```
 
-## Useful links
+## Useful links and notes
 
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
-- [Notes on the COMET codebase](notes/COMET.md)
+- Our main trained [CEDModel](src/mtqe/models/comet.py).
+- [Notes on the COMET codebase](notes/COMET.md) that the `CEDModel` inherits from.
