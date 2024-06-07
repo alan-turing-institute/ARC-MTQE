@@ -117,3 +117,5 @@ model_path = download_model("Unbabel/wmt22-cometkiwi-da")
 ```
 
 This could be updated to allow for the pre-trained QE model to be changed to, for example, [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl) or [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl).
+
+This would also require updating the encoder related hyperparameters in the config file (e.g., `encoder_model: XLM-RoBERTa-XL`).
