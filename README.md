@@ -18,10 +18,13 @@ The goal of critical error detection (CED) is to identify translated text that d
 
 ### Trained models
 
-We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point, which outputs quality scores between 0 and 1 (1=perfect translation). Broadly, we tried three main approaches:
-- Baseline: pick a binarisation threshold using the dev data and use it to binarise COMETKiwi-22 predictions on the test data
-- Fine-tune COMETKiwi-22 with the WMT released authentic training data
-- Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and fine-tune with the WMT authentic data
+We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point, which outputs quality scores between 0 and 1 (1=perfect translation).
+
+For the baseline, we picked a binarisation threshold using the dev data and used it to binarise COMETKiwi-22 predictions on the test data.
+
+We also adapted COMETKiwi-22 for binary classification in the [CEDModel](src/mtqe/models/comet.py) class. Broadly, we tried two main training strategies:
+- Fine-tune `CEDModel` with the WMT released authentic training data
+- Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune the `CEDModel` with the WMT authentic data
 
 ### LLM prompts
 
@@ -45,7 +48,7 @@ We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as t
 │   ├── ...
 ├── scripts/                   -- training, prediction and evaluation code
 │   ├── ...
-├── src/                       -- model implementation
+├── src/                       -- model and prompt implementations
 │   ├── mtqe/
 │   │   ├── data/
 │   │   ├── llms/
@@ -103,5 +106,4 @@ If using Baskerville's Tier 2 HPC service to train models, see [notes on setting
 ## Useful links and notes
 
 - [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
-- Our main trained [CEDModel](src/mtqe/models/comet.py).
-- [Notes on the COMET codebase](notes/COMET.md) that the `CEDModel` inherits from.
+- [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
