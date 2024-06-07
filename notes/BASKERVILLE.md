@@ -4,11 +4,6 @@
 
 Follow the [Baskerville instructions](https://docs.baskerville.ac.uk/logging-on/#first-time-access) for creating an account.
 
-Make sure you add your local SSH key to your Baskerville account. You can copy it on a Mac using the below command:
-
-```bash
-cat ~/.ssh/id_rsa.pub | pbcopy
-```
 
 You can then login with:
 
@@ -24,30 +19,7 @@ cd /bask/projects/v/<project_space_name>
 
 Check out the [Baskerville docs](https://docs.baskerville.ac.uk) for tips on getting started and running jobs. Or search for available applications and where to load them from [here](https://apps.baskerville.ac.uk/search).
 
-# Interactive jobs
-
-You need to run an [interactive job](https://docs.baskerville.ac.uk/interactive-jobs/) on Baskerville to set up the project:
-
-```bash
-srun --account <project_space_name> --qos <qos> --gpus 1 --time <time_in_minutes> --export=USER,HOME,PATH,TERM --pty /bin/bash
-```
-
 # Setting up a project
-
-If your repository is private, you will need to git clone through SSH. Create an SSH key on Baskerville:
-
-```bash
-git config user.name "<your_username>"
-ssh-keygen -t rsa -b 4096 -C "<your_email>"
-cat ~/.ssh/id_rsa.pub
-```
-
-then on GitHub go to `Settings/SSH AND GPG keys/New SSH key` and add the newly generated Baskerville SSH key to your account. You can now clone your repository:
-
-```bash
-cd /bask/projects/v/<project_space_name>
-git clone git@github.com:alan-turing-institute/<arc_git_repo>.git
-```
 
 Load make to download and preprocess data:
 
@@ -55,12 +27,6 @@ Load make to download and preprocess data:
 module load bask-apps/live
 module load make/4.3-GCCcore-12.2.0
 make data
-```
-
-To create a link to the project from your home directory:
-
-```
-ln -s /bask/projects/v/<project_space_name>
 ```
 
 # Setting up Poetry
@@ -84,7 +50,7 @@ Then you can install your project:
 poetry install
 ```
 
-Follow the login instructions in the README for HuggingFace and WandB.
+Follow the login instructions in the [README](../README.md) for HuggingFace and WandB.
 
 To activate your poetry environment:
 
