@@ -110,8 +110,10 @@ If using Baskerville's Tier 2 HPC service to train models, see [notes on setting
 
 ## Development
 
-The code base could be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) for CED. This would require an update to the `load_model_from_file` function in `src/mtqe/models/loaders.py` which is currently hard-coded to download COMETKiwi-22:
+The code base could be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) for CED. This would require an update to the [load_model_from_file](src/mtqe/models/loaders.py) which is currently hard-coded to download COMETKiwi-22:
 
-`model_path = download_model("Unbabel/wmt22-cometkiwi-da")`
+```python
+model_path = download_model("Unbabel/wmt22-cometkiwi-da")
+```
 
 This could be updated to allow for the pre-trained QE model to be changed to, for example, [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl) or [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl).
