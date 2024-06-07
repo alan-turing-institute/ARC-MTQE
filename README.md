@@ -18,7 +18,7 @@ The goal of critical error detection (CED) is to identify translated text that d
 
 ### Trained models
 
-We used [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) ((Rei et al., 2022)[https://aclanthology.org/2022.wmt-1.60/]), which outputs quality scores between 0 and 1 (1=perfect translation).
+We used [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) ([Rei et al., 2022](https://aclanthology.org/2022.wmt-1.60/)), which outputs quality scores between 0 and 1 (1=perfect translation).
 
 For the baseline, we picked a binarisation threshold using the WMT dev data and used it to binarise COMETKiwi-22 predictions on the test data.
 
