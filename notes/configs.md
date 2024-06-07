@@ -1,4 +1,4 @@
-Describe the sections in the YAML config files.
+This file describes the sections in the YAML config files.
 
 ### slurm [only required if running from a slurm file]
 These contain parameters for the slurm file when the model is run on an HPC cluster. In our case, we used the University of Birmingham's [Baskerville](https://docs.baskerville.ac.uk) system and our parameters in this section are specific to that system.

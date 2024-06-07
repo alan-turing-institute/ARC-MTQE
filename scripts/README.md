@@ -42,10 +42,16 @@ It is also possible to make predictions with the COMETKiwi-XL 2023 model but not
 make analyse_da_xl
 ```
 
-To make COMETKiwi-22 predictions for the  CED test and dev data:
+To make baseline COMETKiwi-22 predictions for the  CED test and dev data:
 
 ```bash
 make baseline_predict
+```
+
+To make predictions for a trained CED model, the `predict_ced.py` script can be used. The parameters to be passed to the script are the experiment group (the name of the config file that was used to train the model), the experiment name (matching one in the config file), the initial random seed (again, matching one in the config file), the path of the checkpoint containing the weights of the model, the data split on which to make the predictions (either `dev` or `test`) and the language pair on which to make the predictions (either `en-cs`, `en-de`, `en-ja`, `en-zh` or `all`). For example:
+
+```bash
+python scripts/predict_ced.py -g train_monolingual_auth_data -e en_cs -s 42 -p checkpoints/train_monolingual_auth_data__en-cs__42__20240416_174404/epoch=0-step=468.ckpt -d test -lp en-cs
 ```
 
 To use the OpenAI API to make critical error predictions run the following script. The parameters passed to the script indicate, which prompt (`basic`, `GEMBA` or `wmt21_annotator`) and GPT model (e.g., `gpt-3.5-turbo` or `gpt-4-turbo`) to use and how many translations, which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to make predictions for. For example:
@@ -53,6 +59,8 @@ To use the OpenAI API to make critical error predictions run the following scrip
 ```bash
 poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test -m gpt-4-turbo
 ```
+
+The predictions from the trained models and LLM prompts are stored in the `predictions/ced` path with a different folder for each experiment group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`.
 
 ## Evaluation
 
@@ -66,4 +74,10 @@ To create a latex table in the outputs directory with performance scores of the 
 
 ```bash
 make eval_da
+```
+
+The predictions from the trained models and the LLM prompts can be evaluated using the `eval_ced.py` script. The only parameter that needs to be passed for the evaluation to be run for all predictions that have been generated for that experiemnt group. In the case of the trained models the experiment group is the name of the config file used to run the experiment and for the LLM prompts it is either `prompt_basic`, `prompt_GEMBA` or `wmt21_annotator`. For example:
+
+```bash
+python scripts/eval_ced.py -g train_monolingual_auth_data
 ```
