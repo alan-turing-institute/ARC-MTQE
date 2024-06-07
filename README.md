@@ -1,8 +1,62 @@
-# MTQE
+# Critical Error Detection for Machine Translation
 
-Machine Translation Quality Estimation.
+Code to train and evaluate models for detecting critical errors in machine translations using only the original source text and the machine translated text.
 
-⚠️ This is a work in progress ⚠️
+## Table of contents
+
+- [Background](#background)
+- [Approaches](#approaches)
+- [Structure of this repository](#structure-of-this-repository)
+- [Set up](#set-up)
+- [Useful links and files](#useful-links-and-files)
+
+## Background
+
+The goal of critical error detection (CED) is to identify translated text that deviates in meaning from the original text. CED was introduced at the Conference on Machine Translation (WMT) 2021 quality estimation (QE) subtask ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)), which also released a unique dataset of authentic critical error annotations in translations of Wikipedia comments. See [Knight et al. (2024)](https://doi.org/10.5281/zenodo.10931558) for a literature review on machine translation quality estimation (MTQE) including CED.
+
+## Approaches
+
+### Trained models
+
+We used [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) ([Rei et al., 2022](https://aclanthology.org/2022.wmt-1.60/)), which outputs quality scores between 0 and 1 (1=perfect translation).
+
+For the baseline, we picked a binarisation threshold using the WMT dev data and used it to binarise COMETKiwi-22 predictions on the test data.
+
+We also adapted COMETKiwi-22 for binary classification in the [CEDModel](src/mtqe/models/comet.py) class. Broadly, we tried two main training strategies:
+- Fine-tune `CEDModel` with the WMT released authentic training data
+- Pre-train the `CEDModel` with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and then fine-tune  with the WMT authentic data
+
+See the [notes/](notes/) directory for an overview of the [different training strategies](notes/models.md) and the [scripts/README](scripts/README.md) file on how to train models.
+
+### LLM prompts
+
+- We tried three LLM prompts:
+    - The [basic](src/mtqe/llms/query.py) prompt asks if the translation has the same meaning as the original text
+    - [GEMBA-MQM](src/mtqe/llms/gemba.py) from [Kocmi and Federmann (2024)](https://arxiv.org/abs/2310.13988)
+    - Using the original [WMT annotator guidelines](src/mtqe/llms/annotator_guidelines.py) from [Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)
+
+## Structure of this repository
+
+```
+├── configs/                   -- configs used for training experiments
+├── data/
+│   ├── ...                    -- downloaded data files
+│   ├── preprocessed/          -- preprocessed data used in experiments
+├── notes/                     -- includes overview of training strategies
+│   ├── ...
+├── notebooks/                 -- plots and tables of results
+│   ├── ...
+├── predictions/ced_data/      -- predictions on the test (and dev) data
+│   ├── ...
+├── scripts/                   -- training, prediction and evaluation code
+│   ├── ...
+├── src/                       -- model and prompt implementations
+│   ├── mtqe/
+│   │   ├── data/
+│   │   ├── llms/
+│   │   ├── models/
+│   │   ├── utils/
+```
 
 ## Set up
 
@@ -25,12 +79,6 @@ Download and preprocess datasets:
 make data
 ```
 
-Download COMET-QE 2021:
-
-```bash
-make models
-```
-
 To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
 
 ```bash
@@ -49,77 +97,27 @@ import wandb
 wandb.login()
 ```
 
-To make predictions using GPT, you will need to have access to the OpenAI API. The API key will need to be saved as an environment variable named OPENAI_API_KEY. To do this in a Mac terminal:
+To make predictions using GPT, you need an OpenAI API key saved as an environment variable named OPENAI_API_KEY. To do this in a Mac terminal:
 
 ```
 export OPENAI_API_KEY="your_api_key"
 ```
 
-## Structure of this repository
+## Useful links and files
 
-```
-├── data/
-│   ├── demetr/
-│   ├── mlqe-pe/
-│   ├── unbabel/
-│   ├── wmt-qe-2022-data/
-│   ├── wmt-qe-2023-data/
-│   ├── preprocessed/
-├── models/
-│   ├── ...
-├── notebooks/
-│   ├── ...
-│   outputs/
-│   ├── ...
-├── predictions/
-│   ├── ced_test_data/
-│   ├── da_test_data/
-├── scripts/
-│   ├── ...
+- [Instructions for making and evaluating predictions](scripts/README.md) on the WMT test data
+- [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md).
+- [Notes on the COMET codebase](notes/COMET.md) that our trained `CEDModel` inherits from.
+- [Instructions for using Baskerville's Tier 2 HPC service](notes/Baskerville.md) to train models.
+
+## Development
+
+The code base could be updated to use models other than [COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da). This would require an update to the [load_model_from_file](src/mtqe/models/loaders.py) which is currently hard-coded to download COMETKiwi-22:
+
+```python
+model_path = download_model("Unbabel/wmt22-cometkiwi-da")
 ```
 
-## Links
+This could be updated to allow for the pre-trained QE model to be changed to, for example, [COMETKiwi-23-XL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xl) or [COMETKiwi-23-XXL](https://huggingface.co/Unbabel/wmt23-cometkiwi-da-xxl).
 
-- [Overview of available COMET models](https://github.com/Unbabel/COMET/blob/master/MODELS.md)
-- [Baskerville instructions](notes/BASKERVILLE.md)
-- [Notes on COMET codebase](notes/COMET.md)
-
-## Make predictions
-
-To make predictions for WMT 2023 DA test data using the COMET-QE 2020 and 2021 models and the COMETKiwi 2022 model:
-
-```bash
-make analyse_da
-```
-
-It is also possible to make predictions with the COMETKiwi-XL 2023 model but note that this can take couple of hours per language pair (there are 5 in the 2023 DA test set):
-
-```bash
-make analyse_da_xl
-```
-
-To make COMETKiwi-22 predictions for the  CED test and dev data:
-
-```bash
-make baseline_predict
-```
-
-To use the OpenAI API to make critical error predictions run the following script. The parameters passed to the script indicate, which prompt (`basic`, `GEMBA` or `wmt21_annotator`) and GPT model (e.g., `gpt-3.5-turbo` or `gpt-4-turbo`) to use and how many translations, which language pair (e.g., `en-cs` but can also be `all`) and which data split (`train`, `dev` or `test`) to make predictions for. For example:
-
-```bash
-poetry run python scripts/llm_ced.py -n 5 -p GEMBA -l all -d test -m gpt-4-turbo
-```
-
-## Evaluation
-
-To evaluate the baseline predictions:
-
-```bash
-poetry run python scripts/baseline_eval.py
-```
-
-To create a latex table in the outputs directory with performance scores of the different COMET models on the WMT 2023 DA data:
-
-```bash
-make eval_da
-```
+This would also require updating the encoder related hyperparameters in the config file (e.g., `encoder_model: XLM-RoBERTa-XL`).
