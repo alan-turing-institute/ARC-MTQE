@@ -5,3 +5,7 @@ The notebook `metrics.ipynb` provides some code to plot confusion matrices and p
 ## Latex tables of results
 
 The notebook `create_tables.ipynb` provides some code to plot a metric or metrics (such as MCC or precision and recall) in latex tables.
+
+## Williams significance tst
+
+The notebook `sig_analysis.ipynb` compares whether model correlation performance differs according to the William's significance test.
