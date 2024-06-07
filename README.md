@@ -18,9 +18,9 @@ The goal of critical error detection (CED) is to identify translated text that d
 
 ### Trained models
 
-We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point. Broadly, we tried three approaches:
-- Baseline: pick a binarisation threshold on the dev data and use to make binary predictions on the test data
-- Fine-tune with COMETKiwi-22 the WMT released authentic training data
+We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as the starting point, which outputs quality scores between 0 and 1 (1=perfect translation). Broadly, we tried three main approaches:
+- Baseline: pick a binarisation threshold using the dev data and use it to binarise COMETKiwi-22 predictions on the test data
+- Fine-tune COMETKiwi-22 with the WMT released authentic training data
 - Pre-train with syntethic data from the DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) and fine-tune with the WMT authentic data
 
 ### LLM prompts
@@ -29,7 +29,6 @@ We used ([COMETKiwi-22](https://huggingface.co/Unbabel/wmt22-cometkiwi-da)) as t
     - The [basic](src/mtqe/llms/query.py) prompt asks if the translation has the same meaning as the original
     - [GEMBA-MQM](src/mtqe/llms/gemba.py) from [Kocmi and Federmann (2024)](https://arxiv.org/abs/2310.13988)
     - Using the original [WMT annotator guidelines](src/mtqe/llms/annotator_guidelines.py) from [Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)
-
 
 ## Structure of this repository
 
@@ -98,6 +97,8 @@ To make predictions using GPT, you need an OpenAI API key saved as an environmen
 ```
 export OPENAI_API_KEY="your_api_key"
 ```
+
+If using Baskerville's Tier 2 HPC service to train models, see [notes on setting up](notes/BASKERVILLE.md).
 
 ## Useful links and notes
 
