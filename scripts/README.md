@@ -3,7 +3,30 @@
 ## Train models
 
 ### Config files
-YAML config files are used to control the parameters for training a model. Examples of these are found in the `configs` folder in the repo.
+YAML config files are used to control the parameters for training a model, such as the model hyperparameters and parameters for saving model checkpoints. Examples of these are found in the `configs` folder in the repo. Each config file will contain a 'group' of experiments with each experiment in the group reperesenting a different language pair (or group of language pairs in the multilingual setting).
+
+Some notes on the different sections of the config files can be found [here](notes/configs.md).
+
+### Train a single model
+
+Models can be trained using the `train_ced.py` script. Either the COMETKiwi-22 model weights are used a starting point, or model weights saved from a previous run (in the `checkpoints` folder) - this is controlled in the config file.
+
+The parameters to use when running the script to train a model are the experiment group (this is the name of the config file, without the `.yaml` extension), the experiment name (which must match one listed in the config file) and the initial random seed (which, again, must match one listed in the config file).
+
+For example:
+```bash
+python scripts/train_ced.py -g train_monolingual_auth_data -e en_cs -s 42
+```
+
+### Generate slurm scripts
+
+Slurm scripts for training models can be generated per experiment group (i.e., per config file) using the `generate_train_scripts.py` script. For this all that is needed is the experiment group name (i.e., the config file name). For example:
+
+```bash
+python scripts/generate_train_scripts.py -g train_monolingual_auth_data
+```
+
+This will generate one slurm script per model to be trained. That is, one slurm script per experiment and random seed listed in the config file. These will be saved into the folder `scripts/slurm_scripts/<experiment_group_name>`
 
 ## Make predictions
 
