@@ -116,7 +116,7 @@ export OPENAI_API_KEY="your_api_key"
 
 ### Training, predictions and evaluation
 
-This is described [here](scripts/README.md).
+Follow instructions in the [scripts/README](scripts/README.md).
 
 ## Useful links and files
 
