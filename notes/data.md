@@ -7,7 +7,7 @@ This is the Multilingual Quality Estimation and Automatic Post-editing Dataset a
 
 ## DEMETR data
 
-The Diagnosing Evaluation Metrics for Translation (DEMETR) dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) is downloaded from the [github repo](https://github.com/marzenakrp/demetr) where more information about the dataset can be found. This dataset consists of syntethetic CED data and was used in some of the training strategies for training the CED models. It is distributed under the [MIT license](https://github.com/marzenakrp/demetr?tab=MIT-1-ov-file#readme).
+The Diagnosing Evaluation Metrics for Translation (DEMETR) dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) is downloaded from the [github repo](https://github.com/marzenakrp/demetr) where more information about the dataset can be found. This dataset consists of synthetic CED data and was used in some of the training strategies for training the CED models. It is distributed under the [MIT license](https://github.com/marzenakrp/demetr?tab=MIT-1-ov-file#readme).
 
 ## WMT QE 2022
 
