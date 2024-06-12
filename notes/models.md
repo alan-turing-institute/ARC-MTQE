@@ -5,7 +5,7 @@ Training strategies differ primarily in what data were used for training. Additi
 ## Data
 
 Overall, we used three datasets:
-- WMT 2021 released critical error annotations of translations of English Wikipedia comments into Czech, German, Japanese and Chinese [Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/))
+- WMT 2021 released critical error annotations of translations of English Wikipedia comments into Czech, German, Japanese and Chinese ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/))
 - The DEMETR dataset ([Karpinska et al., 2022](https://doi.org/10.18653/v1/2022.emnlp-main.649)) of synthetically created critical errors in news data (10 language pairs)
 - WMT 2022 released synthetic critical error data for English-German ([Zerva et al., 2022](https://aclanthology.org/2022.wmt-1.3/)).
 
