@@ -86,6 +86,8 @@ This adds the following directories:
 │   ├── preprocessed/          -- preprocessed data used in experiments
 ```
 
+See the [notes/](notes/) directory for an overview of the [datasets](notes/data.md) that will be downloaded when this command is run.
+
 ### HuggingFace
 
 To use COMETKiwi, you need a HuggingFace account and access token (they're under https://huggingface.co/settings/tokens in your account settings). Log in to the HuggingFace CLI which will request the token:
