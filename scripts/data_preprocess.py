@@ -26,7 +26,6 @@ def main():
     The DEMETR data is also combined with the various authentic monolingual and multilingual
     datasets.
 
-    Lastly, we save WMT 2021 English-German synthetic train and dev data to a CSV.
     """
 
     # ==================================================================
@@ -62,7 +61,6 @@ def main():
     # ==================================================================
     # 2. Save each WMT21 train and dev file as is.
     #    Also save each train file combined with the DEMETR data.
-    #    For English-German, also combine with WMT 2022 for balanced data.
     # ==================================================================
 
     # keep track of source sentences in dev and test sets for each language pair

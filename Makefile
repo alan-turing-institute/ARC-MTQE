@@ -3,7 +3,6 @@
 #==================================#
 
 WMT21_LANGUAGE_PAIRS=encs ende enja enzh
-WMT22_LANGUAGE_PAIRS=en-de pt-en
 TRAIN_DEV=train dev
 
 setup:
@@ -55,31 +54,9 @@ download_data:
 
 	cd data && git clone https://github.com/marzenakrp/demetr.git
 
-	#=============#
-	# WMT QE 2022 #
-	#=============#
-
-	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2022-data.git
-
-	cd ./data/wmt-qe-2022-data/train-dev_data/task3_ced && \
-	for lp in ${WMT22_LANGUAGE_PAIRS} ; do \
-		for d in ${TRAIN_DEV} ; do \
-			cd $${d}/$${lp} ; \
-			tar -xvzf $${lp}-$${d}.tar.gz ; \
-			cd ../../ ; \
-		done \
-	done
-
-	#=============#
-	# WMT QE 2023 #
-	#=============#
-
-	cd data && git clone https://github.com/WMT-QE-Task/wmt-qe-2023-data.git
-
 preprocess_data:
 	cd data/ && mkdir -p processed
 	poetry run python scripts/data_preprocess.py
-	poetry run python scripts/wmt22_data_preprocess.py
 
 analyse_da:
 	poetry run python scripts/predict_da.py -m comet_qe_20 -y 2023
