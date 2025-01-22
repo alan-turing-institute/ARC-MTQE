@@ -13,9 +13,11 @@ Code to train and evaluate models for detecting critical errors in machine trans
 
 ## Background
 
-The goal of critical error detection (CED) is to identify translated text that deviates in meaning from the original text. CED was introduced at the Conference on Machine Translation (WMT) 2021 quality estimation (QE) subtask ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)), which also released a unique dataset of authentic critical error annotations in translations of Wikipedia comments. See [Knight et al. (2024)](https://doi.org/10.5281/zenodo.10931558) for a literature review on machine translation quality estimation (MTQE) including CED.
+The goal of critical error detection (CED) is to identify translated text that deviates in meaning from the original text. CED was introduced at the Conference on Machine Translation (WMT) 2021 quality estimation (QE) subtask ([Specia et al.,2021](https://aclanthology.org/2021.wmt-1.71/)), which also released a unique dataset of authentic critical error annotations in translations of Wikipedia comments. See also [Knight et al. (2024)](https://doi.org/10.5281/zenodo.10931558) for a literature review on machine translation quality estimation (MTQE) including CED.
 
 ## Approaches
+
+All the approaches are summarized in detail in [Knight et al. (2025)](https://zenodo.org/records/14639667). Below we give a brief overview.
 
 ### Trained models
 
